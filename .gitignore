@@ -1,0 +1,16 @@
+venv/
+*.log
+__pycache__/
+*.pyc
+*.pyo
+db.sqlite3
+n_cookies.txt
+main.js
+main.js.*
+.env
+node_modules/
+build/
+dist/
+.vscode/
+.idea/
+*.sublime-workspace
