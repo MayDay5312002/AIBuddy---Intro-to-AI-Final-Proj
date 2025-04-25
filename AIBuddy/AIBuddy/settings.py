@@ -23,9 +23,18 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-3n*9x-*uvnvn_2c_qlwjhn&shyv5qi9002&e+02*u=h%9)irs)'
 
 # SECURITY WARNING: don't run with debug turned on in production!
+
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+
+# CSRF_TRUSTED_ORIGINS = ["http://127.0.0.1:8000", "http://localhost:8000"]
+
+#FOR NOW
+# SESSION_COOKIE_SECURE = True
+# CSRF_COOKIE_SECURE = True  # Allow CSRF cookies over HTTP
+# CSRF_COOKIE_SAMESITE = 'Strict'
+CORS_ALLOW_ALL_ORIGINS = True ### FOR NOW
 
 
 # Application definition
@@ -41,6 +50,7 @@ INSTALLED_APPS = [
     'AIBuddy',
     'api',
     'frontend',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
@@ -51,6 +61,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
 ]
 
 ROOT_URLCONF = 'AIBuddy.urls'
