@@ -13,11 +13,15 @@ from urllib.parse import urlparse, parse_qs
 
 
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.vectorstores import FAISS
-from langchain.embeddings import HuggingFaceEmbeddings
+# from langchain.vectorstores import FAISS
+from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_community.vectorstores import FAISS
+# from langchain_huggingface import HuggingFaceEmbeddings
+
 from langchain.docstore.document import Document
 
 from ollama import chat
+import ollama
 
 EMBED_MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
 embedding_model = HuggingFaceEmbeddings(model_name=EMBED_MODEL_NAME)
@@ -67,19 +71,29 @@ class GetTextView(APIView):
             print(e)
             return Response({"error": str(e)}, status=500)
         
-class QueryView(APIView):
+class ChatAIView(APIView):
     # global vectorStore
     def get(self, request):
         global vectorStore
         query = request.GET.get("query")
+        modelName = request.GET.get("model")
         results = query_vectorstore(query)
-        message = f"Answer this question: {query}\nThis is the content: {results}"
-        response = chat(model="llama3.1:8b", messages=[
-            {"role": "system", "content": "You are a helpful tutor."},
+        message = f"Answer this prompt: {query}\n\nContent: {results}"
+        response = chat(model=modelName, messages=[
+            {"role": "system", "content": "You are a helpful tutor that will respond in sentence and paragraph form."},
             {"role": "user", "content": message}
             ])
         messegeResponse  = response['message']['content']
         return Response({"msg": messegeResponse}, status=200)
+    
+
+class GetAllModels(APIView):
+    def get(self, request):
+        models = ollama.list()
+        # for model in models.models:
+        #     print(model.model)
+        return Response({"models": [model.model for model in models.models]}, status=200)
+        # return Response({"msg": "This is a test"}, status=200)
 
     
 

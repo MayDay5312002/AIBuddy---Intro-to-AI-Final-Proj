@@ -1,6 +1,6 @@
 import React from "react";
 import { useState, useEffect } from "react";
-import { Button, TextField, Typography } from "@mui/material";
+import { Button, TextField, Typography, Select, MenuItem, FormControl, InputLabel } from "@mui/material";
 
 import axios from "axios";
 
@@ -9,6 +9,14 @@ const MainApp = () => {
     const [url, setUrl] = useState("");
     const [query, setQuery] = useState("");
     const [response, setResponse] = useState("");
+    const [models, setModels] = useState([])
+    // const []
+
+    const [selectedModel, setSelectedModel] = useState("");
+
+    const handleSelectedChange = (event) => {
+      setSelectedModel(event.target.value);
+    };
 
 
     const handleFileChange = (event) => {
@@ -30,22 +38,64 @@ const MainApp = () => {
                 "Content-Type": "multipart/form-data",
             }
         })
+        .then((response) => {
+            // console.log(response)
+            // setResponse(response.data["msg"])
+        })
+        .catch((error) => {
+            console.error("Error uploading file:", error);
+        });
     }
 
     const handleQuery = () => {
-        axios.get('http://127.0.0.1:8000/api/query/?query=' + query).then((response) => {
+        axios.get('http://127.0.0.1:8000/api/chat/?query=' + query + '&model=' + selectedModel).then((response) => {
             // console.log(response)
             setResponse(response.data["msg"])
         })
     }
 
     useEffect(() => {
+        axios.get('http://127.0.0.1:8000/api/models/')
+        .then((response) => {
+            // console.log(response)
+            setModels(response.data["models"])
+            setSelectedModel(response.data["models"][0])
+        })
+        .catch((error) => {
+            console.error("Error uploading file:", error);
+        })
+    }, [])
+
+    useEffect(() => {
         console.log(file)
 
-    }, [file])
+    }, [file]);
+
+    useEffect(() => {
+      console.log(models)
+
+    }, [models]);
+
     return (
         <div className="center">
+
             <Typography variant="h4" sx={{fontWeight: "bold"}}>AI Buddy - Type Shit</Typography>
+
+            <FormControl fullWidth>
+              <InputLabel id="dropdown-label">Select model</InputLabel>
+              <Select
+                labelId="dropdown-label"
+                value={selectedModel}
+                label="Select Model"
+                onChange={handleSelectedChange}
+              >
+                {models.map((model, index) => (
+                  <MenuItem key={index} value={model}>
+                    {model}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
             <input
               accept="*"
               type="file"
