@@ -1,6 +1,6 @@
 import React from "react";
 import { useState, useEffect } from "react";
-import { Button, TextField, Typography, Select, MenuItem, FormControl, InputLabel } from "@mui/material";
+import { Button, TextField, Typography, Select, MenuItem, FormControl, InputLabel, Box, Radio, RadioGroup, FormControlLabel, FormLabel } from "@mui/material";
 
 import axios from "axios";
 
@@ -10,9 +10,13 @@ const MainApp = () => {
     const [query, setQuery] = useState("");
     const [response, setResponse] = useState("");
     const [models, setModels] = useState([])
+    const [readToQuery, setReadToQuery] = useState(false);
+    const [inputType, setInputType] = useState("file");
     // const []
 
     const [selectedModel, setSelectedModel] = useState("");
+
+    
 
     const handleSelectedChange = (event) => {
       setSelectedModel(event.target.value);
@@ -31,8 +35,15 @@ const MainApp = () => {
 
     const handleSubmitFile = () => {
         const formData = new FormData();
-        formData.append("file", file);
-        formData.append("url", url);
+        if(inputType === "file"){
+          if(inputType===null){return}
+          formData.append("file", file);
+        }
+        else if(inputType === "url"){
+          if(inputType===""){return}
+          formData.append("url", url);
+        }
+        // formData.append("url", url);
         axios.post("http://127.0.0.1:8000/api/fileUpload/", formData, {
             headers: {
                 "Content-Type": "multipart/form-data",
@@ -41,18 +52,38 @@ const MainApp = () => {
         .then((response) => {
             // console.log(response)
             // setResponse(response.data["msg"])
+            setReadToQuery(true);
+
         })
         .catch((error) => {
             console.error("Error uploading file:", error);
         });
     }
 
+    // const handleQuery = () => {
+        // axios.get('http://127.0.0.1:8000/api/chat/?query=' + query + '&model=' + selectedModel).then((response) => {
+        //     // console.log(response)
+        //     setResponse(response.data["msg"])
+        // })
+    // }
     const handleQuery = () => {
-        axios.get('http://127.0.0.1:8000/api/chat/?query=' + query + '&model=' + selectedModel).then((response) => {
-            // console.log(response)
-            setResponse(response.data["msg"])
-        })
-    }
+        setResponse(''); // clear old response
+      
+        const eventSource = new EventSource('http://localhost:8000/api/chatStream/' + '?query=' + query + '&model=' + selectedModel);
+      
+        eventSource.onmessage = function(event) {
+            setResponse(prev => prev + event.data);
+        };
+      
+        eventSource.onerror = function(err) {
+            console.error('EventSource failed:', err);
+            eventSource.close();
+        };
+      
+        return () => {
+            eventSource.close();
+        };
+    };
 
     useEffect(() => {
         axios.get('http://127.0.0.1:8000/api/models/')
@@ -71,17 +102,27 @@ const MainApp = () => {
 
     }, [file]);
 
-    useEffect(() => {
-      console.log(models)
-
-    }, [models]);
+    const handleRadioChange = (event) => {
+      setInputType(event.target.value);
+  };
 
     return (
-        <div className="center">
+        <div>
 
-            <Typography variant="h4" sx={{fontWeight: "bold"}}>AI Buddy - Type Shit</Typography>
+            <Typography variant="h4" sx={{fontWeight: "bold", marginBottom: "1em", textAlign: "center"}}>AI Buddy</Typography>
 
-            <FormControl fullWidth>
+            <FormControl>
+              <FormLabel>Choose Input Type</FormLabel>
+              <RadioGroup
+                row
+                value={inputType}
+                onChange={handleRadioChange}
+              >
+                <FormControlLabel value="file" control={<Radio />} label="Upload a File" />
+                <FormControlLabel value="url" control={<Radio />} label="Enter a youtube URL" />
+              </RadioGroup>
+            </FormControl>
+            <FormControl fullWidth style={{marginTop: "1em", marginBottom: "1em"}}>
               <InputLabel id="dropdown-label">Select model</InputLabel>
               <Select
                 labelId="dropdown-label"
@@ -96,39 +137,50 @@ const MainApp = () => {
                 ))}
               </Select>
             </FormControl>
-            <input
-              accept="*"
-              type="file"
-              id="file-upload"
-              style={{ display: "none" }}
-              onChange={handleFileChange}
-            />
-            <label htmlFor="file-upload">
-              <Button variant="contained" component="span">
-                Upload File
-              </Button>
-            </label>
-            {/* <Button variant="contained" component="span" onClick={handleSubmitFile}>
-                Submit
-            </Button> */}
+            {inputType === "file" &&
+            <Box sx={{my: "1em"}}>
+              <input
+                accept="*"
+                type="file"
+                id="file-upload"
+                style={{ display: "none" }}
+                onChange={handleFileChange}
+                component="span"
+              />
+              <label htmlFor="file-upload">
+                <Button variant="contained" component="span">
+                  Upload File
+                </Button>
+              </label>
+              <Typography variant="body2">Selected file: {file ? file.name : "No file selected" }</Typography>
+            </Box>
+            }
+            {inputType === "url" && 
+            <>
             <TextField
-              label="Enter something"
+              label="Enter URL"
               variant="outlined"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               fullWidth
             />
-            <Button variant="contained" component="span" onClick={handleSubmitFile}>
+            {/* <Button variant="contained" component="span" onClick={handleSubmitFile}>
                 Submit
+            </Button> */}
+            </>
+            }
+            <Button variant="contained" component="span" onClick={handleSubmitFile}>
+                Submit {(inputType === "file") ? "File" : "Youtube URL"}
             </Button>
             <TextField
-              label="Enter something"
+              label="Enter Question"
               variant="outlined"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
+              sx={{my: "1em"}}
               fullWidth
             />
-            <Button variant="contained" onClick={handleQuery}>
+            <Button variant="contained" onClick={handleQuery} disabled={readToQuery == false}>
                 Submit Query
             </Button>
             <Typography variant="h5" sx={{fontWeight: "bold"}}>{response}</Typography>

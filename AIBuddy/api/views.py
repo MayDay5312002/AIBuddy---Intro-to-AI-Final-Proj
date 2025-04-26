@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from django.http import StreamingHttpResponse
 
 from tika import parser
 
@@ -14,14 +15,16 @@ from urllib.parse import urlparse, parse_qs
 
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 # from langchain.vectorstores import FAISS
-from langchain_community.embeddings import HuggingFaceEmbeddings
+# from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
 # from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 
 from langchain.docstore.document import Document
 
 from ollama import chat
 import ollama
+from pydantic import BaseModel
 
 EMBED_MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
 embedding_model = HuggingFaceEmbeddings(model_name=EMBED_MODEL_NAME)
@@ -31,6 +34,25 @@ import os
 
 vectorStore = None
 
+
+
+############Format Outputs#################
+class Card(BaseModel):
+  title_card: str
+  Content: str
+
+class QuizCard(BaseModel):
+  question: str
+  answer: str
+  choices: list[str]
+
+class QuizCards(BaseModel):
+  questions : list[QuizCard]
+
+
+
+
+#########################################
 class GetTextView(APIView):
     def post(self, request):
         # print(request.data["rat"])
@@ -79,12 +101,38 @@ class ChatAIView(APIView):
         modelName = request.GET.get("model")
         results = query_vectorstore(query)
         message = f"Answer this prompt: {query}\n\nContent: {results}"
+        ollama.c
         response = chat(model=modelName, messages=[
             {"role": "system", "content": "You are a helpful tutor that will respond in sentence and paragraph form."},
             {"role": "user", "content": message}
             ])
         messegeResponse  = response['message']['content']
         return Response({"msg": messegeResponse}, status=200)
+    
+
+def chatWithFile(request):
+    query = request.GET.get("query")
+    modelName = request.GET.get("model")
+    results = query_vectorstore(query)
+    def event_stream():
+        global vectorStore
+        # query = request.GET.get("query")
+        # modelName = request.GET.get("model")
+        # results = query_vectorstore(query)
+        message = f"Answer this prompt: {query}\n\nContent: {results}"
+        stream = chat(model=modelName, messages=[
+            # {"role": "control", "content": "thinking"},
+            {"role": "system", "content": "You are a helpful tutor that will respond in sentence and paragraph form."},
+            {"role": "user", "content": message}
+            ],
+            stream=True)
+        for chunk in stream:
+            content = chunk["message"]["content"]
+            yield f"data: {content}\n\n" 
+    response = StreamingHttpResponse(event_stream(), content_type="text/event-stream")
+    response["Cache-Control"] = "no-cache"
+    return response
+        
     
 
 class GetAllModels(APIView):

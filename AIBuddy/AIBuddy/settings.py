@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-3n*9x-*uvnvn_2c_qlwjhn&shyv5qi9002&e+02*u=h%9)irs)
 
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+# ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
 # CSRF_TRUSTED_ORIGINS = ["http://127.0.0.1:8000", "http://localhost:8000"]
 
@@ -35,6 +35,13 @@ ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 # CSRF_COOKIE_SECURE = True  # Allow CSRF cookies over HTTP
 # CSRF_COOKIE_SAMESITE = 'Strict'
 CORS_ALLOW_ALL_ORIGINS = True ### FOR NOW
+
+CORS_ALLOW_HEADERS = [
+    "accept",
+    "cache-control",
+    "content-type",
+    "x-requested-with",
+]
 
 
 # Application definition
