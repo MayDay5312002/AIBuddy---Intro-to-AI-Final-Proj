@@ -28,6 +28,8 @@ from pydantic import BaseModel
 
 from AIBuddy.models import *
 
+import ast
+
 EMBED_MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
 embedding_model = HuggingFaceEmbeddings(model_name=EMBED_MODEL_NAME)
 
@@ -136,7 +138,7 @@ def chatWithFile(request):
         # modelName = request.GET.get("model")
         # results = query_vectorstore(query)
         finalResponse = ""
-        message = f"Answer this prompt: {query}\n\nContent: {results}"
+        message = f"Give an elaborate response to the following prompt and content(prompt and content might be not connected to previous conversations).\n\nAnswer this prompt: {query}\n\nContent: {results}"
         stream = chat(model=modelName, 
             messages=messagesUser + [{"role": "user", "content": message}],
             stream=True)
@@ -160,24 +162,27 @@ class CreateFlashCardsView(APIView):
         query = request.data.get("query")
         modelName = request.data.get("model")
         thread = request.data.get("thread")
+        number = int(request.data.get("number"))
         # print("Thead: ", thread)
         thread = Thread.objects.get(title=thread)
         messagesUser = Message.objects.filter(thread=thread).order_by("created_at")
         messagesUser = [{"role": msg.role, "content": msg.content} for msg in messagesUser]
         results = query_vectorstore(query)
-        message = "Create 5 flash card with attributes title and content for the following prompt and content.\n"
+        message = f"Create {number} flash card(s) with attributes title and content for the following prompt and content(Ensure you follow the number of cards that should be created).\n"
         message += f"Make it as concise as possible.\n\nprompt: {query}\nContent: {results}"
         response = chat(model=modelName, 
             messages=messagesUser + [{"role": "user", "content": message}],
             format=FlashCardsList.model_json_schema())
         Cards = FlashCardsList.model_validate_json(response["message"]["content"])
         result = []
+        i = 0
         for card in Cards.cards:
-            if FlashCards.objects.filter(thread=thread, title=card.title).exists():
+            if FlashCards.objects.filter(thread=thread, title=card.title).exists() or i >= number:
                 continue
             flash = FlashCards.objects.create(thread=thread, title=card.title, content=card.content)
             print(card.title, card.content)
             result.append({"title": card.title, "content": card.content})
+            i += 1
         return Response({"cards": result}, status=200)
         
     
@@ -225,7 +230,75 @@ class DeleteFlashCardView(APIView):
         flashcard = FlashCards.objects.get(thread=thread, title=request.data.get("title"))
         flashcard.delete()
         return Response({"message": "Flashcard deleted"}, status=200)
+    
 
+class ModifyFlashCardView(APIView):
+    def post(self, request):
+        print(request.data.get("thread"))
+        print(request.data.get("oldTitle"))
+        print(request.data.get("title"))
+        print(request.data.get("content"))
+        thread = Thread.objects.get(title=request.data.get("thread"))
+        flashcard = FlashCards.objects.get(thread=thread, title=request.data.get("oldTitle"))
+        flashcard.title = request.data.get("title")
+        flashcard.content = request.data.get("content")
+        flashcard.save()
+        return Response({"message": "Flashcard modified"}, status=200)
+    
+class CreateQuizView(APIView):
+    def post(self, request):
+        try: 
+            thread = Thread.objects.get(title=request.data.get("thread"))
+            messagesUser = Message.objects.filter(thread=thread).order_by("created_at")
+            number = int(request.data.get("number"))
+            messagesUser = [{"role": msg.role, "content": msg.content} for msg in messagesUser]
+            modelName = request.data.get("model")
+            results = query_vectorstore(request.data.get("query"))
+            message = f"""Create a multiple choice questions with {number} quesition(s) and 4 choices for each question based on the following content, where 1 choice is the correct answer.\n
+                        Format: List choices in alphabetical list.\n\n 
+                        prompt: {request.data.get("query")}\n
+                        Content: {results}"""
+            response = chat(model=modelName,
+                messages=messagesUser + [{"role": "user", "content": message}],
+                format=QuizCards.model_json_schema())
+
+            print("test1")
+            QuizCardsInstance = QuizCards.model_validate_json(response["message"]["content"])
+            result = []
+            i = 0
+            for card in QuizCardsInstance.questions:
+                if Quizzes.objects.filter(thread=thread, question=card.question).exists() or i >= number:
+                    continue
+                choicesNew = card.choices
+                # print()
+                if card.answer not in choicesNew:
+                    choicesNew.append(card.answer)
+                choicesNew = str(choicesNew)
+                quiz = Quizzes.objects.create(thread=thread, question=card.question.strip(), answer=card.answer.strip(), choices=choicesNew.strip())
+                # print(card.question, card.answer)
+                result.append({"question": card.question.strip(), "answer": card.answer.strip(), "choices": ast.literal_eval(choicesNew.strip())})
+                i += 1
+            return Response({"quizzes": result}, status=200)
+        except Exception as e:
+            print(e)
+            return Response({"message": "Error creating quiz"}, status=400)
+    
+class GetAllQuizzesView(APIView):
+    def get(self, request):
+        thread = request.GET.get("thread")
+        thread = Thread.objects.get(title=thread)
+        cards = Quizzes.objects.filter(thread=thread)
+        result = []
+        for card in cards:
+            result.append({"question": card.question, "answer": card.answer, "choices": ast.literal_eval(card.choices)})
+        return Response({"quizzes": result}, status=200)
+    
+class DeleteQuizView(APIView):
+    def post(self, request):
+        thread = Thread.objects.get(title=request.data.get("thread"))
+        quiz = Quizzes.objects.get(thread=thread, question=request.data.get("question"))
+        quiz.delete()
+        return Response({"message": "Quiz deleted"}, status=200)
     
 
 

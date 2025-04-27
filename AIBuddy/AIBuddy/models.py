@@ -26,6 +26,7 @@ class Quizzes(models.Model):
     id = models.AutoField(primary_key=True)
     thread = models.ForeignKey(Thread, on_delete=models.CASCADE, related_name='quizzes')
     question = models.TextField()
+    choices = models.TextField(default="{}")
     answer = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

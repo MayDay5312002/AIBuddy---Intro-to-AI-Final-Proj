@@ -74,7 +74,7 @@ export default function BasicModalAdd({threads, setThreads}) {
 
           <div>
             <Typography variant="h6" component="h2" >Thread Name</Typography>
-            <TextField id="Transaction-Name" label="Transaction-Name" value={name} onChange={(e) => setName(e.target.value)} variant="filled" required/>
+            <TextField id="Thread Name" label="Thread Name" value={name} onChange={(e) => setName(e.target.value)} variant="filled" required/>
           </div>
       
           <div>
