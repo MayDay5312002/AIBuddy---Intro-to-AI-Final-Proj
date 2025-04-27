@@ -20,6 +20,7 @@ Final Project - Intro to AI
 11. Click the link for development server to start running the web app.
     - http://127.0.0.1:8000/ (Most likely this is link for you where the app is running)
 12. After doing all the setup above, you can just `python manage.py runserver` to run the web app again.
+13. To quit running the web app, simply `CNTRL+C` in the command lin where the Django server is running. This will shutdown the Django server.
 
 - Note:
     1. Depending on the system you are using, you might want to execute `python ...` or `python3 ...`
