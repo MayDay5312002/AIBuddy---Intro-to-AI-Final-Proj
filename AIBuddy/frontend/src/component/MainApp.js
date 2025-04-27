@@ -69,6 +69,7 @@ const MainApp = () => {
 
 
     const handleSubmitFile = () => {
+        setErrorResponse("");
         const formData = new FormData();
         if(inputType === "file"){
           if(file===null){
