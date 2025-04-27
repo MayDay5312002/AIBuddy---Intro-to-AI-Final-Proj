@@ -28,7 +28,7 @@ from pydantic import BaseModel
 
 from AIBuddy.models import *
 
-import ast
+import ast, random
 
 EMBED_MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
 embedding_model = HuggingFaceEmbeddings(model_name=EMBED_MODEL_NAME)
@@ -276,7 +276,9 @@ class CreateQuizView(APIView):
                 choicesNew = str(choicesNew)
                 quiz = Quizzes.objects.create(thread=thread, question=card.question.strip(), answer=card.answer.strip(), choices=choicesNew.strip())
                 # print(card.question, card.answer)
-                result.append({"question": card.question.strip(), "answer": card.answer.strip(), "choices": ast.literal_eval(choicesNew.strip())})
+                choicesNew = ast.literal_eval(choicesNew.strip())
+                random.shuffle(choicesNew)
+                result.append({"question": card.question.strip(), "answer": card.answer.strip(), "choices": choicesNew})
                 i += 1
             return Response({"quizzes": result}, status=200)
         except Exception as e:
@@ -290,7 +292,9 @@ class GetAllQuizzesView(APIView):
         cards = Quizzes.objects.filter(thread=thread)
         result = []
         for card in cards:
-            result.append({"question": card.question, "answer": card.answer, "choices": ast.literal_eval(card.choices)})
+            choices = ast.literal_eval(card.choices)
+            random.shuffle(choices)
+            result.append({"question": card.question, "answer": card.answer, "choices": choices})
         return Response({"quizzes": result}, status=200)
     
 class DeleteQuizView(APIView):
