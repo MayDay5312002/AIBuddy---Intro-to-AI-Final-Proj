@@ -1,0 +1,28 @@
+Final Project - Intro to AI
+
+**Prerequisites**:
+- ollama (https://ollama.com/); Ensure you have pulled a model
+- Node.js (https://nodejs.org/en)
+- Python (I used Python 3.11)
+
+**Instructions to run web app**:
+1. Install prerequisites
+2. Pull a model (I use llama3.1:8b; This process take a couple minutes)
+3. Check if you have a model with command: `ollama list`
+    - If you do not have a model then go back to 2
+4. `git clone https://github.com/MayDay5312002/AIBuddy---Intro-to-AI-Final-Proj.git` or download zip folder.
+5. Create a virtual environment directory in the root directory where requirements.txt is at. `python -m venv venv` (depends on your system)
+6. Activate your virtual environment `venv\Scripts\activate` or `source venv\bin\activate`
+7. Install requirements of venv by installing requirements.txt `pip install -r requirements.txt`
+8. Go to AIBuddy folder, then do `python manage.py makemigrations` and then do `python manage.py migrate` (This will setup database, but also cause installation of embedding model also)
+9. Go to AIBuddy/frontend folder, then install packages/modules by executing `npm install`. After installation, `npm run dev` to compile the frontend code of the web app.
+10. After doing everything, run the django server by going back to AIBuddy folder, then doing `python manage.py runserver`.
+11. Click the link for development server.
+    - http://127.0.0.1:8000/ (Most likely this is link for you where the app is running)
+
+- Note:
+    1. Depending on the system you are using, you might want to execute `python ...` or `python3 ...`
+    2. The Django server needs to running locally to see the intereact with web app.
+    3. Ensure you compiled the frontend code by doing `npm run dev` or `npm run build`
+    4. When choosing a model for this webapp, ensure you are referring with your hardware. If your system is using integrated graphics, you might want to pull models with a smaller parameters, but if you have a dedicated graphics you can pull models depending on you VRAM. 
+    5. Usually models with higher parameters have better performance.
