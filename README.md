@@ -1,4 +1,4 @@
-Final Project - Intro to AI
+Final Project - Intro to AI (Luke Evarretta)
 
 **Prerequisites**:
 - ollama (https://ollama.com/); Ensure you have pulled a model
