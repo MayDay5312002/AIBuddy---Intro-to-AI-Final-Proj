@@ -1,4 +1,4 @@
-Final Project - Intro to AI (Luke Evarretta)
+***Final Project - Intro to AI (Luke Evarretta)***
 
 **Prerequisites**:
 - ollama (https://ollama.com/); Ensure you have pulled a model
@@ -22,6 +22,19 @@ Final Project - Intro to AI (Luke Evarretta)
 12. After doing all the setup above, you can just `python manage.py runserver` to run the web app again.
 13. To quit running the web app, simply `CNTRL+C` in the command lin where the Django server is running. This will shutdown the Django server.
 
+**How to use the web app:**
+1. Choose input type
+    + If you want to input a file pick "Upload a file"
+    + If you want to input a youtube video pick "Enter a youtube URl"
+2. Input the file or url
+3. Submit the file or url
+4. Wait for a "success" response and it will show what is stored in vector store/DB
+5. Select or create a thread with [ + ] button.
+    + You can also delete thread with thrash can button
+6. Ensure you have selected your thread
+7. You can toggle each execution type to see what was in each feature if there is content (Explanation, Flashcards, Quizzes)
+8. If you want enter a prompt, go ahead, make sure you selected the correct execution type, whether to explain that prompt, create flash cards about that prompt, or create quiz questions regarding that prompt (These will be based on the content you uploaded/submitted)
++ Each thread would have its own FlashCards, quizzes, and messages, so ensure you are naming the thread correctly.
 - Note:
     1. Depending on the system you are using, you might want to execute `python ...` or `python3 ...`
     2. The Django server needs to running locally to see the intereact with web app.
