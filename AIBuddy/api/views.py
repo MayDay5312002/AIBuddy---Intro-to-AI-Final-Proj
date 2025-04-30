@@ -83,15 +83,13 @@ class GetTextView(APIView):
                 vectorStore = FAISS.from_documents(docs, embedding_model)
 
             elif url:
-                print(url)
                 if not ("youtu.be" in url.lower()):
                     if not ("youtube.com" in url.lower()):
-                        print("Invalid URL")
-                        return Response({"error": "Invalid URL"}, status=400) 
+                        return Response({"error": "Invalid URL"}, status=400)
                 video_id = get_youtube_video_id(url)
                 transcript = YouTubeTranscriptApi.get_transcript(video_id)
                 text = "\n".join([i['text'].strip() for i in transcript])
-                print(text)
+                print(f"Transcript: {text[:500]}")  # Check first 500 characters for issues
                 text_splitter = RecursiveCharacterTextSplitter(
                     chunk_size=500,
                     chunk_overlap=50
