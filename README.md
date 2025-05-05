@@ -10,7 +10,7 @@
 2. Pull a model (I use llama3.1:8b; This process take a couple minutes)
 3. Check in terminal if you have a model with command: `ollama list`
     - If you do not have a model then go back to 2
-4. `git clone https://github.com/MayDay5312002/AIBuddy---Intro-to-AI-Final-Proj.git` or download zip folder.
+4. `git clone https://github.com/MayDay5312002/AIBuddy---Intro-to-AI-Final-Proj.git` or extract the zip file "AIBuddy---Intro-to-AI-Final-Proj.zip".
 5. Create a virtual environment directory in the root directory where requirements.txt is at. `python -m venv venv` (depends on your system)
 6. Activate your virtual environment `venv\Scripts\activate` or `source venv\bin\activate`
 7. Install requirements of venv by installing requirements.txt `pip install -r requirements.txt`
