@@ -86,9 +86,17 @@ class GetTextView(APIView):
                 if not ("youtu.be" in url.lower()):
                     if not ("youtube.com" in url.lower()):
                         return Response({"error": "Invalid URL"}, status=400)
-                video_id = get_youtube_video_id(url)
-                transcript = YouTubeTranscriptApi.get_transcript(video_id)
-                text = "\n".join([i['text'].strip() for i in transcript])
+                video_id_str = get_youtube_video_id(url)
+
+                ##############OLD################
+                # transcript = YouTubeTranscriptApi.get_transcript(video_id)
+                # text = "\n".join([i['text'].strip() for i in transcript])
+
+                fetched_transcript = YouTubeTranscriptApi().fetch(video_id=video_id_str)
+                print(len(fetched_transcript))
+                text = ""
+                for snippet in fetched_transcript:
+                    text += f"{snippet.text}\n"
                 print(f"Transcript: {text[:500]}")  # Check first 500 characters for issues
                 text_splitter = RecursiveCharacterTextSplitter(
                     chunk_size=500,
