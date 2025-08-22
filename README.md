@@ -3,9 +3,9 @@
 **Prerequisites**:
 - ollama (https://ollama.com/); Ensure you have pulled a model
 - Node.js (https://nodejs.org/en)
-- Python (I used Python 3.11)
-- Java 11+
-- Microsoft C++ Build Tools
+- Python (I used Python 3.13) (https://www.python.org/downloads/)
+- Java 11+ (https://www.oracle.com/java/technologies/downloads/)
+- Microsoft C++ Build Tools (https://visualstudio.microsoft.com/visual-cpp-build-tools/)
 
 **Instructions to run web app**:
 1. Install prerequisites
