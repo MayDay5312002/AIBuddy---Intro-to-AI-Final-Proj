@@ -31,7 +31,7 @@
 12. After doing all the setup above, you can just `python manage.py runserver` to run the web app again.
 13. To quit running the web app, simply `CNTRL+C` in the command lin where the Django server is running. This will shutdown the Django server.
 
-**Optional - To install electron to make the web app a desktop app:**
+**SOON!! SOON!! |  Optional - To install electron to make the web app a desktop app:**
 1. Go to the AIBuddy\desktop and then `npm install`
 2. After installing everything, simply do `npm start` to start the desktop application
 + Note: You do not have to `python manage.py runserver`. Simply just `npm start`.
