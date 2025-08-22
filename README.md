@@ -4,6 +4,8 @@
 - ollama (https://ollama.com/); Ensure you have pulled a model
 - Node.js (https://nodejs.org/en)
 - Python (I used Python 3.11)
+- Java 11+
+- Microsoft C++ Build Tools
 
 **Instructions to run web app**:
 1. Install prerequisites
@@ -21,6 +23,11 @@
     - http://127.0.0.1:8000/ (Most likely this is link for you where the app is running)
 12. After doing all the setup above, you can just `python manage.py runserver` to run the web app again.
 13. To quit running the web app, simply `CNTRL+C` in the command lin where the Django server is running. This will shutdown the Django server.
+
+**Optional - To install electron to make the web app a desktop app:**
+1. Go to the AIBuddy\desktop and then `npm install`
+2. After installing everything, simply do `npm start` to start the desktop application
++ Note: You do not have to `python manage.py runserver`. Simply just `npm start`.
 
 **How to use the web app:**
 1. Choose input type
@@ -41,6 +48,8 @@
     3. Ensure you compiled the frontend code by doing `npm run dev` or `npm run build`
     4. When choosing a model for this webapp, ensure you are referring with your hardware. If your system is using integrated graphics, you might want to pull models with a smaller parameters, but if you have a dedicated graphics you can pull models depending on you VRAM. 
     5. Usually models with higher parameters have better performance.
+
+
 
 
 
