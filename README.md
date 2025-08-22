@@ -7,6 +7,13 @@
 - Java 11+ (https://www.oracle.com/java/technologies/downloads/)
 - Microsoft C++ Build Tools (https://visualstudio.microsoft.com/visual-cpp-build-tools/)
 
+**How install ollama and pull a model**
+1. Install ollama (https://ollama.com/)
+2. After installation, simply do `ollama pull nameOfModel`
+    + Here some models you can pull: https://ollama.com/search
+3. To see if the model is succefully pulled, simply do `ollama list`. With this command, you will see all the models you have currently.
+- For more guide https://github.com/ollama/ollama/blob/main/README.md#quickstart
+
 **Instructions to run web app**:
 1. Install prerequisites
 2. Pull a model (I use llama3.1:8b; This process take a couple minutes)
