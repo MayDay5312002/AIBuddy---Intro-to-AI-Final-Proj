@@ -17,7 +17,7 @@
 6. Activate your virtual environment `venv\Scripts\activate` or `source venv\bin\activate`
 7. Install requirements of venv by installing requirements.txt `pip install -r requirements.txt`
 8. Go to AIBuddy folder, then do `python manage.py makemigrations` and then do `python manage.py migrate` (This will setup database, but also cause installation of embedding model also)
-9. Go to AIBuddy/frontend folder, then install packages/modules by executing `npm install`. After installation, `npm run dev` to compile the frontend code of the web app.
+9. Go to AIBuddy/frontend folder, then install packages/modules by executing `npm install`. After installation, `npm run dev` or `npm run build` to compile the frontend code of the web app.
 10. After doing everything, run the django server by going back to AIBuddy folder, then doing `python manage.py runserver`.
 11. Click the link for development server to start running the web app.
     - http://127.0.0.1:8000/ (Most likely this is link for you where the app is running)
