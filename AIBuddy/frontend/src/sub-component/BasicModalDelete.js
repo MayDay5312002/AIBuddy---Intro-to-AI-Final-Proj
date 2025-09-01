@@ -53,7 +53,8 @@ export default function BasicModalDelete({threads, setThreads}) {
 
   return (
     <Box component={"span"}>
-      <Button onClick={handleOpen} sx={{mt: 1, color: "white", backgroundColor: "rgb(25, 118, 210)", mx: 1}}><DeleteIcon /></Button>
+      {/* <Button onClick={handleOpen} sx={{mt: 1, color: "white", backgroundColor: "rgb(25, 118, 210)", mx: 1}}><DeleteIcon /></Button> */}
+      <Button onClick={handleOpen} sx={{mt: 1, color: "white", backgroundColor: "rgb(25, 118, 210)", mx: 1}}>Delete Thread</Button>
       <Modal
         open={open}
         onClose={handleClose}

@@ -50,7 +50,8 @@ export default function BasicModalAdd({threads, setThreads}) {
 
   return (
     <Box component={"span"}>
-      <Button onClick={handleOpen} sx={{mt: 1, color: "white", backgroundColor: "rgb(25, 118, 210)"}}><AddIcon /></Button>
+      {/* <Button onClick={handleOpen} sx={{mt: 1, color: "white", backgroundColor: "rgb(25, 118, 210)"}}><AddIcon /></Button> */}
+      <Button onClick={handleOpen} sx={{mt: 1, color: "white", backgroundColor: "rgb(25, 118, 210)"}}>Create Thread</Button>
       <Modal
         open={open}
         onClose={handleClose}

@@ -45,6 +45,8 @@ const MainApp = () => {
 
     const [selectedAnswer, setSelectedAnswer] = useState('');
     const [isAnswerCorrect, setIsAnswerCorrect] = useState(null);
+    const [autoScrollEnabled, setAutoScrollEnabled] = useState(true); //State to control auto-scroll
+    const [errorResponseMsg, setErrorResponseMsg] = useState("");
 
     const handleChoiceClick = (choice, answer) => {
       setSelectedAnswer(choice);
@@ -95,6 +97,9 @@ const MainApp = () => {
 
     const handleSubmitFile = () => {
         setErrorResponse("");
+        setErrorResponseMsg('');//clear old error
+        setErrorResponse(<CircularProgress size={18} />)
+        setVectorStoreContent("");
         const formData = new FormData();
         if(inputType === "file"){
           if(file===null){
@@ -123,6 +128,7 @@ const MainApp = () => {
         .then((response) => {
             // console.log(response)
             // setResponse(response.data["msg"])
+            
             if(inputType === "file"){
               setVectorStoreContent(file.name)
             }
@@ -187,6 +193,7 @@ const MainApp = () => {
 
 
     const handleQuery = () => {
+      setErrorResponseMsg('');//clear old error
       setResponse(''); // clear old response
       setLoading(true);
       const eventSource = new EventSource('http://localhost:8000/api/chatStream/' + '?query=' + query + '&model=' + selectedModel + '&thread=' + selectedThread);
@@ -204,6 +211,7 @@ const MainApp = () => {
       eventSource.onerror = function(err) {
           console.error('EventSource failed:', err);
           // setReadToQuery(false)
+          setErrorResponseMsg("Error: " + err.message);
           setLoading(false);
           eventSource.close();
       };
@@ -223,6 +231,7 @@ const MainApp = () => {
         // console.log(response.data["cards"]);
         let newCards = [...flashCards, ...response.data["cards"]];
         setFlashCards(newCards);
+        // scrollToBottom();
       })
       .catch((error) => {
           setLoading(false);
@@ -238,6 +247,7 @@ const MainApp = () => {
         let newQuizzes = [...quizzes, ...response.data["quizzes"]];
         setQuizzes(newQuizzes);
         setLoading(false);
+        // scrollToBottom();
       })
       .catch((error) => {
           setLoading(false);
@@ -246,7 +256,8 @@ const MainApp = () => {
       
     }
 
-    useEffect(() => {
+    useEffect(() => { //Get flashcards and quizzes for a selected thread
+        setErrorResponseMsg('');//clear old error
         if(selectedThread !== ""){
           axios.get('http://127.0.0.1:8000/api/getFlashCards/' + '?thread=' + selectedThread).
           then((response) => {
@@ -267,19 +278,57 @@ const MainApp = () => {
 
     }, [selectedThread]);
 
-    useEffect(() => {
-      console.log(flashCards)
-    }, [flashCards])
+    // useEffect(() => {
+    //   console.log(flashCards)
+    // }, [flashCards])
 
-    useEffect(() => {
-      console.log("quizzes", quizzes)
-    }, [quizzes])
+    // useEffect(() => {
+    //   console.log("quizzes", quizzes)
+    // }, [quizzes])
     
 
     const handleRadioChange = (event) => {
       // setReadToQuery(false);
       setInputType(event.target.value);
-  };
+    };
+
+    useEffect(() => {// auto scroll
+    function onScroll() {
+        const scrollPosition = window.innerHeight + window.pageYOffset; // window.pageYOffset =  number of pixels the document has been scrolled vertically from the top.
+                                                                        // window.innerHeight = height of the visible viewport
+        const bottomPosition = document.documentElement.scrollHeight; //gets the full height of the page
+        const distanceFromBottom = bottomPosition - scrollPosition;
+
+        if (distanceFromBottom < 100) {
+          // User is near bottom, enable auto-scroll
+          setAutoScrollEnabled(true);
+        } else {
+          // User scrolled up, disable auto-scroll
+          setAutoScrollEnabled(false);
+        }
+      }
+
+      window.addEventListener("scroll", onScroll);
+      return () => window.removeEventListener("scroll", onScroll);
+    }, []);
+    
+
+    useEffect(() => {
+      if (response && autoScrollEnabled) {
+        window.scrollTo({
+          top: document.documentElement.scrollHeight,
+          behavior: "smooth",//optional for smooth scrolling
+        });
+      }
+    }, [response, autoScrollEnabled]);
+
+
+    const scrollToBottom = () => {
+      window.scrollTo({
+        top: document.documentElement.scrollHeight,
+        behavior: "smooth", // optional for smooth scrolling animation
+      });
+    };
 
     return (
       <div >
@@ -372,7 +421,7 @@ const MainApp = () => {
             </Typography>
 
             <Divider sx={{mt: "1em"}}/> 
-
+            {/* <hr style={{width: "100%", border: "1px solid #e0e0e0", height: "0.1em"}}/> */}
             <Box display="flex" flexDirection="column" gap={1} width={300}>
               <Box>
                 <BasicModalAdd  threads={threads} setThreads={setThreads} />
@@ -385,6 +434,7 @@ const MainApp = () => {
                 value={selectedThread}
                 onChange={handleSelectChange}
                 fullWidth
+                sx={{mt: "0.5em"}}
               >
                 {threads.map((thread, index) => (
                   <MenuItem key={index} value={thread}>
@@ -442,6 +492,7 @@ const MainApp = () => {
               {(loading) ? <CircularProgress size={24} /> : ""}
             </IconButton>
             <Typography variant="caption" sx={{display: "block",  height: "0.5em", my:"0.2em", fontStyle: "italic"}}>Note: Please ensure Thread and File/URL are set to submit prompt.</Typography>
+            <Typography sx={{display: "block", color: "red", height: "0.5em", my:"0.2em"}}>{errorResponseMsg}</Typography>
             {/* <Typography variant="h5" sx={{fontWeight: "bold"}}>{response}</Typography> */}
         </Paper>
         {response && executionType === "Explain simply" &&

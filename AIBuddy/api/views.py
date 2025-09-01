@@ -144,7 +144,7 @@ def chatWithFile(request):
         # modelName = request.GET.get("model")
         # results = query_vectorstore(query)
         finalResponse = ""
-        message = f"Give an elaborate response to the following prompt and content(prompt and content might be not connected to previous conversations).\n\nAnswer this prompt: {query}\n\nContent: {results}"
+        message = f"Read the following prompt and content carefully. Provide a comprehensive, detailed, and well-structured response to the prompt, directly utilizing the supplied content for support and context. Clearly explain your reasoning, cite specific information from the content, and organize your answer with appropriate headings, bullet points, or lists as needed for readability. If any aspect is unclear, state your assumptions. Do not reference prior conversations—focus only on the information provided.\nPrompt:{query}\nContent:{results}"
         stream = chat(model=modelName, 
             messages=messagesUser + [{"role": "user", "content": message}],
             stream=True)
