@@ -8,6 +8,6 @@ start /b python manage.py runserver
 
 cd .\desktop
 
-npm start
+call npm start
 
 pause

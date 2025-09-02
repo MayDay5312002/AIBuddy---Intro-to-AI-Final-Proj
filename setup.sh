@@ -27,12 +27,12 @@ python manage.py migrate
 
 # Install frontend npm dependencies
 cd ../frontend || exit
-npm install
-npm run build
+npm install &
+npm run build &
 
 # Install desktop npm dependencies
 cd ../desktop || exit
-npm install
+npm install &
 
 # Keep terminal open (optional)
 read -p "Press enter to continue"
