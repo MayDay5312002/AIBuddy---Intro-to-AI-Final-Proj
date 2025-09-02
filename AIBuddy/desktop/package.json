@@ -2,14 +2,29 @@
   "name": "desktop",
   "version": "1.0.0",
   "main": "runnable.js",
+  "build": {
+    "appId": "com.example.myapp",
+    "productName": "AI Study Companion",
+    "win": {
+      "target": "nsis",
+      "icon": "icon.ico"
+    },
+    "files": [
+      "dist/**/*",
+      "runnable.js",
+      "package.json"
+    ]
+  },
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "dist": "electron-builder"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "devDependencies": {
-    "electron": "^36.0.0"
+    "electron": "^36.8.1",
+    "electron-builder": "^26.0.12"
   }
 }
