@@ -27,7 +27,7 @@
 - Windows:
     - Run the `start.bat`, then wait for application to load and appear on screen.
 - Linux/MacOS:
-    - Run the `start.sh`, then wait for application to load and appear on screen.
+    - Run the `start.sh` by doing `sh start.sh`, then wait for application to load and appear on screen.
 
 **To stop/exit application**:
 - Web application:
