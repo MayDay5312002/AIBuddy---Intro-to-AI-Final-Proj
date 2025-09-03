@@ -35,7 +35,7 @@ python manage.py makemigrations
 python manage.py migrate
 
 # Install frontend npm dependencies
-cd ../frontend || exit
+cd ./frontend || exit
 npm install 
 npm run build 
 
