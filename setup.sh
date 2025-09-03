@@ -35,4 +35,4 @@ cd ../desktop || exit
 npm install 
 
 # Keep terminal open (optional)
-# read -p "Press enter to continue"
+read -p "Press enter to continue"
