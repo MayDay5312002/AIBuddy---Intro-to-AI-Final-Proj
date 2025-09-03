@@ -18,7 +18,7 @@
 - Windows installation:
     - Run `setup.bat`
 - Linux/MacOS installation:
-    - Run `setup.sh` by doing `sh start.sh`.
+    - Run `setup.sh` by doing `sh setup.sh`.
 
 **How to run the application**
 - Web Application:
