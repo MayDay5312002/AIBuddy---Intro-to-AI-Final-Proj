@@ -33,7 +33,6 @@ const MainApp = () => {
     const [quizzes, setQuizzes] = useState([]);
 
     const [loading, setLoading] = useState(false);
-    // const []
 
     const [selectedModel, setSelectedModel] = useState("");
 
@@ -46,7 +45,7 @@ const MainApp = () => {
     const [selectedAnswer, setSelectedAnswer] = useState('');
     const [isAnswerCorrect, setIsAnswerCorrect] = useState(null);
     const [autoScrollEnabled, setAutoScrollEnabled] = useState(true); //State to control auto-scroll
-    const [errorResponseMsg, setErrorResponseMsg] = useState("");
+    const [errorResponseMsg, setErrorResponseMsg] = useState(""); //for when generating response
 
     const handleChoiceClick = (choice, answer) => {
       setSelectedAnswer(choice);
@@ -79,9 +78,9 @@ const MainApp = () => {
     const handleFileChange = (event) => {
         const fileTemp = event.target.files[0];
         if (fileTemp) {
-        //   console.log("Selected file:", file.name);
+          // console.log("Selected file:", file.name);
           setFile(fileTemp)
-        //   console.log(file)
+          // console.log(file)
           // You can now upload or process the file
         }
     };
@@ -143,7 +142,7 @@ const MainApp = () => {
         .catch((error) => {
             setColorOfResponse("red")
             setErrorResponse("Error")
-            console.error("Error uploading file:", error);
+            // console.error("Error uploading file:", error);
         });
     }
 
@@ -153,7 +152,8 @@ const MainApp = () => {
         setFlashCards(flashCards.filter(card => card.title !== titleCard));
       })
       .catch((error) => {
-          console.error("Error uploading file:", error);
+          setErrorResponseMsg("Error: " + error.message);
+          // console.error("Error uploading file:", error);
       });
     }
 
@@ -163,7 +163,8 @@ const MainApp = () => {
         setQuizzes(quizzes.filter(quiz => quiz.question !== question));
       })
       .catch((error) => {
-        console.error("Error uploading file:", error);
+        setErrorResponseMsg("Error: " + error.message);
+        // console.error("Error uploading file:", error);
       })
     }
 
@@ -177,7 +178,8 @@ const MainApp = () => {
             setSelectedModel(response.data["models"][0])
         })
         .catch((error) => {
-            console.error("Error uploading file:", error);
+            setErrorResponseMsg("Error: " + error.message);
+            // console.error("Error uploading file:", error);
         })
 
         axios.get('http://127.0.0.1:8000/api/getThreads/')
@@ -185,7 +187,8 @@ const MainApp = () => {
             setThreads(response.data["threads"]);
         })
         .catch((error) => {
-            console.error("Error uploading file:", error);
+            setErrorResponseMsg("Error: " + error.message);
+            // console.error("Error uploading file:", error);
         })
 
         // axios.get('http://127.0.0.1:8000/api/getQuizzes/' + '?thread=' + selectedThread)
@@ -201,7 +204,7 @@ const MainApp = () => {
       eventSource.onmessage = function(event) {
           if (event.data === "[DONE]") {
               eventSource.close();
-              console.log("DONE!!");
+              // console.log("DONE!!");
               setLoading(false);
               return;
           }
@@ -209,7 +212,7 @@ const MainApp = () => {
       };
     
       eventSource.onerror = function(err) {
-          console.error('EventSource failed:', err);
+          // console.error('EventSource failed:', err);
           // setReadToQuery(false)
           setErrorResponseMsg("Error: " + err.message);
           setLoading(false);
@@ -235,7 +238,8 @@ const MainApp = () => {
       })
       .catch((error) => {
           setLoading(false);
-          console.error("Error uploading file:", error);
+          setErrorResponseMsg("Error: " + error.message);
+          // console.error("Error uploading file:", error);
       })
     }
 
@@ -243,7 +247,7 @@ const MainApp = () => {
       setLoading(true);
       axios.post('http://127.0.0.1:8000/api/createQuiz/', {"query": query, "model": selectedModel, "thread": selectedThread, "number": numberEx}).
       then((response) => {
-        console.log("quizzes type: ", typeof response.data["quizzes"], "quizzes: ", response.data["quizzes"]);
+        // console.log("quizzes type: ", typeof response.data["quizzes"], "quizzes: ", response.data["quizzes"]);
         let newQuizzes = [...quizzes, ...response.data["quizzes"]];
         setQuizzes(newQuizzes);
         setLoading(false);
@@ -251,7 +255,8 @@ const MainApp = () => {
       })
       .catch((error) => {
           setLoading(false);
-          console.error("Error uploading file:", error);
+          setErrorResponseMsg("Error: " + error.message);
+          // console.error("Error uploading file:", error);
       })
       
     }
@@ -264,7 +269,7 @@ const MainApp = () => {
             setFlashCards(response.data["cards"]);
           })
           .catch((error) => {
-              console.error("Error uploading file:", error);
+              // console.error("Error uploading file:", error);
           })
 
           axios.get('http://127.0.0.1:8000/api/getQuizzes/' + '?thread=' + selectedThread)
@@ -272,18 +277,18 @@ const MainApp = () => {
             setQuizzes(response.data["quizzes"]);
           })
           .catch((error) => {
-              console.error("Error uploading file:", error);
+              // console.error("Error uploading file:", error);
           })
         }
 
     }, [selectedThread]);
 
     // useEffect(() => {
-    //   console.log(flashCards)
+      // console.log(flashCards)
     // }, [flashCards])
 
     // useEffect(() => {
-    //   console.log("quizzes", quizzes)
+      // console.log("quizzes", quizzes)
     // }, [quizzes])
     
 
@@ -321,6 +326,7 @@ const MainApp = () => {
         });
       }
     }, [response, autoScrollEnabled]);
+
 
 
     const scrollToBottom = () => {
@@ -376,9 +382,10 @@ const MainApp = () => {
                 ))}
               </Select>
             </FormControl>
+            <Divider sx={{mb:"1em"}}/>
             {inputType === "file" &&
             <Box>
-              <Typography variant="h7" sx={{mb: "0.5em", display: "block"}}>Upload file for vector store</Typography>
+              <Typography variant="h7" sx={{mb: "0.5em", display: "block", }}>Upload file</Typography>
               <input
                 accept="*"
                 type="file"
@@ -398,7 +405,7 @@ const MainApp = () => {
             }
             {inputType === "url" && 
             <>
-              <Typography variant="h7" sx={{mb: "0.5em", display: "block"}}>Enter Youtube URL for vector store</Typography>
+              <Typography variant="h7" sx={{mb: "0.5em", display: "block"}}>Enter Youtube URL</Typography>
               <TextField
                 label="Enter Youtube URL"
                 variant="outlined"
@@ -412,7 +419,7 @@ const MainApp = () => {
             <Button variant="contained" component="span" onClick={handleSubmitFile} sx={{mt: "1em"}}>
                 Submit {(inputType === "file") ? "File" : "Youtube URL"}
             </Button>
-            <Typography variant="caption" sx={{display: "block", color: colorOfResponse, height: "0.5em", my:"0.2em"}}>{errorResponse}</Typography> 
+            <Typography variant="caption" sx={{display: "block", color: colorOfResponse, height: "0.5em", my:"0.5em"}}>{errorResponse}</Typography> 
 
             <Divider sx={{mt: "1em"}}/>
             
@@ -492,7 +499,7 @@ const MainApp = () => {
               {(loading) ? <CircularProgress size={24} /> : ""}
             </IconButton>
             <Typography variant="caption" sx={{display: "block",  height: "0.5em", my:"0.2em", fontStyle: "italic"}}>Note: Please ensure Thread and File/URL are set to submit prompt.</Typography>
-            <Typography sx={{display: "block", color: "red", height: "0.5em", my:"0.2em"}}>{errorResponseMsg}</Typography>
+            <Typography variant="body2" sx={{display: "block", color: "red", height: "0.5em", my:"0.2em", }}>{errorResponseMsg}</Typography>
             {/* <Typography variant="h5" sx={{fontWeight: "bold"}}>{response}</Typography> */}
         </Paper>
         {response && executionType === "Explain simply" &&
@@ -508,8 +515,10 @@ const MainApp = () => {
             overflow: "auto"
           }}
           >
-            <Typography variant="h5" sx={{fontWeight: "bold", color: "green"}}> Response</Typography>
-            <Typography variant="h6" sx={{fontWeight: "500"}}>{response}</Typography>
+            <Typography variant="h5" sx={{fontWeight: "bold", color: "green"}}>Response</Typography>
+              <Typography variant="h6" sx={{ fontWeight: "500"}} >
+                <span dangerouslySetInnerHTML={{ __html: response }} /> 
+              </Typography>
           </Paper>
         }
         {selectedThread !== "" && executionType === "Create flash cards" && flashCards != [] &&
