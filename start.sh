@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # Check if 'python3' is available and is Python 3
 if command -v python3 >/dev/null 2>&1; then
@@ -17,7 +17,7 @@ else
 fi
 
 # Activate virtual environment
-source venv/bin/activate
+. venv/bin/activate
 
 cd AIBuddy
 

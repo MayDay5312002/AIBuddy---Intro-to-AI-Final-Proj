@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 # Check if python3 or python command exists
 if command -v python3 &>/dev/null; then
   PYTHON=python3
