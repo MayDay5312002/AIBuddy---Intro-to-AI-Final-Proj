@@ -44,5 +44,4 @@ cd ../desktop || exit
 npm install 
 
 # Keep terminal open (optional)
-echo "Press Enter to continue..."
-wait
+echo "FINIHED!!"
