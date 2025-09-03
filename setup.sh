@@ -9,13 +9,22 @@ else
   exit 1
 fi
 
+if command -v pip3 &>/dev/null; then
+  PIP=pip3
+elif command -v pip &>/dev/null; then
+  PIP=pip
+else
+  echo "pip is not installed."
+  exit 1
+fi
+
 # Create virtualenv if not exists
 if [ ! -d "venv" ]; then
   $PYTHON -m venv venv
 fi
 
 # Activate virtualenv
-source venv/bin/activate
+. venv/bin/activate
 
 # Install python dependencies
 pip install -r requirements.txt
