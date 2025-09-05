@@ -31,11 +31,10 @@ pip install -r requirements.txt
 
 # Change to Django app folder and run migrations
 cd AIBuddy || exit
-python manage.py makemigrations
-python manage.py migrate
-
 cd models
 call git clone https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2
+python manage.py makemigrations
+python manage.py migrate
 cd ..
 
 # Install frontend npm dependencies

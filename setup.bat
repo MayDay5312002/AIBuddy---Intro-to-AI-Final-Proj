@@ -6,11 +6,11 @@ call venv\Scripts\activate.bat
 call python -m pip install -r requirements.txt
 
 cd AIBuddy
+cd models
+call git clone https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2
 call python manage.py makemigrations
 call python manage.py migrate
 
-cd models
-call git clone https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2
 
 cd ..
 
