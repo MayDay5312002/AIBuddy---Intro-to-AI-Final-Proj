@@ -1,6 +1,7 @@
 ***Final Project - Intro to AI (Luke Evarretta)***
 
 **Prerequisites**:
+- git (https://git-scm.com/downloads)
 - ollama (https://ollama.com/); Ensure you have pulled a model
 - Node.js (https://nodejs.org/en)
 - Python (I used Python 3.13) (https://www.python.org/downloads/)
@@ -15,6 +16,7 @@
 - For more guide https://github.com/ollama/ollama/blob/main/README.md#quickstart
 
 **Instructions to install application**:
++ Note: Ensure you have internet connection.
 - Windows installation:
     - Run `setup.bat`
 - Linux/MacOS installation:
@@ -58,6 +60,7 @@
     3. Ensure you compiled the frontend code by doing `npm run dev` or `npm run build`
     4. When choosing a model for this web app, ensure you are referring with your hardware. If your system is using integrated graphics, you might want to pull models with a smaller parameters, but if you have a dedicated graphics you can pull models depending on you VRAM. 
     5. Usually models with higher parameters have better performance.
+    6. Youtube Transcript needs internet connection.
 
 
 
