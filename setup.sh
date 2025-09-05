@@ -34,6 +34,10 @@ cd AIBuddy || exit
 python manage.py makemigrations
 python manage.py migrate
 
+cd models
+call git clone https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2
+cd ..
+
 # Install frontend npm dependencies
 cd ./frontend || exit
 npm install 

@@ -19,6 +19,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
 # from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_huggingface import HuggingFaceEmbeddings
+# from sentence_transformers import SentenceTransformer
 
 from langchain.docstore.document import Document
 
@@ -30,8 +31,9 @@ from AIBuddy.models import *
 
 import ast, random
 
-EMBED_MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
-embedding_model = HuggingFaceEmbeddings(model_name=EMBED_MODEL_NAME)
+# EMBED_MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
+embedding_model = HuggingFaceEmbeddings(model_name="./models/all-MiniLM-L6-v2")
+
 
 import os
 # Create your views here.
@@ -73,7 +75,7 @@ class GetTextView(APIView):
                 text = fileExtractor(saved_path)
                 text = '\n'.join(text.split('\n\n'))
                 # print(saved_path)
-                print(text)
+                # print(text)
                 default_storage.delete(saved_path)
                 text_splitter = RecursiveCharacterTextSplitter(
                     chunk_size=500,

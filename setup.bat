@@ -3,11 +3,16 @@ if not exist venv (
   python -m venv venv
 )
 call venv\Scripts\activate.bat
-python -m pip install -r requirements.txt
+call python -m pip install -r requirements.txt
 
 cd AIBuddy
-python manage.py makemigrations
-python manage.py migrate
+call python manage.py makemigrations
+call python manage.py migrate
+
+cd models
+call git clone https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2
+
+cd ..
 
 cd frontend
 call npm install
