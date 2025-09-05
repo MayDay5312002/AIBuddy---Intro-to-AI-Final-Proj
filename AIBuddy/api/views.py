@@ -36,7 +36,6 @@ embedding_model = HuggingFaceEmbeddings(model_name="./models/all-MiniLM-L6-v2")
 
 
 import os
-os.environ["TIKA_SERVER_JAR"] = "./tika/tika-server.jar"
 # Create your views here.
 
 
