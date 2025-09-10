@@ -66,6 +66,18 @@ class QuizCards(BaseModel):
 class GetTextView(APIView):
     def post(self, request):
         # print(request.data["rat"])
+        """
+        Given a file or a YouTube URL, upload the file and extract its text or fetch the YouTube video's transcript, and store it in the global vectorStore variable.
+
+        Args:
+            request (Request): a Django request object
+
+        Returns:
+            Response: a Django response object with a JSON containing an error message if there is an error or a success message if there is no error.
+
+        Raises:
+            Exception: if there is an error with the file upload or YouTube video fetching
+        """
         global vectorStore
         try:
             url = request.data.get("url")
@@ -132,6 +144,13 @@ class GetTextView(APIView):
     
 
 def chatWithFile(request):
+    """
+    This function takes a query, modelName, and thread as parameters and returns a text/event-stream response.
+    The event stream will contain the response from the AI model to the given query.
+    The first message will be the prompt and content, followed by the AI model's response.
+
+    The function also saves the query and response to the Message model for the given thread.
+    """
     query = request.GET.get("query")
     modelName = request.GET.get("model")
     thread = request.GET.get("thread")
@@ -140,6 +159,7 @@ def chatWithFile(request):
     messagesUser = Message.objects.filter(thread=thread).order_by("created_at")
     messagesUser = [{"role": msg.role, "content": msg.content} for msg in messagesUser]
     results = query_vectorstore(query)
+    results = [chunk.page_content for chunk in results] #We dont have to include the metadata
     # finalResponse = ""
     def event_stream():
         global vectorStore
@@ -148,6 +168,7 @@ def chatWithFile(request):
         # results = query_vectorstore(query)
         finalResponse = ""
         message = f"Read the following prompt and content carefully. Provide a comprehensive, detailed, and well-structured response to the prompt, directly utilizing the supplied content for support and context. Clearly explain your reasoning and organize your answer with appropriate headings, bullet points, or lists as needed for readability. If any aspect is unclear, state your assumptions. Try not to reference prior conversations—focus only on the information provided.\n\nPrompt:{query}\nContent:{results}"
+        print(message)
         stream = chat(model=modelName, 
             messages=messagesUser + [{"role": "user", "content": message}],
             stream=True)
@@ -169,6 +190,16 @@ def chatWithFile(request):
 
 class CreateFlashCardsView(APIView):
     def post(self, request):
+        """
+        This function takes a query, modelName, thread, and number as parameters and returns a json response.
+        The json response will contain a list of flashcards with attributes title and content.
+        The function also saves the flashcards to the FlashCards model for the given thread.
+
+        The function also uses the chat function from the ollama library to generate the flashcards based on the query and content.
+        The chat function takes the query and content as input and returns a response that contains the flashcards.
+        The response is then validated using the FlashCardsList.model_validate_json function and the validated response is then used to create the flashcards.
+        The function also limits the number of flashcards created to the given number.
+        """
         query = request.data.get("query")
         modelName = request.data.get("model")
         thread = request.data.get("thread")
@@ -178,82 +209,24 @@ class CreateFlashCardsView(APIView):
         messagesUser = Message.objects.filter(thread=thread).order_by("created_at")
         messagesUser = [{"role": msg.role, "content": msg.content} for msg in messagesUser]
         results = query_vectorstore(query)
+        results = [chunk.page_content for chunk in results] #We dont have to include the metadata
         message = f"Create {number} flash card(s) with attributes title and content for the following prompt and content(Ensure you follow the number of cards that should be created).\n"
         message += f"Make it as concise as possible.\n\nprompt: {query}\nContent: {results}"
         response = chat(model=modelName, 
             messages=messagesUser + [{"role": "user", "content": message}],
-            format=FlashCardsList.model_json_schema())
-        Cards = FlashCardsList.model_validate_json(response["message"]["content"])
+            format=FlashCardsList.model_json_schema()) #gives the schema of the response in JSON format.
+        #type(response["message"]["content"]) == str
+        Cards = FlashCardsList.model_validate_json(response["message"]["content"])# Validates if the string follows the model schema then returns a FlashCardsList model, if not raises an exception
         result = []
         i = 0
         for card in Cards.cards:
             if FlashCards.objects.filter(thread=thread, title=card.title).exists() or i >= number:
                 continue
             flash = FlashCards.objects.create(thread=thread, title=card.title, content=card.content)
-            print(card.title, card.content)
+            # print(card.title, card.content)
             result.append({"title": card.title, "content": card.content})
             i += 1
         return Response({"cards": result}, status=200)
-        
-    
-class GetAllFlashCardsView(APIView):
-    def get(self, request):
-        thread = request.GET.get("thread")
-        thread = Thread.objects.get(title=thread)
-        cards = FlashCards.objects.filter(thread=thread)
-        result = []
-        for card in cards:
-            result.append({"title": card.title, "content": card.content})
-        return Response({"cards": result}, status=200)
-class GetAllModels(APIView):
-    def get(self, request):
-        models = ollama.list()
-        # for model in models.models:
-        #     print(model.model)
-        return Response({"models": [model.model for model in models.models]}, status=200)
-        # return Response({"msg": "This is a test"}, status=200)
-
-class CreateNewThreadView(APIView):
-    def post(self, request):
-        if Thread.objects.filter(title=request.data.get("title")).exists():
-            return Response({"message": "Thread already exists"}, status=400)
-        title = request.data.get("title")
-        thread = Thread.objects.create(title=title)
-        message = Message.objects.create(thread=thread, role="system", content="You are a helpful tutor that will respond in sentence and paragraph form.")
-        # print(thread)
-        return Response({"message": thread.id}, status=200)
-    
-class GetAllThreadView(APIView):
-    def get(self, request):
-        threads = Thread.objects.all()
-        return Response({"threads": [thread.title for thread in threads]}, status=200)
-    
-class DeleteThreadView(APIView):
-    def post(self, request):
-        thread = Thread.objects.get(title=request.data.get("title"))
-        thread.delete()
-        return Response({"message": "Thread deleted"}, status=200)
-    
-class DeleteFlashCardView(APIView):
-    def post(self, request):
-        thread = Thread.objects.get(title=request.data.get("thread"))
-        flashcard = FlashCards.objects.get(thread=thread, title=request.data.get("title"))
-        flashcard.delete()
-        return Response({"message": "Flashcard deleted"}, status=200)
-    
-
-class ModifyFlashCardView(APIView):
-    def post(self, request):
-        print(request.data.get("thread"))
-        print(request.data.get("oldTitle"))
-        print(request.data.get("title"))
-        print(request.data.get("content"))
-        thread = Thread.objects.get(title=request.data.get("thread"))
-        flashcard = FlashCards.objects.get(thread=thread, title=request.data.get("oldTitle"))
-        flashcard.title = request.data.get("title")
-        flashcard.content = request.data.get("content")
-        flashcard.save()
-        return Response({"message": "Flashcard modified"}, status=200)
     
 class CreateQuizView(APIView):
     def post(self, request):
@@ -264,16 +237,16 @@ class CreateQuizView(APIView):
             messagesUser = [{"role": msg.role, "content": msg.content} for msg in messagesUser]
             modelName = request.data.get("model")
             results = query_vectorstore(request.data.get("query"))
+            results = [chunk.page_content for chunk in results] #We dont have to include the metadata
             message = f"""Create a multiple choice questions with {number} quesition(s) and 4 choices for each question based on the following content, where 1 choice is the correct answer.\n
                         Format: List choices in alphabetical list.\n\n 
                         prompt: {request.data.get("query")}\n
                         Content: {results}"""
             response = chat(model=modelName,
                 messages=messagesUser + [{"role": "user", "content": message}],
-                format=QuizCards.model_json_schema())
-
-            print("test1")
-            QuizCardsInstance = QuizCards.model_validate_json(response["message"]["content"])
+                format=QuizCards.model_json_schema()) # gives the schema of the response in JSON format.
+            #type(response["message"]["content"]) == str
+            QuizCardsInstance = QuizCards.model_validate_json(response["message"]["content"]) # Validates if the string follows the model schema then returns a QuizCards model, if not raises an exception
             result = []
             i = 0
             for card in QuizCardsInstance.questions:
@@ -294,6 +267,60 @@ class CreateQuizView(APIView):
         except Exception as e:
             print(e)
             return Response({"message": "Error creating quiz"}, status=400)
+        
+    
+
+
+###############THREAD FUNCS##############
+class CreateNewThreadView(APIView):
+    def post(self, request):
+        if Thread.objects.filter(title=request.data.get("title")).exists():
+            return Response({"message": "Thread already exists"}, status=400)
+        title = request.data.get("title")
+        thread = Thread.objects.create(title=title)
+        message = Message.objects.create(thread=thread, role="system", content="You are a helpful tutor that will respond in sentence and paragraph form.")
+        # print(thread)
+        return Response({"message": thread.id}, status=200)
+    
+class GetAllThreadView(APIView):
+    def get(self, request):
+        threads = Thread.objects.all()
+        return Response({"threads": [thread.title for thread in threads]}, status=200)
+
+class DeleteThreadView(APIView):
+    def post(self, request):
+        thread = Thread.objects.get(title=request.data.get("title"))
+        thread.delete()
+        return Response({"message": "Thread deleted"}, status=200)
+    
+####################FLASHCARD FUNCS################
+class GetAllFlashCardsView(APIView):
+    def get(self, request):
+        thread = request.GET.get("thread")
+        thread = Thread.objects.get(title=thread)
+        cards = FlashCards.objects.filter(thread=thread)
+        result = []
+        for card in cards:
+            result.append({"title": card.title, "content": card.content})
+        return Response({"cards": result}, status=200)
+class DeleteFlashCardView(APIView):
+    def post(self, request):
+        thread = Thread.objects.get(title=request.data.get("thread"))
+        flashcard = FlashCards.objects.get(thread=thread, title=request.data.get("title"))
+        flashcard.delete()
+        return Response({"message": "Flashcard deleted"}, status=200)
+    
+
+class ModifyFlashCardView(APIView):
+    def post(self, request):
+        thread = Thread.objects.get(title=request.data.get("thread"))
+        flashcard = FlashCards.objects.get(thread=thread, title=request.data.get("oldTitle"))
+        flashcard.title = request.data.get("title")
+        flashcard.content = request.data.get("content")
+        flashcard.save()
+        return Response({"message": "Flashcard modified"}, status=200)
+    
+####################QUIZ FUNCS################
     
 class GetAllQuizzesView(APIView):
     def get(self, request):
@@ -313,6 +340,28 @@ class DeleteQuizView(APIView):
         quiz = Quizzes.objects.get(thread=thread, question=request.data.get("question"))
         quiz.delete()
         return Response({"message": "Quiz deleted"}, status=200)
+    
+class ModifyQuizView(APIView):
+    def post(self, request):
+
+        thread = Thread.objects.get(title=request.data.get("thread"))
+        quiz = Quizzes.objects.get(thread=thread, question=request.data.get("question"))
+        print(request.data.get("answer"))
+        quiz.question = request.data.get("question")
+        quiz.answer = request.data.get("answer")
+        quiz.choices = str(request.data.get("choices")).strip()
+        quiz.save()
+        return Response({"message": "Quiz modified"}, status=200)
+class DeleteQuizChoiceView(APIView):
+    def post(self, request):
+        thread = Thread.objects.get(title=request.data.get("thread"))
+        quiz = Quizzes.objects.get(thread=thread, question=request.data.get("question"))
+        answer = quiz.answer
+        if(answer not in request.data.get("choices")):
+            quiz.answer = ''
+        quiz.choices = str(request.data.get("choices")).strip()
+        quiz.save()
+        return Response({"message": "Choice deleted"}, status=200)
     
 
 
@@ -344,3 +393,11 @@ def get_youtube_video_id(url):
         query = urlparse(url).query
         return parse_qs(query).get("v", [None])[0]
     return None
+
+class GetAllModels(APIView):
+    def get(self, request):
+        models = ollama.list()
+        # for model in models.models:
+        #     print(model.model)
+        return Response({"models": [model.model for model in models.models]}, status=200)
+        # return Response({"msg": "This is a test"}, status=200)

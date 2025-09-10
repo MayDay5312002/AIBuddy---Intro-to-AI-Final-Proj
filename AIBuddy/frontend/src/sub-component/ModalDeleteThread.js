@@ -19,9 +19,9 @@ const style = {
 };
 
 
-export default function BasicModalDelete({threads, setThreads}) {
+export default function ModalDeleteThread({threads, setThreads}) {
 
-
+  
   const [open, setOpen] = useState(false);
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
@@ -30,6 +30,7 @@ export default function BasicModalDelete({threads, setThreads}) {
   const [selectedThread, setSelectedThread] = useState('');
 
 
+  
   const handleThreadDelete = async () => {
     axios.post("http://127.0.0.1:8000/api/deleteThread/", {"title": selectedThread})
     .then((response) => {
@@ -67,7 +68,7 @@ export default function BasicModalDelete({threads, setThreads}) {
           ...style, 
           borderRadius: 2, 
           border: "none", 
-          width: {xs:"80vw", sm: "60vw", md: "20vw"},
+          width: {xs:"80vw", sm: "60vw", md: "30vw"},
 
         }}>
           <Typography id="modal-modal-title" variant="h5" component="h2" sx={{fontWeight: 500}}>

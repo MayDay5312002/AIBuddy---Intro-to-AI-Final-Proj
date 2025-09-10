@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Box, Button, Typography, TextField, Modal, Divider, IconButton} from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import axios from 'axios';
@@ -19,18 +19,25 @@ const style = {
 };
 
 
-export default function ModalChangeCard({oldTitle, oldContent, setFlashCards, flashCards, thread_title}) {
+export default function ModalChangeFlashCard({oldTitle, oldContent, setFlashCards, flashCards, thread_title}) {
 
 
   const [open, setOpen] = useState(false);
   const handleOpen = () => setOpen(true);
-  const handleClose = () => setOpen(false);
+  const handleClose = () => {
+    setTitle(oldTitle);
+    setContent(oldContent);
+    setOpen(false);
+  }
 
   //use state for current variables
   const [ title , setTitle] = useState(oldTitle);
   const [ content , setContent] = useState(oldContent);
 
-
+  useEffect(() => {
+    setTitle(oldTitle);
+    setContent(oldContent);
+  }, [oldTitle, oldContent]);
 
   const handleThread = async () => {
     axios.post("http://127.0.0.1:8000/api/modifyFlashCard/", {"title": title,  "content": content, "thread": thread_title, "oldTitle": oldTitle})
@@ -64,7 +71,7 @@ export default function ModalChangeCard({oldTitle, oldContent, setFlashCards, fl
           ...style, 
           borderRadius: 2, 
           border: "none", 
-          width: {xs:"80vw", sm: "60vw", md: "20vw"},
+          width: {xs:"80vw", sm: "60vw", md: "30vw"},
 
         }}>
           <Typography id="modal-modal-title" variant="h5" component="h2" sx={{fontWeight: 500}}>

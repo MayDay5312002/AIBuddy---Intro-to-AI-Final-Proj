@@ -7,9 +7,10 @@ import { Button, TextField, Typography, Select, MenuItem, FormControl,
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 
-import BasicModalAdd from "../sub-component/BasicModalAdd.js";
-import BasicModalDelete from "../sub-component/BasicModalDelete.js";
-import ModalChangeCard from "../sub-component/ModalChangeCard.js";
+import ModalAddThread from "../sub-component/ModalAddThread.js";
+import ModalDeleteThread from "../sub-component/ModalDeleteThread.js";
+import ModalChangeFlashCard from "../sub-component/ModalChangeFlashCard.js";
+import ModalChangeQuiz from "../sub-component/ModalChangeQuiz.js";
 
 import axios from "axios";
 
@@ -46,10 +47,12 @@ const MainApp = () => {
     const [isAnswerCorrect, setIsAnswerCorrect] = useState(null);
     const [autoScrollEnabled, setAutoScrollEnabled] = useState(true); //State to control auto-scroll
     const [errorResponseMsg, setErrorResponseMsg] = useState(""); //for when generating response
+    const [indexQuizSelected , setIndexQuizSelected] = useState(-1);
 
-    const handleChoiceClick = (choice, answer) => {
+    const handleChoiceClick = (choice, answer, index) => {
       setSelectedAnswer(choice);
       setIsAnswerCorrect(choice === answer); // Check if selected answer is correct
+      setIndexQuizSelected(index);
     };
 
     
@@ -431,8 +434,8 @@ const MainApp = () => {
             {/* <hr style={{width: "100%", border: "1px solid #e0e0e0", height: "0.1em"}}/> */}
             <Box display="flex" flexDirection="column" gap={1} width={300}>
               <Box>
-                <BasicModalAdd  threads={threads} setThreads={setThreads} />
-                <BasicModalDelete  threads={threads} setThreads={setThreads} />
+                <ModalAddThread  threads={threads} setThreads={setThreads} />
+                <ModalDeleteThread  threads={threads} setThreads={setThreads} />
               </Box>
               {/* Dropdown to select thread */}
               <TextField
@@ -499,7 +502,7 @@ const MainApp = () => {
               {(loading) ? <CircularProgress size={24} /> : ""}
             </IconButton>
             <Typography variant="caption" sx={{display: "block",  height: "0.5em", my:"0.2em", fontStyle: "italic"}}>Note: Please ensure Thread and File/URL are set to submit prompt.</Typography>
-            <Typography variant="body2" sx={{display: "block", color: "red", height: "0.5em", my:"0.2em", }}>{errorResponseMsg}</Typography>
+            <Typography variant="body2" sx={{display: "block", color: "red", height: "0.5em", my:"0.2em", fontSize:"0.8em", my: "0.8em"}}>{errorResponseMsg}</Typography>
             {/* <Typography variant="h5" sx={{fontWeight: "bold"}}>{response}</Typography> */}
         </Paper>
         {response && executionType === "Explain simply" &&
@@ -543,7 +546,7 @@ const MainApp = () => {
                 <IconButton onClick={() => deleteCard(card["title"])} sx={{mx: 1}}>
                   <DeleteIcon />
                 </IconButton>
-                <ModalChangeCard oldTitle={card["title"]}  oldContent={card["content"]} setFlashCards={setFlashCards} flashCards={flashCards} thread_title={selectedThread}/>
+                <ModalChangeFlashCard oldTitle={card["title"]}  oldContent={card["content"]} setFlashCards={setFlashCards} flashCards={flashCards} thread_title={selectedThread}/>
                 <Divider sx={{ my: 1 }} />
                 <Typography variant="body1" sx={{ fontWeight: "400" }}>
                   {card["content"]}
@@ -568,25 +571,26 @@ const MainApp = () => {
           >
             <Typography variant="h5" sx={{fontWeight: "bold", color: "green", my: "1em", textAlign: "center"}}>Quizzes</Typography>
             {/* <Typography variant="h6" sx={{fontWeight: "500"}}>{response}</Typography> */}
-            {quizzes.map((quiz, index) => (
-              <Paper key={quiz.title} sx={{ p: 2, mb: 2, display: "inline-block", mx: 1}}>
+            {quizzes.map((quiz, indexQuiz) => (
+              <Paper key={quiz.question} sx={{ p: 2, mb: 2, display: "inline-block", mx: 1}}>
                 <Typography variant="h6" sx={{ fontWeight: "500" }} component={"span"}>
                   {quiz["question"]}
                 </Typography>
                 <IconButton onClick={() => deleteQuiz(quiz["question"])} sx={{mx: 1}}>
                   <DeleteIcon />
                 </IconButton>
-                {/* <ModalChangeQuiz oldTitle={quiz["title"]}  oldContent={quiz["content"]} setFlashCards={setQuizzes} flashCards={quizzes} thread_title={selectedThread}/> */}
+                <ModalChangeQuiz oldAnswer={quiz.answer} oldQuestion={quiz.question} oldChoices={quiz.choices} setQuizzes={setQuizzes} quizzes={quizzes} thread_title={selectedThread}/>
                 <Divider sx={{ my: 1 }} />
                 <List>
                   {quiz.choices.map((choice, index) => (
                     <ListItem
-                      key={index}
-                      button
-                      onClick={() => handleChoiceClick(choice, quiz.answer)}  
+                      key={choice}
+                      component={"button"}
+                      onClick={() => handleChoiceClick(choice, quiz.answer, indexQuiz)}  
                       sx={{
+                        // Need to fix this. It shows color of the same choice(s) in diff questions
                         backgroundColor:
-                          selectedAnswer === choice
+                          selectedAnswer === choice && indexQuizSelected === indexQuiz
                             ? isAnswerCorrect
                               ? 'lightgreen'
                               : 'lightcoral'
