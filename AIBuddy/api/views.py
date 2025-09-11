@@ -319,6 +319,12 @@ class ModifyFlashCardView(APIView):
         flashcard.content = request.data.get("content")
         flashcard.save()
         return Response({"message": "Flashcard modified"}, status=200)
+
+class CreateManualFlashCardView(APIView):
+    def post(self, request):
+        thread = Thread.objects.get(title=request.data.get("thread"))
+        flashcard = FlashCards.objects.create(thread=thread, title=request.data.get("title"), content=request.data.get("content"))
+        return Response({"message": "Flashcard created"}, status=200)
     
 ####################QUIZ FUNCS################
     
@@ -363,6 +369,12 @@ class DeleteQuizChoiceView(APIView):
         quiz.save()
         return Response({"message": "Choice deleted"}, status=200)
     
+    
+class CreateManualQuizView(APIView):
+    def post(self, request):
+        thread = Thread.objects.get(title=request.data.get("thread"))
+        quiz = Quizzes.objects.create(thread=thread, question=request.data.get("question"), answer=request.data.get("answer"), choices=str(request.data.get("choices")).strip())
+        return Response({"message": "Quiz created"}, status=200)
 
 
 

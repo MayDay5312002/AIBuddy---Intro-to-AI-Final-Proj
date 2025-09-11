@@ -1,10 +1,9 @@
 import * as React from 'react';
 import { useState, useEffect } from 'react';
 import { Box, Button, Typography, TextField, Modal, Divider, IconButton, List, ListItem} from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import axios from 'axios';
 import AddBoxSharpIcon from '@mui/icons-material/AddBoxSharp';
+import axios from 'axios';
+import DeleteIcon from '@mui/icons-material/Delete';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import DangerousIcon from '@mui/icons-material/Dangerous';
 import CloseIcon from '@mui/icons-material/Close';
@@ -24,38 +23,28 @@ const style = {
 };
 
 
-export default function ModalChangeQuiz({oldAnswer,oldQuestion, oldChoices, setQuizzes, quizzes, thread_title}) {
+export default function ModalAddQuiz({setQuizzes, quizzes, thread_title}) {
 
 
   const [open, setOpen] = useState(false);
   const handleOpen = () => setOpen(true);
+
+  //use state for current variables
+  const [ question , setQuestion] = useState('');
+  const [ choices, setChoices] = useState(['']);
+  const [ answer , setAnswer] = useState('');
+
   const handleClose = () => {
-    setQuestion(oldQuestion);
-    setChoices(oldChoices);
-    setAnswer(oldAnswer);
+    setQuestion('');
+    setAnswer('');
+    setChoices(['']);
     setOpen(false);
   }
 
-  //use state for current variables
-  const [ question , setQuestion] = useState(oldQuestion);
-  const [ choices, setChoices] = useState(oldChoices); 
-  const [ answer , setAnswer] = useState(oldAnswer);
-
-  useEffect(() => {
-    setQuestion(oldQuestion);
-    setChoices(oldChoices);
-    setAnswer(oldAnswer);
-  }, [oldQuestion, oldChoices, oldAnswer]);
-
   const handleThread = async () => {
-    axios.post("http://127.0.0.1:8000/api/modifyQuizCard/", {"question": question,  "choices": choices, "answer": answer, "thread": thread_title,})
+    axios.post("http://127.0.0.1:8000/api/createManualQuiz/", {"question": question,  "choices": choices, "answer": answer, "thread": thread_title})
     .then((response) => {
-      // setQuizzes(quizzes.map(card => card.title === oldTitle ? {...card, title: title, content: content} : card));
-      let index = quizzes.findIndex(card => card.question === oldQuestion);
-      if(index !== -1){
-        let updatedquizzes = [...quizzes.slice(0, index), {"question": question, "answer": answer, "choices": choices}, ...quizzes.slice(index + 1)];
-        setQuizzes(updatedquizzes);
-      }
+      setQuizzes([...quizzes, {"question": question, "answer": answer, "choices": choices}]);
     })
     .catch((error) => {
       console.log(error);
@@ -65,21 +54,11 @@ export default function ModalChangeQuiz({oldAnswer,oldQuestion, oldChoices, setQ
     handleClose();
   }
 
-  const handleDeleteChoice = async (newChoices) => {
-    axios.post("http://127.0.0.1:8000/api/deleteChoiceQuiz/", {"question": question, "choices": newChoices, "thread": thread_title})
-    .then((response) => {
-      setChoices( newChoices );
-    })
-    .catch((error) => {
-      console.log(error);
-      handleClose();
-    });
-    
-  }
-
   return (
     <Box component={"span"}>
-      <IconButton onClick={handleOpen}><EditIcon /></IconButton>
+      <Box sx={{display: 'flex', justifyContent: 'center', my: "0.5em"}}>
+        <IconButton onClick={handleOpen} sx={{}}><AddBoxSharpIcon /></IconButton>
+      </Box>
       <Modal
         open={open}
         onClose={handleClose}
@@ -98,20 +77,18 @@ export default function ModalChangeQuiz({oldAnswer,oldQuestion, oldChoices, setQ
         }}>
           <IconButton onClick={handleClose} sx={{position: "absolute", right: 18}}><CloseIcon /></IconButton>
           <Typography id="modal-modal-title" variant="h5" component="h2" sx={{fontWeight: 500}}>
-            Modify Quiz
+            Add Quiz
           </Typography>
           <Divider sx={{my: 1}}/>
 
 
           <div>
             <Typography variant="h6" component="h2" >Quiz Question</Typography>
-            <TextField id="Card Question" label="Card Question" value={question} onChange={(e) => setQuestion(e.target.value)} variant="filled" required fullWidth 
-            multiline rows={3}
-            />
+            <TextField id="Card Question" label="Card Question" value={question} onChange={(e) => setQuestion(e.target.value)} variant="filled" required fullWidth multiline rows={3}/>
           </div>
 
           <div>
-            <Typography variant="h6" component="h2"  sx={{mt: "0.5em"}}>Quiz Choices</Typography>
+            <Typography variant="h6" component="h2" sx={{mt: "0.5em"}} >Quiz Choices</Typography>
             <IconButton>
               <AddBoxSharpIcon onClick={() => setChoices([...choices, ""])}/>
             </IconButton>
@@ -160,9 +137,9 @@ export default function ModalChangeQuiz({oldAnswer,oldQuestion, oldChoices, setQ
                     }}>
                     {
                       (choice === answer) ?
-                        <CheckCircleIcon sx={{color: "green"}}/> // Right Answer
+                        <CheckCircleIcon sx={{color: "green"}}/>
                       :
-                        <DangerousIcon sx={{color: "red"}}/> // Wrong Answer
+                        <DangerousIcon sx={{color: "red"}}/>
                     }
                   </IconButton> 
                 </ListItem>
@@ -173,14 +150,7 @@ export default function ModalChangeQuiz({oldAnswer,oldQuestion, oldChoices, setQ
           </div>
       
           <div style={{marginTop: "1em"}}>
-            <Button 
-            disabled={question === oldQuestion && JSON.stringify(choices) == JSON.stringify(oldChoices) && answer === oldAnswer} 
-            onClick={handleThread} 
-            variant='contained' 
-            sx={{my: "1em"}}
-            >
-              Submit
-            </Button>
+            <Button disabled={question === '' || choices.length === 0} onClick={handleThread} variant='contained' sx={{my: "1em"}}>Submit</Button>
           </div>
           
           

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useState, useEffect } from 'react';
 import { Box, Button, Typography, TextField, Modal, Divider, IconButton} from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
+import AddBoxSharpIcon from '@mui/icons-material/AddBoxSharp';
 import axios from 'axios';
 import CloseIcon from '@mui/icons-material/Close';
 
@@ -20,35 +20,27 @@ const style = {
 };
 
 
-export default function ModalChangeFlashCard({oldTitle, oldContent, setFlashCards, flashCards, thread_title}) {
+export default function ModalAddFlashCard({setFlashCards, flashCards, thread_title}) {
 
 
   const [open, setOpen] = useState(false);
   const handleOpen = () => setOpen(true);
+
+  //use state for current variables
+  const [ title , setTitle] = useState('');
+  const [ content , setContent] = useState('');
+
   const handleClose = () => {
-    setTitle(oldTitle);
-    setContent(oldContent);
+    setTitle('');
+    setContent('');
     setOpen(false);
   }
 
-  //use state for current variables
-  const [ title , setTitle] = useState(oldTitle);
-  const [ content , setContent] = useState(oldContent);
-
-  useEffect(() => {
-    setTitle(oldTitle);
-    setContent(oldContent);
-  }, [oldTitle, oldContent]);
-
   const handleThread = async () => {
-    axios.post("http://127.0.0.1:8000/api/modifyFlashCard/", {"title": title,  "content": content, "thread": thread_title, "oldTitle": oldTitle})
+    axios.post("http://127.0.0.1:8000/api/createManualFlashCard/", {"title": title,  "content": content, "thread": thread_title})
     .then((response) => {
       // setFlashCards(flashCards.map(card => card.title === oldTitle ? {...card, title: title, content: content} : card));
-      let index = flashCards.findIndex(card => card.title === oldTitle);
-      if(index !== -1){
-        let updatedFlashCards = [...flashCards.slice(0, index), {"title": title, "content": content}, ...flashCards.slice(index + 1)];
-        setFlashCards(updatedFlashCards);
-      }
+      setFlashCards([...flashCards, {"title": title, "content": content}]);
     })
     .catch((error) => {
       console.log(error);
@@ -60,7 +52,9 @@ export default function ModalChangeFlashCard({oldTitle, oldContent, setFlashCard
 
   return (
     <Box component={"span"}>
-      <IconButton onClick={handleOpen}><EditIcon /></IconButton>
+      <Box sx={{display: 'flex', justifyContent: 'center', my: "0.5em"}}>
+        <IconButton onClick={handleOpen} sx={{}}><AddBoxSharpIcon /></IconButton>
+      </Box>
       <Modal
         open={open}
         onClose={handleClose}
@@ -75,9 +69,9 @@ export default function ModalChangeFlashCard({oldTitle, oldContent, setFlashCard
           width: {xs:"80vw", sm: "60vw", md: "30vw"},
 
         }}>
-          <IconButton onClick={handleClose} sx={{position: "absolute", right: 18}}><CloseIcon /></IconButton>
+            <IconButton onClick={handleClose} sx={{position: "absolute", right: 18}}><CloseIcon /></IconButton>
           <Typography id="modal-modal-title" variant="h5" component="h2" sx={{fontWeight: 500}}>
-            Modify Flash Card
+            Add Flash Card
           </Typography>
           <Divider sx={{my: 1}}/>
 
@@ -103,7 +97,7 @@ export default function ModalChangeFlashCard({oldTitle, oldContent, setFlashCard
           </div>
       
           <div style={{marginTop: "3em"}}>
-            <Button disabled={title === oldTitle && content === oldContent} onClick={handleThread} variant='contained' sx={{my: "1em"}}>Submit</Button>
+            <Button disabled={title === '' || content === ''} onClick={handleThread} variant='contained' sx={{my: "1em"}}>Submit</Button>
           </div>
           
           

@@ -1,6 +1,6 @@
 from django.urls import path, include
 from .views import (GetTextView, GetAllModels, chatWithFile, CreateNewThreadView, GetAllThreadView, DeleteThreadView, CreateFlashCardsView, GetAllFlashCardsView
-, DeleteFlashCardView, ModifyFlashCardView, CreateQuizView, GetAllQuizzesView, DeleteQuizView, ModifyQuizView, DeleteQuizChoiceView)
+, DeleteFlashCardView, ModifyFlashCardView, CreateQuizView, GetAllQuizzesView, DeleteQuizView, ModifyQuizView, DeleteQuizChoiceView, CreateManualFlashCardView, CreateManualQuizView)
     
 # from .views import index
 
@@ -21,4 +21,6 @@ urlpatterns = [
     path('deleteQuiz/', DeleteQuizView.as_view()),
     path('modifyQuizCard/', ModifyQuizView.as_view()),
     path('deleteChoiceQuiz/', DeleteQuizChoiceView.as_view()),
+    path('createManualFlashCard/', CreateManualFlashCardView.as_view()),
+    path('createManualQuiz/', CreateManualQuizView.as_view()),
 ]

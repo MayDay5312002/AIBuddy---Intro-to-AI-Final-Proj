@@ -7,10 +7,16 @@ import { Button, TextField, Typography, Select, MenuItem, FormControl,
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 
+import FullscreenIcon from '@mui/icons-material/Fullscreen';
+import FullscreenExitIcon from '@mui/icons-material/FullscreenExit';
+
+
 import ModalAddThread from "../sub-component/ModalAddThread.js";
 import ModalDeleteThread from "../sub-component/ModalDeleteThread.js";
 import ModalChangeFlashCard from "../sub-component/ModalChangeFlashCard.js";
 import ModalChangeQuiz from "../sub-component/ModalChangeQuiz.js";
+import ModalAddFlashCard from "../sub-component/ModalAddFlashCard.js";
+import ModalAddQuiz from "../sub-component/ModalAddQuiz.js";
 
 import axios from "axios";
 
@@ -48,12 +54,24 @@ const MainApp = () => {
     const [autoScrollEnabled, setAutoScrollEnabled] = useState(true); //State to control auto-scroll
     const [errorResponseMsg, setErrorResponseMsg] = useState(""); //for when generating response
     const [indexQuizSelected , setIndexQuizSelected] = useState(-1);
+    const [isFullscreen, setIsFullscreen] = useState(false);
 
     const handleChoiceClick = (choice, answer, index) => {
-      setSelectedAnswer(choice);
-      setIsAnswerCorrect(choice === answer); // Check if selected answer is correct
-      setIndexQuizSelected(index);
+      if(selectedAnswer === choice){
+        setSelectedAnswer('');
+        setIsAnswerCorrect(null);
+      }
+      else{
+        setSelectedAnswer(choice);
+        setIsAnswerCorrect(choice === answer); // Check if selected answer is correct
+        setIndexQuizSelected(index);
+      }
     };
+
+    const toggleFullscreen = () => {
+      setIsFullscreen(!isFullscreen);
+    };
+
 
     
 
@@ -76,6 +94,11 @@ const MainApp = () => {
         setNumberEx(val === "" ? 0 : parseInt(val, 10));
       }
     };
+
+    useEffect(() => {
+      setSelectedAnswer('');
+      setIsAnswerCorrect(null);
+    }, [executionType])
   
 
     const handleFileChange = (event) => {
@@ -341,183 +364,195 @@ const MainApp = () => {
 
     return (
       <div >
-        <Paper 
-        elevation={3}
-        sx={{
-          padding: 3,
-          backgroundColor: '#f9fafb',
-          borderRadius: 4,
-          boxShadow: '0px 4px 20px rgba(0,0,0,0.1)',
-          border: '1px solid #e0e0e0',
-        }}>
-
-            <Typography variant="h4" sx={{fontWeight: "bold", marginBottom: "1em", textAlign: "center"}}>
-              <Box sx={{cursor: "pointer"}} component={"span"} onClick={() => window.location.reload()}>
-                <img src="http://127.0.0.1:8000/static/images/Logo.png" height={"80em"} style={{position: "relative", top: "0.2em"}}/>
-                AI Study Companion
-              </Box>
-            </Typography>
-
-            <FormControl>
-              <FormLabel>Choose Input Type</FormLabel>
-              <RadioGroup
-                row
-                value={inputType}
-                onChange={handleRadioChange}
-              >
-                <FormControlLabel value="file" control={<Radio />} label="Upload a File" />
-                <FormControlLabel value="url" control={<Radio />} label="Enter a youtube URL" />
-              </RadioGroup>
-            </FormControl>
-            <Divider />
-            <FormControl fullWidth style={{marginTop: "1em", marginBottom: "1em"}}>
-              <InputLabel id="dropdown-label">Select model</InputLabel>
-              <Select
-                labelId="dropdown-label"
-                value={selectedModel}
-                label="Select Model"
-                onChange={handleSelectedChange}
-              >
-                {models.map((model, index) => (
-                  <MenuItem key={index} value={model}>
-                    {model}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            <Divider sx={{mb:"1em"}}/>
-            {inputType === "file" &&
-            <Box>
-              <Typography variant="h7" sx={{mb: "0.5em", display: "block", }}>Upload file</Typography>
-              <input
-                accept="*"
-                type="file"
-                id="file-upload"
-                style={{ display: "none" }}
-                onChange={handleFileChange}
-                component="span"
-                required
-              />
-              <label htmlFor="file-upload">
-                <Button variant="contained" component="span">
-                  Upload File
-                </Button>
-              </label>
-              <Typography variant="body2" sx={{mt: "0.5em", overflow: "auto"}}><span style={{textDecoration: "underline"}}>Selected file</span>: {file ? file.name : "No file selected" }</Typography>
-            </Box>
-            }
-            {inputType === "url" && 
-            <>
-              <Typography variant="h7" sx={{mb: "0.5em", display: "block"}}>Enter Youtube URL</Typography>
-              <TextField
-                label="Enter Youtube URL"
-                variant="outlined"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                fullWidth
-                required
-              />
-            </>
-            }
-            <Button variant="contained" component="span" onClick={handleSubmitFile} sx={{mt: "1em"}}>
-                Submit {(inputType === "file") ? "File" : "Youtube URL"}
-            </Button>
-            <Typography variant="caption" sx={{display: "block", color: colorOfResponse, height: "0.5em", my:"0.5em"}}>{errorResponse}</Typography> 
-
-            <Divider sx={{mt: "1em"}}/>
-            
-            <Typography variant="body2" sx={{ my: "1em"}}> 
-              Vector Store Content: {(vectorStoreContent.includes("youtu.be") || vectorStoreContent.includes("youtube.com")) ? <a href={vectorStoreContent}>{vectorStoreContent}</a> : vectorStoreContent}
-            </Typography>
-
-            <Divider sx={{mt: "1em"}}/> 
-            {/* <hr style={{width: "100%", border: "1px solid #e0e0e0", height: "0.1em"}}/> */}
-            <Box display="flex" flexDirection="column" gap={1} width={300}>
-              <Box>
-                <ModalAddThread  threads={threads} setThreads={setThreads} />
-                <ModalDeleteThread  threads={threads} setThreads={setThreads} />
-              </Box>
-              {/* Dropdown to select thread */}
-              <TextField
-                select
-                label="Select a Thread"
-                value={selectedThread}
-                onChange={handleSelectChange}
-                fullWidth
-                sx={{mt: "0.5em"}}
-              >
-                {threads.map((thread, index) => (
-                  <MenuItem key={index} value={thread}>
-                    {thread}
-                  </MenuItem>
-                ))}
-              </TextField>
-              
-              
-            </Box>
-
-            <FormControl sx={{mt: "1em"}}>
-              <FormLabel>Choose Execution Type</FormLabel>
-              <RadioGroup
-                row
-                value={executionType}
-                onChange={handleExecuteQuery}
-              >
-                <FormControlLabel value="Explain simply" control={<Radio />} label="Explain Simply" />
-                <FormControlLabel value="Create flash cards" control={<Radio />} label="Create flash cards" />
-                <FormControlLabel value="Create quiz" control={<Radio />} label="Create quiz" />
-              </RadioGroup>
-            </FormControl>
-            <TextField
-              label="Enter Prompt"
-              variant="outlined"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              sx={{my: "1em"}}
-              fullWidth
-              required
-            />
-            {(executionType !== "Explain simply") &&
-            <Box>
-              <Typography variant="h7" sx={{fontWeight: 200, display: "block"}} >Number of {executionType === "Create flash cards" ? "flash cards" : "questions"} to generate:</Typography>
-              <TextField
-                type="number"
-                label="Enter a number"
-                value={numberEx}
-                onChange={handleChangeExcutionType}
-                inputProps={{
-                  min: 1,
-                  step: 1, // ensures stepping by whole numbers
-                }}
-                sx={{ width: 200, my: "1em" }}
-              /> 
-            </Box>
-            }
-            <Button variant="contained" 
-            onClick={(executionType === "Explain simply") ? handleQuery : (executionType === "Create flash cards") ? handleCreateFlashCards : handleCreateQuiz} 
-            disabled={readToQuery === false || selectedThread === "" || query === ""}>
-                Submit Prompt
-            </Button>
-            <IconButton>
-              {(loading) ? <CircularProgress size={24} /> : ""}
-            </IconButton>
-            <Typography variant="caption" sx={{display: "block",  height: "0.5em", my:"0.2em", fontStyle: "italic"}}>Note: Please ensure Thread and File/URL are set to submit prompt.</Typography>
-            <Typography variant="body2" sx={{display: "block", color: "red", height: "0.5em", my:"0.2em", fontSize:"0.8em", my: "0.8em"}}>{errorResponseMsg}</Typography>
-            {/* <Typography variant="h5" sx={{fontWeight: "bold"}}>{response}</Typography> */}
-        </Paper>
-        {response && executionType === "Explain simply" &&
+        { isFullscreen === false ?  
           <Paper 
+          elevation={3}
           sx={{
             padding: 3,
             backgroundColor: '#f9fafb',
             borderRadius: 4,
+            boxShadow: '0px 4px 20px rgba(0,0,0,0.1)',
             border: '1px solid #e0e0e0',
-            mt: "1em",
-            maxHeight: "20em",
-            whiteSpace: "pre-line",
-            overflow: "auto"
+          }}>
+
+              <Typography variant="h4" sx={{fontWeight: "bold", marginBottom: "1em", textAlign: "center"}}>
+                <Box sx={{cursor: "pointer"}} component={"span"} onClick={() => window.location.reload()}>
+                  <img src="http://127.0.0.1:8000/static/images/Logo.png" height={"80em"} style={{position: "relative", top: "0.2em"}}/>
+                  AI Study Companion
+                </Box>
+              </Typography>
+
+              <FormControl>
+                <FormLabel>Choose Input Type</FormLabel>
+                <RadioGroup
+                  row
+                  value={inputType}
+                  onChange={handleRadioChange}
+                >
+                  <FormControlLabel value="file" control={<Radio />} label="Upload a File" />
+                  <FormControlLabel value="url" control={<Radio />} label="Enter a youtube URL" />
+                </RadioGroup>
+              </FormControl>
+              <Divider />
+              <FormControl fullWidth style={{marginTop: "1em", marginBottom: "1em"}}>
+                <InputLabel id="dropdown-label">Select model</InputLabel>
+                <Select
+                  labelId="dropdown-label"
+                  value={selectedModel}
+                  label="Select Model"
+                  onChange={handleSelectedChange}
+                >
+                  {models.map((model, index) => (
+                    <MenuItem key={index} value={model}>
+                      {model}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <Divider sx={{mb:"1em"}}/>
+              {inputType === "file" &&
+              <Box>
+                <Typography variant="h7" sx={{mb: "0.5em", display: "block", }}>Upload file</Typography>
+                <input
+                  accept="*"
+                  type="file"
+                  id="file-upload"
+                  style={{ display: "none" }}
+                  onChange={handleFileChange}
+                  component="span"
+                  required
+                />
+                <label htmlFor="file-upload">
+                  <Button variant="contained" component="span">
+                    Upload File
+                  </Button>
+                </label>
+                <Typography variant="body2" sx={{mt: "0.5em", overflow: "auto"}}><span style={{textDecoration: "underline"}}>Selected file</span>: {file ? file.name : "No file selected" }</Typography>
+              </Box>
+              }
+              {inputType === "url" && 
+              <>
+                <Typography variant="h7" sx={{mb: "0.5em", display: "block"}}>Enter Youtube URL</Typography>
+                <TextField
+                  label="Enter Youtube URL"
+                  variant="outlined"
+                  value={url}
+                  onChange={(e) => setUrl(e.target.value)}
+                  fullWidth
+                  required
+                />
+              </>
+              }
+              <Button variant="contained" component="span" onClick={handleSubmitFile} sx={{mt: "1em"}}>
+                  Submit {(inputType === "file") ? "File" : "Youtube URL"}
+              </Button>
+              <Typography variant="caption" sx={{display: "block", color: colorOfResponse, height: "0.5em", my:"0.5em"}}>{errorResponse}</Typography> 
+
+              <Divider sx={{mt: "1em"}}/>
+
+              <Typography variant="body2" sx={{ my: "1em"}}> 
+                Vector Store Content: {(vectorStoreContent.includes("youtu.be") || vectorStoreContent.includes("youtube.com")) ? <a href={vectorStoreContent}>{vectorStoreContent}</a> : vectorStoreContent}
+              </Typography>
+
+              <Divider sx={{mt: "1em"}}/> 
+              {/* <hr style={{width: "100%", border: "1px solid #e0e0e0", height: "0.1em"}}/> */}
+              <Box display="flex" flexDirection="column" gap={1} width={300}>
+                <Box>
+                  <ModalAddThread  threads={threads} setThreads={setThreads} />
+                  <ModalDeleteThread  threads={threads} setThreads={setThreads} />
+                </Box>
+                {/* Dropdown to select thread */}
+                <TextField
+                  select
+                  label="Select a Thread"
+                  value={selectedThread}
+                  onChange={handleSelectChange}
+                  fullWidth
+                  sx={{mt: "0.5em"}}
+                >
+                  {threads.map((thread, index) => (
+                    <MenuItem key={index} value={thread}>
+                      {thread}
+                    </MenuItem>
+                  ))}
+                </TextField>
+                
+                
+              </Box>
+
+              <FormControl sx={{mt: "1em"}}>
+                <FormLabel>Choose Execution Type</FormLabel>
+                <RadioGroup
+                  row
+                  value={executionType}
+                  onChange={handleExecuteQuery}
+                >
+                  <FormControlLabel value="Explain simply" control={<Radio />} label="Explain Simply" />
+                  <FormControlLabel value="Create flash cards" control={<Radio />} label="Create flash cards" />
+                  <FormControlLabel value="Create quiz" control={<Radio />} label="Create quiz" />
+                </RadioGroup>
+              </FormControl>
+              <TextField
+                label="Enter Prompt"
+                variant="outlined"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                sx={{my: "1em"}}
+                fullWidth
+                required
+              />
+              {(executionType !== "Explain simply") &&
+              <Box>
+                <Typography variant="h7" sx={{fontWeight: 200, display: "block"}} >Number of {executionType === "Create flash cards" ? "flash cards" : "questions"} to generate:</Typography>
+                <TextField
+                  type="number"
+                  label="Enter a number"
+                  value={numberEx}
+                  onChange={handleChangeExcutionType}
+                  inputProps={{
+                    min: 1,
+                    step: 1, // ensures stepping by whole numbers
+                  }}
+                  sx={{ width: 200, my: "1em" }}
+                /> 
+              </Box>
+              }
+              <Button variant="contained" 
+              onClick={(executionType === "Explain simply") ? handleQuery : (executionType === "Create flash cards") ? handleCreateFlashCards : handleCreateQuiz} 
+              disabled={readToQuery === false || selectedThread === "" || query === ""}>
+                  Submit Prompt
+              </Button>
+              <IconButton>
+                {(loading) ? <CircularProgress size={24} /> : ""}
+              </IconButton>
+              <Typography variant="caption" sx={{display: "block",  height: "0.5em", my:"0.2em", fontStyle: "italic"}}>Note: Please ensure Thread and File/URL are set to submit prompt.</Typography>
+              <Typography variant="body2" sx={{display: "block", color: "red", height: "0.5em", my:"0.2em", fontSize:"0.8em", my: "0.8em"}}>{errorResponseMsg}</Typography>
+              {/* <Typography variant="h5" sx={{fontWeight: "bold"}}>{response}</Typography> */}
+          </Paper>
+          :
+          ""
+        }
+        {response && executionType === "Explain simply" &&
+          <Paper 
+          sx={{
+            px: "3vh",
+            pt: "2vh",
+            backgroundColor: '#f9fafb',
+            borderRadius: "1em",
+            border: '1px solid #e0e0e0',
+            mt: isFullscreen ? 0 : "1em",
+            maxHeight: isFullscreen ? "98vh" : "32em",
+            overflow: "auto",
+            position: isFullscreen ? 'fixed' : 'relative',
           }}
           >
+            <IconButton
+              onClick={toggleFullscreen}
+              sx={{ position: 'absolute', top: 8, right: 8 }}
+              aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+            >
+              {isFullscreen ? <FullscreenExitIcon /> : <FullscreenIcon />}
+            </IconButton>
             <Typography variant="h5" sx={{fontWeight: "bold", color: "green"}}>Response</Typography>
               <Typography variant="h6" sx={{ fontWeight: "500"}} >
                 <span dangerouslySetInnerHTML={{ __html: response }} /> 
@@ -527,19 +562,28 @@ const MainApp = () => {
         {selectedThread !== "" && executionType === "Create flash cards" && flashCards != [] &&
           <Paper 
           sx={{
-            padding: 3,
+            px: "3vh",
+            pt: "2vh",
             backgroundColor: '#f9fafb',
-            borderRadius: 4,
+            borderRadius: "1em",
             border: '1px solid #e0e0e0',
-            mt: "1em",
-            maxHeight: "20em",
-            whiteSpace: "pre-line",
-            overflow: "auto"
+            mt: isFullscreen ? 0 : "1em",
+            maxHeight: isFullscreen ? "98vh" : "32em",
+            overflow: "auto",
+            position: isFullscreen ? 'fixed' : 'relative',
           }}
           >
-            <Typography variant="h5" sx={{fontWeight: "bold", color: "green", my: "1em", textAlign: "center"}}>Flash Cards</Typography>
+            <IconButton
+              onClick={toggleFullscreen}
+              sx={{ position: 'absolute', top: 8, right: 8 }}
+              aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+            >
+              {isFullscreen ? <FullscreenExitIcon /> : <FullscreenIcon />}
+            </IconButton>
+            <Typography variant="h5" sx={{fontWeight: "bold", color: "green", mt: "1em", textAlign: "center"}}>Flash Cards</Typography>
+            <ModalAddFlashCard setFlashCards={setFlashCards} flashCards={flashCards} thread_title={selectedThread}/>
             {flashCards.map((card, index) => (
-              <Paper key={card.title} sx={{ p: 2, mb: 2, display: "inline-block", mx: 1}}>
+              <Paper key={card.title} sx={{ p: 2, mb: 2, display: "inline-block", mx: 1, maxWidth: "30em"}}>
                 <Typography variant="h6" sx={{ fontWeight: "500" }} component={"span"}>
                   {card["title"]}
                 </Typography>
@@ -559,18 +603,27 @@ const MainApp = () => {
         {selectedThread !== "" && executionType === "Create quiz" && quizzes != [] &&
           <Paper 
           sx={{
-            padding: 3,
+            px: "3vh",
+            pt: "2vh",
             backgroundColor: '#f9fafb',
-            borderRadius: 4,
+            borderRadius: "1em",
             border: '1px solid #e0e0e0',
-            mt: "1em",
-            maxHeight: "20em",
-            whiteSpace: "pre-line",
-            overflow: "auto"
+            mt: isFullscreen ? 0 : "1em",
+            maxHeight: isFullscreen ? "98vh" : "32em",
+            overflow: "auto",
+            position: isFullscreen ? 'fixed' : 'relative',
           }}
           >
-            <Typography variant="h5" sx={{fontWeight: "bold", color: "green", my: "1em", textAlign: "center"}}>Quizzes</Typography>
+            <IconButton
+              onClick={toggleFullscreen}
+              sx={{ position: 'absolute', top: 8, right: 8 }}
+              aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+            >
+              {isFullscreen ? <FullscreenExitIcon /> : <FullscreenIcon />}
+            </IconButton>
+            <Typography variant="h5" sx={{fontWeight: "bold", color: "green", mt: "1em", textAlign: "center"}}>Quizzes</Typography>
             {/* <Typography variant="h6" sx={{fontWeight: "500"}}>{response}</Typography> */}
+            <ModalAddQuiz setQuizzes={setQuizzes} quizzes={quizzes} thread_title={selectedThread}/>
             {quizzes.map((quiz, indexQuiz) => (
               <Paper key={quiz.question} sx={{ p: 2, mb: 2, display: "inline-block", mx: 1}}>
                 <Typography variant="h6" sx={{ fontWeight: "500" }} component={"span"}>

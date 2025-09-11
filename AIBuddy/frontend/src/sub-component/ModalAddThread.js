@@ -1,8 +1,9 @@
 import * as React from 'react';
 import { useState } from 'react';
-import { Box, Button, Typography, TextField, Modal, Divider} from '@mui/material';
+import { Box, Button, Typography, TextField, Modal, Divider, IconButton} from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import axios from 'axios';
+import CloseIcon from '@mui/icons-material/Close';
 
 
 
@@ -70,6 +71,7 @@ export default function BasicModalAdd({threads, setThreads}) {
           width: {xs:"80vw", sm: "60vw", md: "30vw"},
 
         }}>
+          <IconButton onClick={handleClose} sx={{position: "absolute", right: 18}}><CloseIcon /></IconButton>
           <Typography id="modal-modal-title" variant="h5" component="h2" sx={{fontWeight: 500}}>
             Create Thread
           </Typography>
