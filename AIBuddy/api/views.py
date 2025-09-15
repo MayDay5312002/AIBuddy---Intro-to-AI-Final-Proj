@@ -443,7 +443,7 @@ def ModifyMessageView(request):
     messages = messages[1:]
     # theQuery = None
     # theResponse = None
-    print("# queries: ", len(queries), request.GET.get("oldQuestion"), f"{request.GET.get("oldDocument")}")
+    print("# queries: ", len(queries), request.GET.get("oldQuestion"), request.GET.get("oldDocument"))
     print("# responses: ", len(responses))
     for query in queries:
             for response in responses:
@@ -494,7 +494,7 @@ class ModifyMessageManualView(APIView):
         messages = messages[1:]
         # theQuery = None
         # theResponse = None
-        print("# queries: ", len(queries), request.data.get("oldQuestion"), f"{request.data.get("oldDocument")}")
+        print("# queries: ", len(queries), request.data.get("oldQuestion"), request.data.get("oldDocument"))
         print("# responses: ", len(responses))
         for query in queries:
                 for response in responses:
