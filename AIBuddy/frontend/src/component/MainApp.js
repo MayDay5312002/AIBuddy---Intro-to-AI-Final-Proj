@@ -3,7 +3,8 @@ import { useState, useEffect } from "react";
 import { Button, TextField, Typography, Select, MenuItem, FormControl, 
   InputLabel, Box, Radio, RadioGroup, FormControlLabel, FormLabel, Paper, Divider, IconButton, 
   CircularProgress, List,
-  ListItem, ListItemText} from "@mui/material";
+  ListItem, ListItemText,
+  Modal} from "@mui/material";
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 
@@ -17,6 +18,7 @@ import ModalChangeFlashCard from "../sub-component/ModalChangeFlashCard.js";
 import ModalChangeQuiz from "../sub-component/ModalChangeQuiz.js";
 import ModalAddFlashCard from "../sub-component/ModalAddFlashCard.js";
 import ModalAddQuiz from "../sub-component/ModalAddQuiz.js";
+import ModalModifyMessegeHistory from "../sub-component/ModalModifyMessegeHistory.js";
 
 import axios from "axios";
 
@@ -55,6 +57,8 @@ const MainApp = () => {
     const [errorResponseMsg, setErrorResponseMsg] = useState(""); //for when generating response
     const [indexQuizSelected , setIndexQuizSelected] = useState(-1);
     const [isFullscreen, setIsFullscreen] = useState(false);
+
+    const [refreshMessageHistory, setRefreshMessageHistory] = useState(false);
 
     const handleChoiceClick = (choice, answer, index) => {
       if(selectedAnswer === choice){
@@ -145,7 +149,7 @@ const MainApp = () => {
           formData.append("url", url);
         }
         // formData.append("url", url);
-        axios.post("http://127.0.0.1:8000/api/fileUpload/", formData, {
+        axios.post("http://127.0.0.1:4192/api/fileUpload/", formData, {
             headers: {
                 "Content-Type": "multipart/form-data",
             }
@@ -173,7 +177,7 @@ const MainApp = () => {
     }
 
     const deleteCard = (titleCard) => {
-      axios.post("http://127.0.0.1:8000/api/deleteFlashCard/", {"title": titleCard, "thread": selectedThread})
+      axios.post("http://127.0.0.1:4192/api/deleteFlashCard/", {"title": titleCard, "thread": selectedThread})
       .then((response) => {
         setFlashCards(flashCards.filter(card => card.title !== titleCard));
       })
@@ -184,7 +188,7 @@ const MainApp = () => {
     }
 
     const deleteQuiz = (question) => {
-      axios.post("http://127.0.0.1:8000/api/deleteQuiz/", {"question": question, "thread": selectedThread})
+      axios.post("http://127.0.0.1:4192/api/deleteQuiz/", {"question": question, "thread": selectedThread})
       .then((response) => {
         setQuizzes(quizzes.filter(quiz => quiz.question !== question));
       })
@@ -197,7 +201,7 @@ const MainApp = () => {
     
 
     useEffect(() => {
-        axios.get('http://127.0.0.1:8000/api/models/')
+        axios.get('http://127.0.0.1:4192/api/models/')
         .then((response) => {
             // console.log(response)
             setModels(response.data["models"])
@@ -208,7 +212,7 @@ const MainApp = () => {
             // console.error("Error uploading file:", error);
         })
 
-        axios.get('http://127.0.0.1:8000/api/getThreads/')
+        axios.get('http://127.0.0.1:4192/api/getThreads/')
         .then((response) => {
             setThreads(response.data["threads"]);
         })
@@ -217,7 +221,7 @@ const MainApp = () => {
             // console.error("Error uploading file:", error);
         })
 
-        // axios.get('http://127.0.0.1:8000/api/getQuizzes/' + '?thread=' + selectedThread)
+        // axios.get('http://127.0.0.1:4192/api/getQuizzes/' + '?thread=' + selectedThread)
     }, [])
 
 
@@ -225,13 +229,14 @@ const MainApp = () => {
       setErrorResponseMsg('');//clear old error
       setResponse(''); // clear old response
       setLoading(true);
-      const eventSource = new EventSource('http://localhost:8000/api/chatStream/' + '?query=' + query + '&model=' + selectedModel + '&thread=' + selectedThread);
+      const eventSource = new EventSource('http://localhost:4192/api/chatStream/' + '?query=' + query + '&model=' + selectedModel + '&thread=' + selectedThread);
     
       eventSource.onmessage = function(event) {
           if (event.data === "[DONE]") {
               eventSource.close();
               // console.log("DONE!!");
               setLoading(false);
+              setRefreshMessageHistory(!refreshMessageHistory);
               return;
           }
           setResponse(prev => prev + event.data);
@@ -254,7 +259,7 @@ const MainApp = () => {
 
     const handleCreateFlashCards = () => {
       setLoading(true);
-      axios.post('http://127.0.0.1:8000/api/createFlashCards/', {"query": query, "model": selectedModel, "thread": selectedThread, "number": numberEx}).
+      axios.post('http://127.0.0.1:4192/api/createFlashCards/', {"query": query, "model": selectedModel, "thread": selectedThread, "number": numberEx}).
       then((response) => {
         setLoading(false);
         // console.log(response.data["cards"]);
@@ -271,7 +276,7 @@ const MainApp = () => {
 
     const handleCreateQuiz = () => {
       setLoading(true);
-      axios.post('http://127.0.0.1:8000/api/createQuiz/', {"query": query, "model": selectedModel, "thread": selectedThread, "number": numberEx}).
+      axios.post('http://127.0.0.1:4192/api/createQuiz/', {"query": query, "model": selectedModel, "thread": selectedThread, "number": numberEx}).
       then((response) => {
         // console.log("quizzes type: ", typeof response.data["quizzes"], "quizzes: ", response.data["quizzes"]);
         let newQuizzes = [...quizzes, ...response.data["quizzes"]];
@@ -290,7 +295,7 @@ const MainApp = () => {
     useEffect(() => { //Get flashcards and quizzes for a selected thread
         setErrorResponseMsg('');//clear old error
         if(selectedThread !== ""){
-          axios.get('http://127.0.0.1:8000/api/getFlashCards/' + '?thread=' + selectedThread).
+          axios.get('http://127.0.0.1:4192/api/getFlashCards/' + '?thread=' + selectedThread).
           then((response) => {
             setFlashCards(response.data["cards"]);
           })
@@ -298,7 +303,7 @@ const MainApp = () => {
               // console.error("Error uploading file:", error);
           })
 
-          axios.get('http://127.0.0.1:8000/api/getQuizzes/' + '?thread=' + selectedThread)
+          axios.get('http://127.0.0.1:4192/api/getQuizzes/' + '?thread=' + selectedThread)
           .then((response) => {
             setQuizzes(response.data["quizzes"]);
           })
@@ -377,7 +382,7 @@ const MainApp = () => {
 
               <Typography variant="h4" sx={{fontWeight: "bold", marginBottom: "1em", textAlign: "center"}}>
                 <Box sx={{cursor: "pointer"}} component={"span"} onClick={() => window.location.reload()}>
-                  <img src="http://127.0.0.1:8000/static/images/Logo.png" height={"80em"} style={{position: "relative", top: "0.2em"}}/>
+                  <img src="http://127.0.0.1:4192/static/images/Logo.png" height={"80em"} style={{position: "relative", top: "0.2em"}}/>
                   AI Study Companion
                 </Box>
               </Typography>
@@ -424,7 +429,7 @@ const MainApp = () => {
                 />
                 <label htmlFor="file-upload">
                   <Button variant="contained" component="span">
-                    Upload File
+                    Select File
                   </Button>
                 </label>
                 <Typography variant="body2" sx={{mt: "0.5em", overflow: "auto"}}><span style={{textDecoration: "underline"}}>Selected file</span>: {file ? file.name : "No file selected" }</Typography>
@@ -500,6 +505,8 @@ const MainApp = () => {
                 sx={{my: "1em"}}
                 fullWidth
                 required
+                multiline
+                rows={1}
               />
               {(executionType !== "Explain simply") &&
               <Box>
@@ -532,7 +539,7 @@ const MainApp = () => {
           :
           ""
         }
-        {response && executionType === "Explain simply" &&
+        {selectedThread !== "" && executionType === "Explain simply" &&
           <Paper 
           sx={{
             px: "3vh",
@@ -553,7 +560,8 @@ const MainApp = () => {
             >
               {isFullscreen ? <FullscreenExitIcon /> : <FullscreenIcon />}
             </IconButton>
-            <Typography variant="h5" sx={{fontWeight: "bold", color: "green"}}>Response</Typography>
+            <Typography variant="h5" sx={{fontWeight: "bold", color: "green", mt: "1em", textAlign: "center"}}>Response</Typography>
+            <ModalModifyMessegeHistory thread_title={selectedThread} refreshMessageHistory={refreshMessageHistory} setRefreshMessageHistory={setRefreshMessageHistory} setResponse={setResponse}/>
               <Typography variant="h6" sx={{ fontWeight: "500"}} >
                 <span dangerouslySetInnerHTML={{ __html: response }} /> 
               </Typography>

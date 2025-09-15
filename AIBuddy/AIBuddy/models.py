@@ -10,7 +10,9 @@ class Message(models.Model):
     id = models.AutoField(primary_key=True)
     thread = models.ForeignKey(Thread, on_delete=models.CASCADE, related_name='messages')
     role = models.CharField(max_length=10)
+    instructions = models.TextField(default="")
     content = models.TextField()
+    document = models.TextField(default="")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

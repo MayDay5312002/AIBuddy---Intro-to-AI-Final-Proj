@@ -42,7 +42,7 @@ export default function ModalAddQuiz({setQuizzes, quizzes, thread_title}) {
   }
 
   const handleThread = async () => {
-    axios.post("http://127.0.0.1:8000/api/createManualQuiz/", {"question": question,  "choices": choices, "answer": answer, "thread": thread_title})
+    axios.post("http://127.0.0.1:4192/api/createManualQuiz/", {"question": question,  "choices": choices, "answer": answer, "thread": thread_title})
     .then((response) => {
       setQuizzes([...quizzes, {"question": question, "answer": answer, "choices": choices}]);
     })

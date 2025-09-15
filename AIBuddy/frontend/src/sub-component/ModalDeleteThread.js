@@ -33,7 +33,7 @@ export default function ModalDeleteThread({threads, setThreads}) {
 
   
   const handleThreadDelete = async () => {
-    axios.post("http://127.0.0.1:8000/api/deleteThread/", {"title": selectedThread})
+    axios.post("http://127.0.0.1:4192/api/deleteThread/", {"title": selectedThread})
     .then((response) => {
       setThreads(threads.filter(thread => thread !== selectedThread));
       setSelectedThread('');

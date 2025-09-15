@@ -35,7 +35,7 @@ export default function BasicModalAdd({threads, setThreads}) {
 
 
   const handleThread = async () => {
-    axios.post("http://127.0.0.1:8000/api/createThread/", {"title": name})
+    axios.post("http://127.0.0.1:4192/api/createThread/", {"title": name})
     .then((response) => {
       let updatedThreads = [...threads, name.trim()];
       setThreads(updatedThreads);

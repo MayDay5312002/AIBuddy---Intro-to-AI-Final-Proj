@@ -24,8 +24,9 @@
 
 **How to run the application**
 - Web Application:
-    1. go to AIBuddy folder, then do command `python manage.py runserver`
-    2. Click on the URL (http://127.0.0.1:8000/ | Might be different for you) to open it as new tab in web browser
+    1. go to AIBuddy folder, then do command `python manage.py runserver 4129`
+        - `4192` could be any number. That is the port.
+    2. Click on the URL (http://127.0.0.1:4192/ | Might be different for you) to open it as new tab in web browser
 - Windows:
     - Run the `start.bat`, then wait for application to load and appear on screen.
 - Linux/MacOS:
@@ -52,6 +53,8 @@
 7. You can toggle each execution type to see what was in each feature if there is content (Explanation, Flashcards, Quizzes)
 8. If you want enter a prompt, go ahead, make sure you selected the correct execution type, whether to explain that prompt, create flash cards about that prompt, or create quiz questions regarding that prompt (These will be based on the content you uploaded/submitted)
 + Each thread would have its own FlashCards, quizzes, and messages, so ensure you are naming the thread correctly.
++ You can also manually add flash cards and quizzes. You can delete messasges from the message history, quizzes, and flash cards. You can modify a message, flash card, and a quiz.
++ Messages History is used to provide conversational context for generating quizzes, responses, and flash cards.
 
 
 - Note:

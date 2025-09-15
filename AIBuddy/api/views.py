@@ -40,7 +40,8 @@ import os
 
 
 vectorStore = None
-
+documentName = None
+tempVectorStore = None
 
 
 ############Format Outputs#################
@@ -78,10 +79,17 @@ class GetTextView(APIView):
         Raises:
             Exception: if there is an error with the file upload or YouTube video fetching
         """
-        global vectorStore
+        
+        if request.data.get("modifyMsg") == "true":
+            global tempVectorStore
+            print("!!!tempVectorStore!!!")
+        else:
+            global vectorStore
+
         try:
             url = request.data.get("url")
             file = request.FILES.get("file")
+            global documentName
             if file:
                 file_path = os.path.join("uploads", file.name)
                 saved_path = default_storage.save(file_path, ContentFile(file.read()))
@@ -95,8 +103,12 @@ class GetTextView(APIView):
                     chunk_overlap=50
                 )
                 docs = [Document(page_content=chunk) for chunk in text_splitter.split_text(text)]
-                vectorStore = FAISS.from_documents(docs, embedding_model)
-
+                if request.data.get("modifyMsg") == "true":
+                    tempVectorStore = FAISS.from_documents(docs, embedding_model)
+                else:
+                    vectorStore = FAISS.from_documents(docs, embedding_model)
+                documentName = file.name
+            
             elif url:
                 if not ("youtu.be" in url.lower()):
                     if not ("youtube.com" in url.lower()):
@@ -108,18 +120,22 @@ class GetTextView(APIView):
                 # text = "\n".join([i['text'].strip() for i in transcript])
 
                 fetched_transcript = YouTubeTranscriptApi().fetch(video_id=video_id_str)
-                print(len(fetched_transcript))
+                # print(len(fetched_transcript))
                 text = ""
                 for snippet in fetched_transcript:
                     text += f"{snippet.text}\n"
-                print(f"Transcript: {text[:500]}")  # Check first 500 characters for issues
+                # print(f"Transcript: {text[:500]}")  # Check first 500 characters for issues
                 text_splitter = RecursiveCharacterTextSplitter(
                     chunk_size=500,
                     chunk_overlap=50
                 )
                 docs = [Document(page_content=chunk) for chunk in text_splitter.split_text(text)]
-                vectorStore = FAISS.from_documents(docs, embedding_model)
-
+                if request.data.get("modifyMsg") == "true":
+                    tempVectorStore = FAISS.from_documents(docs, embedding_model)
+                else:
+                    vectorStore = FAISS.from_documents(docs, embedding_model)
+                documentName = url #No need to worry about '&' bcuz of POST method
+            
             return Response({"msg": "This is a test"}, status=200)
         except Exception as e:
             default_storage.delete(saved_path)
@@ -157,7 +173,7 @@ def chatWithFile(request):
     # print("Thead: ", thread)
     thread = Thread.objects.get(title=thread)
     messagesUser = Message.objects.filter(thread=thread).order_by("created_at")
-    messagesUser = [{"role": msg.role, "content": msg.content} for msg in messagesUser]
+    messagesUser = [{"role": msg.role, "content": msg.instructions if msg.role == "user" else msg.content} for msg in messagesUser]
     results = query_vectorstore(query)
     results = [chunk.page_content for chunk in results] #We dont have to include the metadata
     # finalResponse = ""
@@ -168,7 +184,7 @@ def chatWithFile(request):
         # results = query_vectorstore(query)
         finalResponse = ""
         message = f"Read the following prompt and content carefully. Provide a comprehensive, detailed, and well-structured response to the prompt, directly utilizing the supplied content for support and context. Clearly explain your reasoning and organize your answer with appropriate headings, bullet points, or lists as needed for readability. If any aspect is unclear, state your assumptions. Try not to reference prior conversations—focus only on the information provided.\n\nPrompt:{query}\nContent:{results}"
-        print(message)
+        # print(message)
         stream = chat(model=modelName, 
             messages=messagesUser + [{"role": "user", "content": message}],
             stream=True)
@@ -179,7 +195,7 @@ def chatWithFile(request):
             # print(finalResponse)
             yield f"data: {content}\n\n"
         # print(finalResponse)
-        Message.objects.create(thread=thread, role="user", content=query)
+        Message.objects.create(thread=thread, role="user", content=query, instructions=message, document=documentName)
         Message.objects.create(thread=thread, role="assistant", content=finalResponse)
         yield "data: [DONE]\n\n"
 
@@ -207,7 +223,7 @@ class CreateFlashCardsView(APIView):
         # print("Thead: ", thread)
         thread = Thread.objects.get(title=thread)
         messagesUser = Message.objects.filter(thread=thread).order_by("created_at")
-        messagesUser = [{"role": msg.role, "content": msg.content} for msg in messagesUser]
+        messagesUser = [{"role": msg.role, "content": msg.instructions if msg.role == "user" else msg.content} for msg in messagesUser]
         results = query_vectorstore(query)
         results = [chunk.page_content for chunk in results] #We dont have to include the metadata
         message = f"Create {number} flash card(s) with attributes title and content for the following prompt and content(Ensure you follow the number of cards that should be created).\n"
@@ -234,7 +250,7 @@ class CreateQuizView(APIView):
             thread = Thread.objects.get(title=request.data.get("thread"))
             messagesUser = Message.objects.filter(thread=thread).order_by("created_at")
             number = int(request.data.get("number"))
-            messagesUser = [{"role": msg.role, "content": msg.content} for msg in messagesUser]
+            messagesUser = [{"role": msg.role, "content": msg.instructions if msg.role == "user" else msg.content} for msg in messagesUser]
             modelName = request.data.get("model")
             results = query_vectorstore(request.data.get("query"))
             results = [chunk.page_content for chunk in results] #We dont have to include the metadata
@@ -377,7 +393,120 @@ class CreateManualQuizView(APIView):
         return Response({"message": "Quiz created"}, status=200)
 
 
+#####################MESSAGE funcs
+class GetAllMessagesView(APIView):
+    def get(self, request):
+        thread = request.GET.get("thread")
+        # print(thread)
+        thread = Thread.objects.get(title=thread)
+        messages = Message.objects.filter(thread=thread).order_by("created_at")
+        messages = messages[1:]
+        messages = [{"role": msg.role, "content": msg.content} if msg.role == "assistant" else {"role": msg.role, "content": msg.content, "document": msg.document} for msg in messages]
+        return Response({"messages": messages}, status=200)
+    
+class DeleteMessageView(APIView):
+    def post(self, request):
+        thread = Thread.objects.get(title=request.data.get("thread"))
+        queries = Message.objects.filter(thread=thread, content=request.data.get("content"), role="user", document=request.data.get("document"))
+        if len(queries) == 0:
+            return Response({"message": "Message not found"}, status=404)
+        responses = Message.objects.filter(thread=thread, role="assistant", content=request.data.get("response"))
+        if len(responses) == 0:
+            return Response({"message": "Response not found"}, status=404)
+        for query in queries:
+            for response in responses:
+                if response.id == query.id+1 and response.role == "assistant":
+                    query.delete()
+                    response.delete()
+                    break
+         
+        return Response({"message": "Message deleted"}, status=200)
+    
+class DeleteAllMessagesView(APIView):
+    def post(self, request):
+        thread = Thread.objects.get(title=request.data.get("thread"))
+        allMessages = Message.objects.filter(thread=thread).order_by("created_at")
+        allMessages = allMessages[1:]
+        for message in allMessages:
+            message.delete()
+        return Response({"message": "All messages deleted"}, status=200)
+    
+def ModifyMessageView(request):
+    thread = Thread.objects.get(title=request.GET.get("thread"))
+    time = request.GET.get("t")
+    queries = Message.objects.filter(thread=thread, content=request.GET.get("oldQuestion"), role="user", document=request.GET.get("oldDocument"))
+    responses = Message.objects.filter(thread=thread, role="assistant", content=request.GET.get("oldResponse"))
+    messages = Message.objects.filter(thread=thread).order_by("created_at")
+    modelName = request.GET.get("model")
+    oldDocument = request.GET.get("oldDocument")
+    message = request.GET.get("query")
+    messages = messages[1:]
+    # theQuery = None
+    # theResponse = None
+    print("# queries: ", len(queries), request.GET.get("oldQuestion"), f"{request.GET.get("oldDocument")}")
+    print("# responses: ", len(responses))
+    for query in queries:
+            for response in responses:
+                if response.id == query.id+1 and response.role == "assistant":
+                    theQuery = query
+                    theResponse = response
+                    break
+    messagesUser = [{"role": msg.role, "content": msg.instructions if msg.role == "user" else msg.content} for msg in messages if msg.created_at < theQuery.created_at]
+    results = query_vectorstore2(request.GET.get("query"))
+    results = [chunk.page_content for chunk in results]
 
+
+    def event_stream():
+        finalResponse = ""
+        message = f"Read the following prompt and content carefully. Provide a comprehensive, detailed, and well-structured response to the prompt, directly utilizing the supplied content for support and context. Clearly explain your reasoning and organize your answer with appropriate headings, bullet points, or lists as needed for readability. If any aspect is unclear, state your assumptions. Try not to reference prior conversations—focus only on the information provided.\n\nPrompt:{theQuery.content}\nContent:{results}"
+        # print(message)
+        stream = chat(model=modelName, 
+            messages=messagesUser + [{"role": "user", "content": message}],
+            stream=True)
+        for chunk in stream:
+            content = chunk["message"]["content"]
+            content = content.replace("\n", "<br>")
+            finalResponse += content
+            # print(finalResponse)
+            yield f"data: {content}\n\n"
+        theQuery.content = request.GET.get("query")
+        theQuery.instructions = message
+        theQuery.document = request.GET.get("newDocument")
+        theQuery.save()
+        theResponse.content = finalResponse
+        theResponse.save()
+        print("Done")
+        yield "data: [DONE]\n\n"
+    response = StreamingHttpResponse(event_stream(), content_type="text/event-stream")
+    response["Cache-Control"] = "no-cache"
+    return response
+
+class ModifyMessageManualView(APIView):
+    def post(self, request):
+        thread = Thread.objects.get(title=request.data.get("thread"))
+        time = request.data.get("t")
+        queries = Message.objects.filter(thread=thread, content=request.data.get("oldQuestion"), role="user", document=request.data.get("oldDocument"))
+        responses = Message.objects.filter(thread=thread, role="assistant", content=request.data.get("oldResponse"))
+        messages = Message.objects.filter(thread=thread).order_by("created_at")
+        # modelName = request.data.get("model")
+        # oldDocument = request.data.get("oldDocument")
+        message = request.data.get("query")
+        messages = messages[1:]
+        # theQuery = None
+        # theResponse = None
+        print("# queries: ", len(queries), request.data.get("oldQuestion"), f"{request.data.get("oldDocument")}")
+        print("# responses: ", len(responses))
+        for query in queries:
+                for response in responses:
+                    if response.id == query.id+1 and response.role == "assistant":
+                        query.content = request.data.get("query")
+                        query.document = request.data.get("newDocument")
+                        query.instructions = request.data.get("query")
+                        query.save()
+                        response.content = request.data.get("newResponse")
+                        response.save()
+                        break
+        return Response({"message": "Message modified"}, status=200)    
 
 ########################function tools
 
@@ -391,10 +520,21 @@ def query_vectorstore(query, topK=7):
     else:
         print("No vector store")
 
+def query_vectorstore2(query, topK=7):
+    global tempVectorStore
+    if tempVectorStore is not None:
+        results = tempVectorStore.similarity_search(query, k=topK)
+        # for doc in results:
+        #     print(doc.page_content)
+        # tempVectorStore = None
+        return results
+    else:
+        print("No vector store")
+
     
 def fileExtractor(file_path):
     parsed = parser.from_file(file_path)
-    print(parsed['content'])
+    # print(parsed['content'])
     return parsed['content'].strip()
 
 
@@ -413,3 +553,4 @@ class GetAllModels(APIView):
         #     print(model.model)
         return Response({"models": [model.model for model in models.models]}, status=200)
         # return Response({"msg": "This is a test"}, status=200)
+

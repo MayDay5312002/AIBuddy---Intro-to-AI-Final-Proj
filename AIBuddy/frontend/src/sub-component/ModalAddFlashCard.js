@@ -37,7 +37,7 @@ export default function ModalAddFlashCard({setFlashCards, flashCards, thread_tit
   }
 
   const handleThread = async () => {
-    axios.post("http://127.0.0.1:8000/api/createManualFlashCard/", {"title": title,  "content": content, "thread": thread_title})
+    axios.post("http://127.0.0.1:4192/api/createManualFlashCard/", {"title": title,  "content": content, "thread": thread_title})
     .then((response) => {
       // setFlashCards(flashCards.map(card => card.title === oldTitle ? {...card, title: title, content: content} : card));
       setFlashCards([...flashCards, {"title": title, "content": content}]);

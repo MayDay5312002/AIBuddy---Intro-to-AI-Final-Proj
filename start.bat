@@ -4,7 +4,7 @@ call venv\Scripts\activate.bat
 cd AIBuddy
 
 @REM run this program in the background (without new CMD)
-start /b python manage.py runserver 
+start /b python manage.py runserver 4192
 
 cd .\desktop
 

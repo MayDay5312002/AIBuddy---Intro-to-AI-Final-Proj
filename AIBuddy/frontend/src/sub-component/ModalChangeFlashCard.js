@@ -41,7 +41,7 @@ export default function ModalChangeFlashCard({oldTitle, oldContent, setFlashCard
   }, [oldTitle, oldContent]);
 
   const handleThread = async () => {
-    axios.post("http://127.0.0.1:8000/api/modifyFlashCard/", {"title": title,  "content": content, "thread": thread_title, "oldTitle": oldTitle})
+    axios.post("http://127.0.0.1:4192/api/modifyFlashCard/", {"title": title,  "content": content, "thread": thread_title, "oldTitle": oldTitle})
     .then((response) => {
       // setFlashCards(flashCards.map(card => card.title === oldTitle ? {...card, title: title, content: content} : card));
       let index = flashCards.findIndex(card => card.title === oldTitle);

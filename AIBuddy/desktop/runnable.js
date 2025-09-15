@@ -27,7 +27,7 @@ function createWindow() {
     },
   });
 
-  win.loadURL('http://127.0.0.1:8000');
+  win.loadURL('http://127.0.0.1:4192');
 }
 
 
@@ -63,7 +63,7 @@ app.whenReady().then(() => {
   // djangoProcess.stdout.on('data', data => console.log(`[Django] ${data}`));
   // djangoProcess.stderr.on('data', data => console.error(`[Django Error] ${data}`));
 
-  waitForServer('http://127.0.0.1:8000', createWindow);
+  waitForServer('http://127.0.0.1:4192', createWindow);
 });
 
 app.on('window-all-closed', () => {

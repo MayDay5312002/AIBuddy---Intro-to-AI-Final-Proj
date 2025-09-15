@@ -48,7 +48,7 @@ export default function ModalChangeQuiz({oldAnswer,oldQuestion, oldChoices, setQ
   }, [oldQuestion, oldChoices, oldAnswer]);
 
   const handleThread = async () => {
-    axios.post("http://127.0.0.1:8000/api/modifyQuizCard/", {"question": question,  "choices": choices, "answer": answer, "thread": thread_title,})
+    axios.post("http://127.0.0.1:4192/api/modifyQuizCard/", {"question": question,  "choices": choices, "answer": answer, "thread": thread_title,})
     .then((response) => {
       // setQuizzes(quizzes.map(card => card.title === oldTitle ? {...card, title: title, content: content} : card));
       let index = quizzes.findIndex(card => card.question === oldQuestion);
@@ -66,7 +66,7 @@ export default function ModalChangeQuiz({oldAnswer,oldQuestion, oldChoices, setQ
   }
 
   const handleDeleteChoice = async (newChoices) => {
-    axios.post("http://127.0.0.1:8000/api/deleteChoiceQuiz/", {"question": question, "choices": newChoices, "thread": thread_title})
+    axios.post("http://127.0.0.1:4192/api/deleteChoiceQuiz/", {"question": question, "choices": newChoices, "thread": thread_title})
     .then((response) => {
       setChoices( newChoices );
     })
