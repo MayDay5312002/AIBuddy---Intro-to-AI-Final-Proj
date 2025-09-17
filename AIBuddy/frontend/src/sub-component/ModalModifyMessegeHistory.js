@@ -86,7 +86,7 @@ export default function ModalModifyMessegeHistory({setResponse,thread_title, ref
         }}>
             <IconButton onClick={handleClose} sx={{position: "absolute", right: 18}}><CloseIcon /></IconButton>
           <Typography id="modal-modal-title" variant="h5" component="h2" sx={{fontWeight: 500}}>
-            Modify Message History
+            Message History
           </Typography>
           <Divider sx={{my: 1}}/>
 
@@ -96,8 +96,8 @@ export default function ModalModifyMessegeHistory({setResponse,thread_title, ref
            maxHeight: {xs:"80vh", sm: "60vh", md: "60vh"},
            overflow: "auto"
            }}>
-            <Typography variant="h6" component="h2" >Message History</Typography>
-            <Button  variant='contained' sx={{my: "1em"}} onClick={() => setDeleteAll(true)}>Delete all Messages</Button>
+            {/* <Typography variant="h6" component="h2" >Message History</Typography> */}
+            <Button  variant='contained' sx={{mb: "0.5em"}} onClick={() => setDeleteAll(true)}>Delete all Messages</Button>
             {
               deleteAll === true ?
                 (
@@ -126,8 +126,10 @@ export default function ModalModifyMessegeHistory({setResponse,thread_title, ref
                   <Paper sx={{ p:1}}>
                     {
                       message.role === "user" ?
-                      <Typography variant="body1" component="p" sx={{ color: "#0077b6", cursor: "pointer"}} onClick={ () => setResponse(messages[index+1].content)}>
-                        {message.content} <br/> <u>Content</u>: {message.document} <br/>
+                      <Box>
+                        <Typography variant="body1" component="p" sx={{ color: "#0077b6", cursor: "pointer", '&:hover': {backgroundColor: "#f3f3f3ff"}, borderRadius: 1, p:1}} onClick={() => setResponse(messages[index+1].content)}>
+                          {message.content} <br/> <u>Content</u>: {message.document} <br/>
+                          </Typography>
                         <IconButton 
                         onClick={() => {
                           axios.post("http://127.0.0.1:4192/api/deleteMessage/", {"thread": thread_title, "content": message.content, "document": message.document, "response": messages[index+1].content})
@@ -144,9 +146,10 @@ export default function ModalModifyMessegeHistory({setResponse,thread_title, ref
                         <ModalModifyMsg thread_title={thread_title} refreshMessageHistory={refreshMessageHistory} 
                         setRefreshMessageHistory={setRefreshMessageHistory} oldQuestion={message.content} 
                         oldResponse={messages[index+1].content} document={message.document} setResponse={setResponse}/>
-                      </Typography>
+                      </Box>
                       :
                       <Typography variant="body1" component="p" ><span dangerouslySetInnerHTML={{ __html: message.content }} /></Typography>
+
                     }
                   </Paper>
                 </Box>

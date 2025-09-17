@@ -501,7 +501,7 @@ const MainApp = () => {
               
           </Paper>
         } 
-          <Paper sx={{p:"1em", borderRadius: 4, top: 0, mx: "1em", flexGrow: 5, overflow: "auto", position: "relative"}}>
+          <Paper sx={{p:"1em", borderRadius: 4, top: 0, mx: "1em", flexGrow: 5, overflow: "auto", position: "relative", display: "flex", flexDirection: "column"}}>
             {isFullscreen === false &&
             <Box>
               <FormControl sx={{mt: "1em"}}>
@@ -553,6 +553,7 @@ const MainApp = () => {
                   </IconButton>
                   <Typography variant="caption" sx={{display: "block",  height: "0.5em", my:"0.2em", fontStyle: "italic"}}>Note: Please ensure Thread and File/URL are set to submit prompt.</Typography>
                   <Typography variant="body2" sx={{display: "block", color: "red", height: "0.5em", my:"0.2em", fontSize:"0.8em", my: "0.8em"}}>{errorResponseMsg}</Typography>
+                  <Divider sx={{mb: "0.5em"}}/>
                 </Box>
                 }
 
@@ -569,6 +570,7 @@ const MainApp = () => {
                       // height: isFullscreen ? "98vh" : {xs: "12em", sm: "13em", md: "23em"},
                       overflow: "auto",
                       position: "relative",
+                      flex: "1"
                     }}
                     >
                       <IconButton
@@ -596,8 +598,10 @@ const MainApp = () => {
                       border: '1px solid #e0e0e0',
                       // mt: isFullscreen ? 0 : "1em",
                       // height: isFullscreen ? "98vh" : {xs: "12em", sm: "13em", md: "16em"},
+                      // height: `calc(100vh - ${outerPaperHeight}px)`,
                       overflow: "auto",
                       position: "relative",
+                      flex: "1"
                     }}
                     >
                       <IconButton
@@ -639,7 +643,7 @@ const MainApp = () => {
                       // height: isFullscreen ? "98vh" : {xs: "12em", sm: "13em", md: "16em"},
                       overflow: "auto",
                       position: "relative",
-                      // width: "100%"
+                      flex: "1"
                     }}
                     >
                       <IconButton
