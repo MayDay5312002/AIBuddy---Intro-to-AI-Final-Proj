@@ -369,23 +369,37 @@ const MainApp = () => {
 
     return (
       <div >
-        { isFullscreen === false ?  
+        {/* <Box sx={{display: "flex", justifyContent: "center", alignItems: "center"}}> */}
+        <Box >
+          <Typography variant="h4" sx={{fontWeight: "bold", textAlign: "center"}}>
+            <Box sx={{cursor: "pointer"}} component={"span"} onClick={() => window.location.reload()}>
+              <img src="http://127.0.0.1:4192/static/images/Logo.png" height={"80em"} style={{position: "relative", top: "0.2em"}}/>
+              AI Study Companion
+            </Box>
+          </Typography>
+        </Box>
+        <Divider sx={{margin: "1em", mx: "5em", fontSize: "0.6em"}}/>
+        <Box sx={{display: "flex", flexDirection: "row", height: "86vh"}}>
+        { isFullscreen == false &&  
           <Paper 
-          elevation={3}
+          // elevation={3}
           sx={{
             padding: 3,
-            backgroundColor: '#f9fafb',
             borderRadius: 4,
-            boxShadow: '0px 4px 20px rgba(0,0,0,0.1)',
-            border: '1px solid #e0e0e0',
+            ml: "1em",
+            // order:1
+            flexGrow: 1,
+            overflow: "auto",
+            minWidth: {sm: "20em"}
+
           }}>
 
-              <Typography variant="h4" sx={{fontWeight: "bold", marginBottom: "1em", textAlign: "center"}}>
+              {/* <Typography variant="h4" sx={{fontWeight: "bold", marginBottom: "1em", textAlign: "center"}}>
                 <Box sx={{cursor: "pointer"}} component={"span"} onClick={() => window.location.reload()}>
                   <img src="http://127.0.0.1:4192/static/images/Logo.png" height={"80em"} style={{position: "relative", top: "0.2em"}}/>
                   AI Study Companion
                 </Box>
-              </Typography>
+              </Typography> */}
 
               <FormControl>
                 <FormLabel>Choose Input Type</FormLabel>
@@ -460,7 +474,6 @@ const MainApp = () => {
               </Typography>
 
               <Divider sx={{mt: "1em"}}/> 
-              {/* <hr style={{width: "100%", border: "1px solid #e0e0e0", height: "0.1em"}}/> */}
               <Box display="flex" flexDirection="column" gap={1} width={300}>
                 <Box>
                   <ModalAddThread  threads={threads} setThreads={setThreads} />
@@ -484,7 +497,13 @@ const MainApp = () => {
                 
                 
               </Box>
-
+              {/* <hr style={{width: "100%", border: "1px solid #e0e0e0", height: "0.1em"}}/> */}
+              
+          </Paper>
+        } 
+          <Paper sx={{p:"1em", borderRadius: 4, top: 0, mx: "1em", flexGrow: 5, overflow: "auto", position: "relative"}}>
+            {isFullscreen === false &&
+            <Box>
               <FormControl sx={{mt: "1em"}}>
                 <FormLabel>Choose Execution Type</FormLabel>
                 <RadioGroup
@@ -508,169 +527,175 @@ const MainApp = () => {
                 multiline
                 rows={1}
               />
-              {(executionType !== "Explain simply") &&
-              <Box>
-                <Typography variant="h7" sx={{fontWeight: 200, display: "block"}} >Number of {executionType === "Create flash cards" ? "flash cards" : "questions"} to generate:</Typography>
-                <TextField
-                  type="number"
-                  label="Enter a number"
-                  value={numberEx}
-                  onChange={handleChangeExcutionType}
-                  inputProps={{
-                    min: 1,
-                    step: 1, // ensures stepping by whole numbers
-                  }}
-                  sx={{ width: 200, my: "1em" }}
-                /> 
-              </Box>
-              }
-              <Button variant="contained" 
-              onClick={(executionType === "Explain simply") ? handleQuery : (executionType === "Create flash cards") ? handleCreateFlashCards : handleCreateQuiz} 
-              disabled={readToQuery === false || selectedThread === "" || query === ""}>
-                  Submit Prompt
-              </Button>
-              <IconButton>
-                {(loading) ? <CircularProgress size={24} /> : ""}
-              </IconButton>
-              <Typography variant="caption" sx={{display: "block",  height: "0.5em", my:"0.2em", fontStyle: "italic"}}>Note: Please ensure Thread and File/URL are set to submit prompt.</Typography>
-              <Typography variant="body2" sx={{display: "block", color: "red", height: "0.5em", my:"0.2em", fontSize:"0.8em", my: "0.8em"}}>{errorResponseMsg}</Typography>
-              {/* <Typography variant="h5" sx={{fontWeight: "bold"}}>{response}</Typography> */}
-          </Paper>
-          :
-          ""
-        }
-        {selectedThread !== "" && executionType === "Explain simply" &&
-          <Paper 
-          sx={{
-            px: "3vh",
-            pt: "2vh",
-            backgroundColor: '#f9fafb',
-            borderRadius: "1em",
-            border: '1px solid #e0e0e0',
-            mt: isFullscreen ? 0 : "1em",
-            maxHeight: isFullscreen ? "98vh" : "32em",
-            overflow: "auto",
-            position: isFullscreen ? 'fixed' : 'relative',
-          }}
-          >
-            <IconButton
-              onClick={toggleFullscreen}
-              sx={{ position: 'absolute', top: 8, right: 8 }}
-              aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
-            >
-              {isFullscreen ? <FullscreenExitIcon /> : <FullscreenIcon />}
-            </IconButton>
-            <Typography variant="h5" sx={{fontWeight: "bold", color: "green", mt: "1em", textAlign: "center"}}>Response</Typography>
-            <ModalModifyMessegeHistory thread_title={selectedThread} refreshMessageHistory={refreshMessageHistory} setRefreshMessageHistory={setRefreshMessageHistory} setResponse={setResponse}/>
-              <Typography variant="h6" sx={{ fontWeight: "500"}} >
-                <span dangerouslySetInnerHTML={{ __html: response }} /> 
-              </Typography>
-          </Paper>
-        }
-        {selectedThread !== "" && executionType === "Create flash cards" && flashCards != [] &&
-          <Paper 
-          sx={{
-            px: "3vh",
-            pt: "2vh",
-            backgroundColor: '#f9fafb',
-            borderRadius: "1em",
-            border: '1px solid #e0e0e0',
-            mt: isFullscreen ? 0 : "1em",
-            maxHeight: isFullscreen ? "98vh" : "32em",
-            overflow: "auto",
-            position: isFullscreen ? 'fixed' : 'relative',
-          }}
-          >
-            <IconButton
-              onClick={toggleFullscreen}
-              sx={{ position: 'absolute', top: 8, right: 8 }}
-              aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
-            >
-              {isFullscreen ? <FullscreenExitIcon /> : <FullscreenIcon />}
-            </IconButton>
-            <Typography variant="h5" sx={{fontWeight: "bold", color: "green", mt: "1em", textAlign: "center"}}>Flash Cards</Typography>
-            <ModalAddFlashCard setFlashCards={setFlashCards} flashCards={flashCards} thread_title={selectedThread}/>
-            {flashCards.map((card, index) => (
-              <Paper key={card.title} sx={{ p: 2, mb: 2, display: "inline-block", mx: 1, maxWidth: "30em"}}>
-                <Typography variant="h6" sx={{ fontWeight: "500" }} component={"span"}>
-                  {card["title"]}
-                </Typography>
-                <IconButton onClick={() => deleteCard(card["title"])} sx={{mx: 1}}>
-                  <DeleteIcon />
-                </IconButton>
-                <ModalChangeFlashCard oldTitle={card["title"]}  oldContent={card["content"]} setFlashCards={setFlashCards} flashCards={flashCards} thread_title={selectedThread}/>
-                <Divider sx={{ my: 1 }} />
-                <Typography variant="body1" sx={{ fontWeight: "400" }}>
-                  {card["content"]}
-                </Typography>
-
-              </Paper>
-            ))}
-          </Paper>
-        }
-        {selectedThread !== "" && executionType === "Create quiz" && quizzes != [] &&
-          <Paper 
-          sx={{
-            px: "3vh",
-            pt: "2vh",
-            backgroundColor: '#f9fafb',
-            borderRadius: "1em",
-            border: '1px solid #e0e0e0',
-            mt: isFullscreen ? 0 : "1em",
-            maxHeight: isFullscreen ? "98vh" : "32em",
-            overflow: "auto",
-            position: isFullscreen ? 'fixed' : 'relative',
-          }}
-          >
-            <IconButton
-              onClick={toggleFullscreen}
-              sx={{ position: 'absolute', top: 8, right: 8 }}
-              aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
-            >
-              {isFullscreen ? <FullscreenExitIcon /> : <FullscreenIcon />}
-            </IconButton>
-            <Typography variant="h5" sx={{fontWeight: "bold", color: "green", mt: "1em", textAlign: "center"}}>Quizzes</Typography>
-            {/* <Typography variant="h6" sx={{fontWeight: "500"}}>{response}</Typography> */}
-            <ModalAddQuiz setQuizzes={setQuizzes} quizzes={quizzes} thread_title={selectedThread}/>
-            {quizzes.map((quiz, indexQuiz) => (
-              <Paper key={quiz.question} sx={{ p: 2, mb: 2, display: "inline-block", mx: 1}}>
-                <Typography variant="h6" sx={{ fontWeight: "500" }} component={"span"}>
-                  {quiz["question"]}
-                </Typography>
-                <IconButton onClick={() => deleteQuiz(quiz["question"])} sx={{mx: 1}}>
-                  <DeleteIcon />
-                </IconButton>
-                <ModalChangeQuiz oldAnswer={quiz.answer} oldQuestion={quiz.question} oldChoices={quiz.choices} setQuizzes={setQuizzes} quizzes={quizzes} thread_title={selectedThread}/>
-                <Divider sx={{ my: 1 }} />
-                <List>
-                  {quiz.choices.map((choice, index) => (
-                    <ListItem
-                      key={choice}
-                      component={"button"}
-                      onClick={() => handleChoiceClick(choice, quiz.answer, indexQuiz)}  
-                      sx={{
-                        // Need to fix this. It shows color of the same choice(s) in diff questions
-                        backgroundColor:
-                          selectedAnswer === choice && indexQuizSelected === indexQuiz
-                            ? isAnswerCorrect
-                              ? 'lightgreen'
-                              : 'lightcoral'
-                            : 'transparent',
-                        borderRadius: 1,
-                        '&:hover': {
-                          backgroundColor: 'lightgray',
-                        },
-                        cursor: 'pointer',
+                  {(executionType !== "Explain simply") &&
+                  <Box>
+                    <Typography variant="h7" sx={{fontWeight: 200, display: "block"}} >Number of {executionType === "Create flash cards" ? "flash cards" : "questions"} to generate:</Typography>
+                    <TextField
+                      type="number"
+                      label="Enter a number"
+                      value={numberEx}
+                      onChange={handleChangeExcutionType}
+                      inputProps={{
+                        min: 1,
+                        step: 1, // ensures stepping by whole numbers
                       }}
+                      sx={{ width: 200, my: "1em" }}
+                    /> 
+                  </Box>
+                  }
+                  <Button variant="contained" 
+                  onClick={(executionType === "Explain simply") ? handleQuery : (executionType === "Create flash cards") ? handleCreateFlashCards : handleCreateQuiz} 
+                  disabled={readToQuery === false || selectedThread === "" || query === ""}>
+                      Submit Prompt
+                  </Button>
+                  <IconButton>
+                    {(loading) ? <CircularProgress size={24} /> : ""}
+                  </IconButton>
+                  <Typography variant="caption" sx={{display: "block",  height: "0.5em", my:"0.2em", fontStyle: "italic"}}>Note: Please ensure Thread and File/URL are set to submit prompt.</Typography>
+                  <Typography variant="body2" sx={{display: "block", color: "red", height: "0.5em", my:"0.2em", fontSize:"0.8em", my: "0.8em"}}>{errorResponseMsg}</Typography>
+                </Box>
+                }
+
+                  {selectedThread !== "" && executionType === "Explain simply" &&
+                    <Paper 
+                    sx={{
+                      px: "3vh",
+                      pt: "2vh",
+                      backgroundColor: '#f9fafb',
+                      borderRadius: "1em",
+                      border: '1px solid #e0e0e0',
+                      // mt: isFullscreen ? 0 : "1em",
+                      // maxWidth: 
+                      // height: isFullscreen ? "98vh" : {xs: "12em", sm: "13em", md: "23em"},
+                      overflow: "auto",
+                      position: "relative",
+                    }}
                     >
-                      <ListItemText primary={choice} />
-                    </ListItem>
-                  ))}
-                </List>
-              </Paper>
-            ))}
+                      <IconButton
+                        onClick={toggleFullscreen}
+                        sx={{ position: 'absolute', top: 8, right: 8 }}
+                        aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+                      >
+                        {isFullscreen ? <FullscreenExitIcon /> : <FullscreenIcon />}
+                      </IconButton>
+                      <Typography variant="h5" sx={{fontWeight: "bold", color: "green", mt: "1em", textAlign: "center"}}>Response</Typography>
+                      <ModalModifyMessegeHistory thread_title={selectedThread} refreshMessageHistory={refreshMessageHistory} setRefreshMessageHistory={setRefreshMessageHistory} setResponse={setResponse}/>
+                      <Typography variant="h6" sx={{ fontWeight: "500"}}>
+                        <span dangerouslySetInnerHTML={{ __html: response }} /> 
+                      </Typography>
+                    </Paper>
+                
+                  }
+                  {selectedThread !== "" && executionType === "Create flash cards" && flashCards != [] &&
+                    <Paper 
+                    sx={{
+                      px: "3vh",
+                      pt: "2vh",
+                      backgroundColor: '#f9fafb',
+                      borderRadius: "1em",
+                      border: '1px solid #e0e0e0',
+                      // mt: isFullscreen ? 0 : "1em",
+                      // height: isFullscreen ? "98vh" : {xs: "12em", sm: "13em", md: "16em"},
+                      overflow: "auto",
+                      position: "relative",
+                    }}
+                    >
+                      <IconButton
+                        onClick={toggleFullscreen}
+                        sx={{ position: 'absolute', top: 8, right: 8 }}
+                        aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+                      >
+                        {isFullscreen ? <FullscreenExitIcon /> : <FullscreenIcon />}
+                      </IconButton>
+                      <Typography variant="h5" sx={{fontWeight: "bold", color: "green", mt: "1em", textAlign: "center"}}>Flash Cards</Typography>
+                      <ModalAddFlashCard setFlashCards={setFlashCards} flashCards={flashCards} thread_title={selectedThread}/>
+                      {flashCards.map((card, index) => (
+                        <Paper key={card.title} sx={{ p: 2, mb: 2, display: "inline-block", mx: 1, maxWidth: "30em"}}>
+                          <Typography variant="h6" sx={{ fontWeight: "500" }} component={"span"}>
+                            {card["title"]}
+                          </Typography>
+                          <IconButton onClick={() => deleteCard(card["title"])} sx={{mx: 1}}>
+                            <DeleteIcon />
+                          </IconButton>
+                          <ModalChangeFlashCard oldTitle={card["title"]}  oldContent={card["content"]} setFlashCards={setFlashCards} flashCards={flashCards} thread_title={selectedThread}/>
+                          <Divider sx={{ my: 1 }} />
+                          <Typography variant="body1" sx={{ fontWeight: "400" }}>
+                            {card["content"]}
+                          </Typography>
+                      
+                        </Paper>
+                      ))}
+                    </Paper>
+                  }
+                  {selectedThread !== "" && executionType === "Create quiz" && quizzes != [] &&
+                    <Paper 
+                    sx={{
+                      px: "3vh",
+                      pt: "2vh",
+                      backgroundColor: '#f9fafb',
+                      borderRadius: "1em",
+                      border: '1px solid #e0e0e0',
+                      // mt: isFullscreen ? 0 : "1em",
+                      // height: isFullscreen ? "98vh" : {xs: "12em", sm: "13em", md: "16em"},
+                      overflow: "auto",
+                      position: "relative",
+                      // width: "100%"
+                    }}
+                    >
+                      <IconButton
+                        onClick={toggleFullscreen}
+                        sx={{ position: 'absolute', top: 8, right: 8 }}
+                        aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+                      >
+                        {isFullscreen ? <FullscreenExitIcon /> : <FullscreenIcon />}
+                      </IconButton>
+                      <Typography variant="h5" sx={{fontWeight: "bold", color: "green", mt: "1em", textAlign: "center"}}>Quizzes</Typography>
+                      {/* <Typography variant="h6" sx={{fontWeight: "500"}}>{response}</Typography> */}
+                      <ModalAddQuiz setQuizzes={setQuizzes} quizzes={quizzes} thread_title={selectedThread}/>
+                      {quizzes.map((quiz, indexQuiz) => (
+                        <Paper key={quiz.question} sx={{ p: 2, mb: 2, display: "inline-block", mx: 1}}>
+                          <Typography variant="h6" sx={{ fontWeight: "500" }} component={"span"}>
+                            {quiz["question"]}
+                          </Typography>
+                          <IconButton onClick={() => deleteQuiz(quiz["question"])} sx={{mx: 1}}>
+                            <DeleteIcon />
+                          </IconButton>
+                          <ModalChangeQuiz oldAnswer={quiz.answer} oldQuestion={quiz.question} oldChoices={quiz.choices} setQuizzes={setQuizzes} quizzes={quizzes} thread_title={selectedThread}/>
+                          <Divider sx={{ my: 1 }} />
+                          <List>
+                            {quiz.choices.map((choice, index) => (
+                              <ListItem
+                                key={choice}
+                                component={"button"}
+                                onClick={() => handleChoiceClick(choice, quiz.answer, indexQuiz)}  
+                                sx={{
+                                  // Need to fix this. It shows color of the same choice(s) in diff questions
+                                  backgroundColor:
+                                    selectedAnswer === choice && indexQuizSelected === indexQuiz
+                                      ? isAnswerCorrect
+                                        ? 'lightgreen'
+                                        : 'lightcoral'
+                                      : 'transparent',
+                                  borderRadius: 1,
+                                  '&:hover': {
+                                    backgroundColor: 'lightgray',
+                                  },
+                                  cursor: 'pointer',
+                                }}
+                              >
+                                <ListItemText primary={choice} />
+                              </ListItem>
+                            ))}
+                          </List>
+                        </Paper>
+                      ))}
+                    </Paper>
+                  }
+
           </Paper>
-        }
+          </Box>
+
+        
         </div>
     );
 };
