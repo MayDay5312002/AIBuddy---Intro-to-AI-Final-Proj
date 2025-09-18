@@ -377,14 +377,45 @@ const MainApp = () => {
       <div style={{display: "flex", flexDirection: "column", height: "100%"}}>
         {/* <Box sx={{display: "flex", justifyContent: "center", alignItems: "center"}}> */}
         <Box >
-          <Typography variant="h4" sx={{fontWeight: "bold", textAlign: "center", fontSize: "4.1vh", color: "#383838ff",}}>
-            <Box sx={{cursor: "pointer"}} component={"span"} onClick={() => window.location.reload()}>
+          <Typography variant="h4" sx={{fontWeight: "bold", textAlign: "center", fontSize: "4.1vh", color: "#383838ff"}}>
+            <Box sx={{cursor: "pointer", }} component={"span"} onClick={() => window.location.reload()}>
               <img src="http://127.0.0.1:4192/static/images/Logo.png"  style={{position: "relative", top: "0.2rem", height: "9vh"}}/>
-              AI Study Companion
+              <Typography
+                variant="h4"
+                sx={{
+                  display: "inline",
+                  fontWeight: "600",
+                  fontSize: "4.1vh",
+                  color: "#3a3838ff",
+                  textShadow: `
+                    -1px -1px 0 #ffffffff,  
+                    1px -1px 0 #ffffffff,
+                    -1px 1px 0 #ffffffff,
+                    1px 1px 0 #ffffffff,
+                    2px 2px 4px white
+                  `,
+                }}
+              >
+                AI Study Companion
+              </Typography>
+
             </Box>
           </Typography>
         </Box>
-        <Divider sx={{margin: "1em", mx: "5em", fontSize: "0.6rem"}}/>
+        {/* <Divider sx={{margin: "1em", mx: "5em", fontSize: "0.6rem"}}/> */}
+        <hr 
+        style=
+        {{
+          margin: "1em 5em",
+          fontSize: "0.6rem", 
+          borderRadius: "10em", 
+          borderWidth: "0.1em", 
+          color: "#cfcfcfff",
+          borderTopColor: "#8a8a8aff",
+          borderBottomColor: 'rgb(194, 213, 219)',
+          color: '#a5a5a5ff'
+        }}
+        />
         <Box
          sx={{display: "flex",
           flexDirection: isPortrait ? "column" : "row",
@@ -602,7 +633,7 @@ const MainApp = () => {
                       >
                         {isFullscreen ? <FullscreenExitIcon /> : <FullscreenIcon />}
                       </IconButton>
-                      <Typography variant="h5" sx={{fontWeight: "bold", color: "green", mt: "1em", textAlign: "center"}}>Response</Typography>
+                      <Typography variant="h5" sx={{fontWeight: "bold", color: "green", mt: "1em", textAlign: "center", color: "#0077b6"}}>Response</Typography>
                       <ModalModifyMessegeHistory thread_title={selectedThread} refreshMessageHistory={refreshMessageHistory} setRefreshMessageHistory={setRefreshMessageHistory} setResponse={setResponse}/>
                       <Typography variant="h6" sx={{ fontWeight: "500"}}>
                         <span dangerouslySetInnerHTML={{ __html: response }} /> 
@@ -635,7 +666,7 @@ const MainApp = () => {
                       >
                         {isFullscreen ? <FullscreenExitIcon /> : <FullscreenIcon />}
                       </IconButton>
-                      <Typography variant="h5" sx={{fontWeight: "bold", color: "green", mt: "1em", textAlign: "center"}}>Flash Cards</Typography>
+                      <Typography variant="h5" sx={{fontWeight: "bold", color: "green", mt: "1em", textAlign: "center", color: "#0077b6"}}>Flash Cards</Typography>
                       <ModalAddFlashCard setFlashCards={setFlashCards} flashCards={flashCards} thread_title={selectedThread}/>
                       {flashCards.map((card, index) => (
                         <Paper key={card.title} sx={{ p: 2, mb: 2, display: "inline-block", mx: 1, maxWidth: "30em"}}>
@@ -680,7 +711,7 @@ const MainApp = () => {
                       >
                         {isFullscreen ? <FullscreenExitIcon /> : <FullscreenIcon />}
                       </IconButton>
-                      <Typography variant="h5" sx={{fontWeight: "bold", color: "green", mt: "1em", textAlign: "center"}}>Quizzes</Typography>
+                      <Typography variant="h5" sx={{fontWeight: "bold", color: "green", mt: "1em", textAlign: "center", color:"#0077b6"}}>Quizzes</Typography>
                       {/* <Typography variant="h6" sx={{fontWeight: "500"}}>{response}</Typography> */}
                       <ModalAddQuiz setQuizzes={setQuizzes} quizzes={quizzes} thread_title={selectedThread}/>
                       {quizzes.map((quiz, indexQuiz) => (
