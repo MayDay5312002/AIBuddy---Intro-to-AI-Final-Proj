@@ -440,7 +440,7 @@ const MainApp = () => {
             flexGrow: 3,
             overflow: "auto",
             minWidth: "20em",
-            minHeight: "25em",
+            minHeight: isPortrait ? "25em" : 0,
 
 
           }}>
