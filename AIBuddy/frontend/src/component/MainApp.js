@@ -368,9 +368,9 @@ const MainApp = () => {
     };
 
     return (
-      <div style={{display: "flex", flexDirection: "column", height: "100%"}}>
+      <div >
         {/* <Box sx={{display: "flex", justifyContent: "center", alignItems: "center"}}> */}
-        <Box sx={{height: "6em"}}>
+        <Box >
           <Typography variant="h4" sx={{fontWeight: "bold", textAlign: "center"}}>
             <Box sx={{cursor: "pointer"}} component={"span"} onClick={() => window.location.reload()}>
               <img src="http://127.0.0.1:4192/static/images/Logo.png" height={"80em"} style={{position: "relative", top: "0.2em"}}/>
@@ -378,13 +378,13 @@ const MainApp = () => {
             </Box>
           </Typography>
         </Box>
-        <Divider sx={{margin: "1em", mx: "5em", fontSize: "0.6em", height: "0.1em"}}/>
+        <Divider sx={{margin: "1em", mx: "5em", fontSize: "0.6em"}}/>
         <Box
          sx={{display: "flex",
           flexDirection: "row",
           // height: "86vh",
-          pb: "0.75em",
-          flex: "1"
+          height: {xs: "60vh", sm: "70vh", md: "86vh"},
+          pb: "0.75em"
           }}
         >
         { isFullscreen == false &&  
