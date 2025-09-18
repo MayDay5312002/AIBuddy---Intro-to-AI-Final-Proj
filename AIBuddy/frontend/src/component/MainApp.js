@@ -60,6 +60,8 @@ const MainApp = () => {
 
     const [refreshMessageHistory, setRefreshMessageHistory] = useState(false);
 
+    const [isPortrait, setIsPortrait] = useState(window.matchMedia("(orientation: portrait)").matches);
+
     const handleChoiceClick = (choice, answer, index) => {
       if(selectedAnswer === choice){
         setSelectedAnswer('');
@@ -120,6 +122,10 @@ const MainApp = () => {
         setSelectedThread("")
       }
     }, [threads])
+
+    useEffect(() => {
+      setIsPortrait(window.matchMedia("(orientation: portrait)").matches);
+    }, [window.innerHeight, window.innerWidth])
     
 
 
@@ -370,23 +376,24 @@ const MainApp = () => {
     return (
       <div style={{display: "flex", flexDirection: "column", height: "100%"}}>
         {/* <Box sx={{display: "flex", justifyContent: "center", alignItems: "center"}}> */}
-        <Box sx={{height: "10vh"}}>
+        <Box >
           <Typography variant="h4" sx={{fontWeight: "bold", textAlign: "center", fontSize: "4.1vh", color: "#383838ff",}}>
             <Box sx={{cursor: "pointer"}} component={"span"} onClick={() => window.location.reload()}>
-              <img src="http://127.0.0.1:4192/static/images/Logo.png"  style={{position: "relative", top: "0.2em", height: "9vh"}}/>
+              <img src="http://127.0.0.1:4192/static/images/Logo.png"  style={{position: "relative", top: "0.2rem", height: "9vh"}}/>
               AI Study Companion
             </Box>
           </Typography>
         </Box>
-        <Divider sx={{margin: "1em", mx: "5em", fontSize: "0.6em", height: "0.1em"}}/>
+        <Divider sx={{margin: "1em", mx: "5em", fontSize: "0.6rem"}}/>
         <Box
          sx={{display: "flex",
-          flexDirection: "row",
+          flexDirection: isPortrait ? "column" : "row",
           overflow: "auto",
           // height: "86vh",
           // height: {xs: "60vh", sm: "70vh", md: "86vh"},
           pb: "0.75em",
-          flexGrow: "1"
+          // flexGrow: "1"
+          flex: "1"
           }}
         >
         { isFullscreen == false &&  
@@ -396,10 +403,14 @@ const MainApp = () => {
             padding: 3,
             borderRadius: 4,
             ml: "1em",
+            mr: isPortrait ? "1em" : 0,
+            mb: isPortrait ? "1em" : 0,  
             // order:1
-            flexGrow: 1,
+            flexGrow: 3,
             overflow: "auto",
-            minWidth: {sm: "20em"}
+            minWidth: "20em",
+            minHeight: "25em",
+
 
           }}>
 
@@ -561,7 +572,7 @@ const MainApp = () => {
                     {(loading) ? <CircularProgress size={24} /> : ""}
                   </IconButton>
                   <Typography variant="caption" sx={{display: "block",  height: "0.5em", my:"0.2em", fontStyle: "italic"}}>Note: Please ensure Thread and File/URL are set to submit prompt.</Typography>
-                  <Typography variant="body2" sx={{display: "block", color: "red", height: "0.5em", my:"0.2em", fontSize:"0.8em", my: "0.8em"}}>{errorResponseMsg}</Typography>
+                  <Typography variant="body2" sx={{display: "block", color: "red", height: "0.5em", my:"0.2em", fontSize:"0.8rem", my: "0.8em"}}>{errorResponseMsg}</Typography>
                   <Divider sx={{mb: "0.5em"}}/>
                 </Box>
                 }
@@ -654,6 +665,7 @@ const MainApp = () => {
                       border: '1px solid #e0e0e0',
                       // mt: isFullscreen ? 0 : "1em",
                       // height: isFullscreen ? "98vh" : {xs: "12em", sm: "13em", md: "16em"},
+                      // height: `calc(100vh - ${outerPaperHeight}px)`,
                       overflow: "auto",
                       position: "relative",
                       flex: "1",
