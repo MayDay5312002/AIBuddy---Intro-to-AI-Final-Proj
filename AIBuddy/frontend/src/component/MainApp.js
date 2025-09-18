@@ -60,7 +60,7 @@ const MainApp = () => {
 
     const [refreshMessageHistory, setRefreshMessageHistory] = useState(false);
 
-    const [isPortrait, setIsPortrait] = useState(1.25*window.innerWidth < window.innerHeight ? true : false);
+    const [isPortrait, setIsPortrait] = useState(window.matchMedia("(orientation: portrait)").matches);
 
     const handleChoiceClick = (choice, answer, index) => {
       if(selectedAnswer === choice){
@@ -124,12 +124,7 @@ const MainApp = () => {
     }, [threads])
 
     useEffect(() => {
-      if(1.25*window.innerHeight < window.innerWidth){
-        setIsPortrait(true)
-      }
-      else{
-        setIsPortrait(false)
-      }
+      setIsPortrait(window.matchMedia("(orientation: portrait)").matches);
     }, [window.innerHeight, window.innerWidth])
     
 
