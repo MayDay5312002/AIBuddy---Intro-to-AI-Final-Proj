@@ -17,13 +17,18 @@ html, body {
 
 #main {
     width: 100%;
-    min-height: 100vh; 
+    /* min-height: 100vh;  */
+    height: 100%;    
 }
 
 #app {
     width: 100%;
-    min-height: 100vh;
+    /* min-height: 100vh; */
+    height: 100%;
     
+}
+div.program {
+    height: 100vh;
 }
 
 .blue1 {

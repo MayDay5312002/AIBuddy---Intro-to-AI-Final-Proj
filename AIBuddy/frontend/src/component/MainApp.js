@@ -368,7 +368,7 @@ const MainApp = () => {
     };
 
     return (
-      <Box sx={{display: "flex", flexDirection: "column", height: "100%"}}>
+      <div style={{display: "flex", flexDirection: "column", height: "100%"}}>
         {/* <Box sx={{display: "flex", justifyContent: "center", alignItems: "center"}}> */}
         <Box sx={{height: "6em"}}>
           <Typography variant="h4" sx={{fontWeight: "bold", textAlign: "center"}}>
@@ -384,7 +384,7 @@ const MainApp = () => {
           flexDirection: "row",
           overflow: "auto",
           // height: "86vh",
-          height: {xs: "60vh", sm: "70vh", md: "86vh"},
+          // height: {xs: "60vh", sm: "70vh", md: "86vh"},
           pb: "0.75em",
           flexGrow: "1"
           }}
@@ -715,7 +715,7 @@ const MainApp = () => {
           </Box>
 
         
-        </Box>
+        </div>
     );
 };
 
