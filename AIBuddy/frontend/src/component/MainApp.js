@@ -379,7 +379,14 @@ const MainApp = () => {
           </Typography>
         </Box>
         <Divider sx={{margin: "1em", mx: "5em", fontSize: "0.6em"}}/>
-        <Box sx={{display: "flex", flexDirection: "row", height: "86vh", pb: "0.75em"}}>
+        <Box
+         sx={{display: "flex",
+          flexDirection: "row",
+          height: "86vh",
+          height: {xs: "65vh", sm: "75vh", md: "80vh"},
+          pb: "0.75em"
+          }}
+        >
         { isFullscreen == false &&  
           <Paper 
           // elevation={3}
