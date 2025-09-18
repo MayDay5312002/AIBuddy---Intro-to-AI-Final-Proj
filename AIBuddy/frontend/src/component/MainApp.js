@@ -370,10 +370,10 @@ const MainApp = () => {
     return (
       <div style={{display: "flex", flexDirection: "column", height: "100%"}}>
         {/* <Box sx={{display: "flex", justifyContent: "center", alignItems: "center"}}> */}
-        <Box sx={{height: "6em"}}>
-          <Typography variant="h4" sx={{fontWeight: "bold", textAlign: "center"}}>
+        <Box sx={{height: "10vh"}}>
+          <Typography variant="h4" sx={{fontWeight: "bold", textAlign: "center", fontSize: "4.1vh", color: "#383838ff",}}>
             <Box sx={{cursor: "pointer"}} component={"span"} onClick={() => window.location.reload()}>
-              <img src="http://127.0.0.1:4192/static/images/Logo.png" height={"80em"} style={{position: "relative", top: "0.2em"}}/>
+              <img src="http://127.0.0.1:4192/static/images/Logo.png"  style={{position: "relative", top: "0.2em", height: "9vh"}}/>
               AI Study Companion
             </Box>
           </Typography>
