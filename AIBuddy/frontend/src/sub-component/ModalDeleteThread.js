@@ -56,7 +56,7 @@ export default function ModalDeleteThread({threads, setThreads}) {
   return (
     <Box component={"span"}>
       {/* <Button onClick={handleOpen} sx={{mt: 1, color: "white", backgroundColor: "rgb(25, 118, 210)", mx: 1}}><DeleteIcon /></Button> */}
-      <Button onClick={handleOpen} sx={{mt: 1, color: "white", backgroundColor: "rgb(25, 118, 210)", mx: 1}}>Delete Thread</Button>
+      <Button onClick={handleOpen} sx={{mt: 1, color: "white", backgroundColor: "rgb(25, 118, 210)", mx: 1, fontSize: "0.85em"}}>Delete Thread</Button>
       <Modal
         open={open}
         onClose={handleClose}
@@ -96,7 +96,7 @@ export default function ModalDeleteThread({threads, setThreads}) {
           </div>
       
           <div>
-            <Button disabled={selectedThread === "" ? true : false} onClick={handleThreadDelete} variant='contained' sx={{my: "1em"}}>Submit</Button>
+            <Button disabled={selectedThread === "" ? true : false} onClick={handleThreadDelete} variant='contained' sx={{my: "1em", fontSize: "0.85em"}}>Submit</Button>
           </div>
           
           

@@ -493,7 +493,7 @@ const MainApp = () => {
                   required
                 />
                 <label htmlFor="file-upload">
-                  <Button variant="contained" component="span">
+                  <Button variant="contained" component="span" sx={{fontSize: "0.85rem"}}>
                     Select File
                   </Button>
                 </label>
@@ -513,7 +513,7 @@ const MainApp = () => {
                 />
               </>
               }
-              <Button variant="contained" component="span" onClick={handleSubmitFile} sx={{mt: "1em"}}>
+              <Button variant="contained" component="span" onClick={handleSubmitFile} sx={{mt: "1em", fontSize: "0.85rem"}}>
                   Submit {(inputType === "file") ? "File" : "Youtube URL"}
               </Button>
               <Typography variant="caption" sx={{display: "block", color: colorOfResponse, height: "0.5em", my:"0.5em"}}>{errorResponse}</Typography> 
@@ -594,7 +594,9 @@ const MainApp = () => {
                     /> 
                   </Box>
                   }
-                  <Button variant="contained" 
+                  <Button 
+                  sx={{fontSize: "0.85rem"}}
+                  variant="contained" 
                   onClick={(executionType === "Explain simply") ? handleQuery : (executionType === "Create flash cards") ? handleCreateFlashCards : handleCreateQuiz} 
                   disabled={readToQuery === false || selectedThread === "" || query === ""}>
                       Submit Prompt
@@ -631,7 +633,7 @@ const MainApp = () => {
                         sx={{ position: 'absolute', top: 8, right: 8 }}
                         aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
                       >
-                        {isFullscreen ? <FullscreenExitIcon /> : <FullscreenIcon />}
+                        {isFullscreen ? <FullscreenExitIcon/> : <FullscreenIcon />}
                       </IconButton>
                       <Typography variant="h5" sx={{fontWeight: "bold", color: "green", mt: "1em", textAlign: "center", color: "#0077b6"}}>Response</Typography>
                       <ModalModifyMessegeHistory thread_title={selectedThread} refreshMessageHistory={refreshMessageHistory} setRefreshMessageHistory={setRefreshMessageHistory} setResponse={setResponse}/>

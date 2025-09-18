@@ -212,7 +212,7 @@ export default function ModalModifyMsg({setResponse,thread_title, refreshMessage
             if (generating) return;
             setModifyOption(modifyOption === "Manual" ? "Auto" : "Manual");
           }}
-           component="span" style={{marginTop: "0.5em", marginBottom: "0.5em"}}>{modifyOption}</Button>
+           component="span" sx={{marginTop: "0.5em", marginBottom: "0.5em", fontSize: "0.85em"}}>{modifyOption}</Button>
           <Divider sx={{my: 1}}/>
 
           <Paper 
@@ -282,7 +282,7 @@ export default function ModalModifyMsg({setResponse,thread_title, refreshMessage
                   required
                 />
                 <label htmlFor="file-upload-here" style={{display: "span"}}>
-                  <Button variant="contained" component="span">
+                  <Button variant="contained" component="span" sx={{ fontSize: "0.85em"}}>
                     Select File
                   </Button>
                 </label>
@@ -306,7 +306,7 @@ export default function ModalModifyMsg({setResponse,thread_title, refreshMessage
             <Typography variant="body2" sx={{mb: "0.5em", overflow: "auto"}}><u>Old reference</u>: {document}</Typography>
             <Button variant="contained" component="span" 
               onClick={handleSubmitFile} 
-              sx={{display: "span"}}>
+              sx={{display: "span", fontSize: "0.85em"}}>
             Submit {(inputType === "file") ? "File" : "Youtube URL"}
             </Button>
             <span style={{marginLeft: "0.5em", color: "green", fontSize: "1em"}}>{errorResponse}</span>
@@ -341,7 +341,7 @@ export default function ModalModifyMsg({setResponse,thread_title, refreshMessage
 
             onClick={modifyOption === "Auto" ? handleQueryAuto : handleQueryManual }
             variant='contained' 
-            sx={{my: "1em"}}
+            sx={{my: "1em", fontSize: "0.85em"}}
             >
               Submit
             </Button>

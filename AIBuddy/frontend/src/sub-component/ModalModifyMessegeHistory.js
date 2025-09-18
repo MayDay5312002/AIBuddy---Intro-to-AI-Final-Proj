@@ -97,7 +97,7 @@ export default function ModalModifyMessegeHistory({setResponse,thread_title, ref
            overflow: "auto"
            }}>
             {/* <Typography variant="h6" component="h2" >Message History</Typography> */}
-            <Button  variant='contained' sx={{mb: "0.5em"}} onClick={() => setDeleteAll(true)}>Delete all Messages</Button>
+            <Button  variant='contained' sx={{mb: "0.5em", fontSize: "0.85em"}} onClick={() => setDeleteAll(true)}>Delete all Messages</Button>
             {
               deleteAll === true ?
                 (
@@ -106,14 +106,14 @@ export default function ModalModifyMessegeHistory({setResponse,thread_title, ref
                       sx={{ margin: "0.2em", cursor: "pointer", "&:hover": { backgroundColor: "#c9c9c9ff" } }}
                       onClick={() => deleteAllMessage()}
                     >
-                      <Typography variant="body1" component="p">Yes</Typography>
+                      <Typography variant="body1" component="p" sx={{ fontSize: "0.85em"}}>Yes</Typography>
                     </IconButton>
                     /
                     <IconButton 
                       sx={{ cursor: "pointer", marginLeft: "0.2em", "&:hover": { backgroundColor: "#c9c9c9ff" } }}
                       onClick={() => setDeleteAll(false)}
                     >
-                      <Typography variant="body1" component="p">No</Typography>
+                      <Typography variant="body1" component="p" sx={{ fontSize: "0.85em"}}>No</Typography>
                     </IconButton>
                   </>
                 )

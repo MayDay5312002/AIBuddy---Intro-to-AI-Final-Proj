@@ -150,7 +150,7 @@ export default function ModalAddQuiz({setQuizzes, quizzes, thread_title}) {
           </div>
       
           <div style={{marginTop: "1em"}}>
-            <Button disabled={question === '' || choices.length === 0} onClick={handleThread} variant='contained' sx={{my: "1em"}}>Submit</Button>
+            <Button disabled={question === '' || choices.length === 0} onClick={handleThread} variant='contained' sx={{my: "1em", fontSize: "0.85rem"}}>Submit</Button>
           </div>
           
           

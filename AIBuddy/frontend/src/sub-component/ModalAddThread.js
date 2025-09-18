@@ -55,7 +55,7 @@ export default function BasicModalAdd({threads, setThreads}) {
   return (
     <Box component={"span"}>
       {/* <Button onClick={handleOpen} sx={{mt: 1, color: "white", backgroundColor: "rgb(25, 118, 210)"}}><AddIcon /></Button> */}
-      <Button onClick={handleOpen} sx={{mt: 1, color: "white", backgroundColor: "rgb(25, 118, 210)"}}>Create Thread</Button>
+      <Button onClick={handleOpen} sx={{mt: 1, color: "white", backgroundColor: "rgb(25, 118, 210)", fontSzie: "0.85rem"}}>Create Thread</Button>
       <Modal
         open={open}
         onClose={handleClose}
@@ -84,7 +84,7 @@ export default function BasicModalAdd({threads, setThreads}) {
           </div>
       
           <div>
-            <Button disabled={name === "" ? true : false} onClick={handleThread} variant='contained' sx={{my: "1em"}}>Submit</Button>
+            <Button disabled={name === "" ? true : false} onClick={handleThread} variant='contained' sx={{my: "1em", fontSize: "0.85rem"}}>Submit</Button>
           </div>
           
           

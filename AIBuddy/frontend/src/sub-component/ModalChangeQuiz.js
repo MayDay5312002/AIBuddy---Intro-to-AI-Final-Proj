@@ -177,7 +177,7 @@ export default function ModalChangeQuiz({oldAnswer,oldQuestion, oldChoices, setQ
             disabled={question === oldQuestion && JSON.stringify(choices) == JSON.stringify(oldChoices) && answer === oldAnswer} 
             onClick={handleThread} 
             variant='contained' 
-            sx={{my: "1em"}}
+            sx={{my: "1em", fontSize: "0.85em"}}
             >
               Submit
             </Button>

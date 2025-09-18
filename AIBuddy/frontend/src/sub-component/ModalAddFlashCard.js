@@ -97,7 +97,14 @@ export default function ModalAddFlashCard({setFlashCards, flashCards, thread_tit
           </div>
       
           <div style={{marginTop: "3em"}}>
-            <Button disabled={title === '' || content === ''} onClick={handleThread} variant='contained' sx={{my: "1em"}}>Submit</Button>
+            <Button 
+            disabled={title === '' || content === ''} 
+            onClick={handleThread} 
+            variant='contained' 
+            sx={{my: "1em", fontSize: "0.85rem"}}
+            >
+            Submit
+            </Button>
           </div>
           
           
