@@ -379,7 +379,7 @@ const MainApp = () => {
           </Typography>
         </Box>
         <Divider sx={{margin: "1em", mx: "5em", fontSize: "0.6em"}}/>
-        <Box sx={{display: "flex", flexDirection: "row", height: "86vh"}}>
+        <Box sx={{display: "flex", flexDirection: "row", height: "86vh", pb: "0.75em"}}>
         { isFullscreen == false &&  
           <Paper 
           // elevation={3}
@@ -570,7 +570,8 @@ const MainApp = () => {
                       // height: isFullscreen ? "98vh" : {xs: "12em", sm: "13em", md: "23em"},
                       overflow: "auto",
                       position: "relative",
-                      flex: "1"
+                      flex: "1",
+                      minHeight: {xs: "12em", sm: "13em", md: "16em"}
                     }}
                     >
                       <IconButton
@@ -601,7 +602,8 @@ const MainApp = () => {
                       // height: `calc(100vh - ${outerPaperHeight}px)`,
                       overflow: "auto",
                       position: "relative",
-                      flex: "1"
+                      flex: "1",
+                      minHeight: {xs: "12em", sm: "13em", md: "16em"}
                     }}
                     >
                       <IconButton
@@ -643,7 +645,8 @@ const MainApp = () => {
                       // height: isFullscreen ? "98vh" : {xs: "12em", sm: "13em", md: "16em"},
                       overflow: "auto",
                       position: "relative",
-                      flex: "1"
+                      flex: "1",
+                      minHeight: {xs: "12em", sm: "13em", md: "16em"}
                     }}
                     >
                       <IconButton
