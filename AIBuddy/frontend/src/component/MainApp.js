@@ -383,7 +383,7 @@ const MainApp = () => {
          sx={{display: "flex",
           flexDirection: "row",
           height: "86vh",
-          height: {xs: "65vh", sm: "75vh", md: "80vh"},
+          height: {xs: "60vh", sm: "70vh", md: "80vh"},
           pb: "0.75em"
           }}
         >
@@ -511,7 +511,7 @@ const MainApp = () => {
           <Paper sx={{p:"1em", borderRadius: 4, top: 0, mx: "1em", flexGrow: 5, overflow: "auto", position: "relative", display: "flex", flexDirection: "column"}}>
             {isFullscreen === false &&
             <Box>
-              <FormControl sx={{mt: "1em"}}>
+              <FormControl sx={{mt: "0.2em"}}>
                 <FormLabel>Choose Execution Type</FormLabel>
                 <RadioGroup
                   row
