@@ -382,8 +382,8 @@ const MainApp = () => {
         <Box
          sx={{display: "flex",
           flexDirection: "row",
-          height: "86vh",
-          height: {xs: "55vh", sm: "65vh", md: "80vh"},
+          // height: "86vh",
+          height: {xs: "55vh", sm: "60vh", md: "86vh"},
           pb: "0.75em"
           }}
         >
