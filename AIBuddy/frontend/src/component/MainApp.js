@@ -124,7 +124,12 @@ const MainApp = () => {
     }, [threads])
 
     useEffect(() => {
-      setIsPortrait(window.matchMedia("(orientation: portrait)").matches);
+      if(1.25*window.innerHeight < window.innerWidth){
+        setIsPortrait(true)
+      }
+      else{
+        setIsPortrait(false)
+      }
     }, [window.innerHeight, window.innerWidth])
     
 
