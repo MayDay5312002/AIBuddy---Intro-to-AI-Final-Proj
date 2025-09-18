@@ -368,7 +368,7 @@ const MainApp = () => {
     };
 
     return (
-      <div style={{display: "flex", flexDirection: "column", height: "100"}}>
+      <div style={{display: "flex", flexDirection: "column", height: "100%"}}>
         {/* <Box sx={{display: "flex", justifyContent: "center", alignItems: "center"}}> */}
         <Box >
           <Typography variant="h4" sx={{fontWeight: "bold", textAlign: "center"}}>
