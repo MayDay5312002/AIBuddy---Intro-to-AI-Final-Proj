@@ -571,7 +571,8 @@ const MainApp = () => {
                       overflow: "auto",
                       position: "relative",
                       flex: "1",
-                      minHeight: {xs: "20em", sm: "18em", md: "16em"}
+                      minHeight: {xs: "20em", sm: "18em", md: "16em"},
+                      pb: isFullscreen ? 0 : "0.75em"
                     }}
                     >
                       <IconButton
@@ -603,7 +604,8 @@ const MainApp = () => {
                       overflow: "auto",
                       position: "relative",
                       flex: "1",
-                      minHeight: {xs: "20em", sm: "18em", md: "16em"}
+                      minHeight: {xs: "20em", sm: "18em", md: "16em"},
+                      pb: isFullscreen ? 0 : "0.75em"
                     }}
                     >
                       <IconButton
@@ -646,7 +648,8 @@ const MainApp = () => {
                       overflow: "auto",
                       position: "relative",
                       flex: "1",
-                      minHeight: {xs: "20em", sm: "18em", md: "16em"}
+                      minHeight: {xs: "20em", sm: "18em", md: "16em"},
+                      pb: isFullscreen ? 0 : "0.75em"
                     }}
                     >
                       <IconButton
