@@ -598,6 +598,12 @@ const MainApp = () => {
                 required
                 multiline
                 rows={1}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    (executionType === "Explain simply") ? handleQuery() : (executionType === "Create flash cards") ? handleCreateFlashCards() : handleCreateQuiz()
+                  }
+                }}
               />
                   {(executionType !== "Explain simply") &&
                   <Box>
@@ -618,6 +624,7 @@ const MainApp = () => {
                   <Button 
                   sx={{fontSize: "0.85rem"}}
                   variant="contained" 
+                  type="submit"
                   onClick={(executionType === "Explain simply") ? handleQuery : (executionType === "Create flash cards") ? handleCreateFlashCards : handleCreateQuiz} 
                   disabled={readToQuery === false || selectedThread === "" || query === "" || loading}>
                       Submit Prompt
