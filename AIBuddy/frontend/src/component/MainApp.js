@@ -378,7 +378,7 @@ const MainApp = () => {
         {/* <Box sx={{display: "flex", justifyContent: "center", alignItems: "center"}}> */}
         <Box >
           <Typography variant="h4" sx={{fontWeight: "bold", textAlign: "center", fontSize: "4.1vh", color: "#383838ff"}}>
-            <Box sx={{cursor: "pointer", }} component={"span"} onClick={() => window.location.reload()}>
+            <Box sx={{cursor: "pointer" }} component={"span"} onClick={() => window.location.reload()}>
               <img src="http://127.0.0.1:4192/static/images/Logo.png"  style={{position: "relative", top: "0.2rem", height: "9vh"}}/>
               <Typography
                 variant="h4"
