@@ -183,6 +183,10 @@ const MainApp = () => {
     }
 
     const deleteCard = (titleCard) => {
+      if(loading){
+        setErrorResponseMsg("Warning: Cannot delete while generating response");
+        return;
+      }
       axios.post("http://127.0.0.1:4192/api/deleteFlashCard/", {"title": titleCard, "thread": selectedThread})
       .then((response) => {
         setFlashCards(flashCards.filter(card => card.title !== titleCard));
@@ -194,6 +198,10 @@ const MainApp = () => {
     }
 
     const deleteQuiz = (question) => {
+      if(loading){
+        setErrorResponseMsg("Warning: Cannot delete while generating response");
+        return;
+      }
       axios.post("http://127.0.0.1:4192/api/deleteQuiz/", {"question": question, "thread": selectedThread})
       .then((response) => {
         setQuizzes(quizzes.filter(quiz => quiz.question !== question));
