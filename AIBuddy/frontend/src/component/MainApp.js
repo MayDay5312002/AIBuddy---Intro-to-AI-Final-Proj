@@ -183,12 +183,13 @@ const MainApp = () => {
     }
 
     const deleteCard = (titleCard) => {
-      if(loading){
-        setErrorResponseMsg("Warning: Cannot delete while generating response");
-        return;
-      }
+      // if(loading){
+      //   setErrorResponseMsg("Warning: Cannot delete while generating response");
+      //   return;
+      // }
       axios.post("http://127.0.0.1:4192/api/deleteFlashCard/", {"title": titleCard, "thread": selectedThread})
       .then((response) => {
+        
         setFlashCards(flashCards.filter(card => card.title !== titleCard));
         setErrorResponseMsg("");
       })
@@ -199,10 +200,6 @@ const MainApp = () => {
     }
 
     const deleteQuiz = (question) => {
-      if(loading){
-        setErrorResponseMsg("Warning: Cannot delete while generating response");
-        return;
-      }
       axios.post("http://127.0.0.1:4192/api/deleteQuiz/", {"question": question, "thread": selectedThread})
       .then((response) => {
         setQuizzes(quizzes.filter(quiz => quiz.question !== question));
@@ -274,43 +271,53 @@ const MainApp = () => {
   };
 
 
-    const handleCreateFlashCards = () => {
-      setLoading(true);
-      axios.post('http://127.0.0.1:4192/api/createFlashCards/', {"query": query, "model": selectedModel, "thread": selectedThread, "number": numberEx}).
-      then((response) => {
-        setLoading(false);
-        // console.log(response.data["cards"]);
-        let newCards = [...flashCards, ...response.data["cards"]];
-        setFlashCards(newCards);
-        setErrorResponseMsg("");
-        
-        // scrollToBottom();
-      })
-      .catch((error) => {
-          setLoading(false);
-          setErrorResponseMsg("Error: " + error.message);
-          // console.error("Error uploading file:", error);
-      })
+    const handleCreateFlashCards = async () => {
+    setLoading(true);
+    try {
+      await axios.post('http://127.0.0.1:4192/api/createFlashCards/', {
+        query: query,
+        model: selectedModel,
+        thread: selectedThread,
+        number: numberEx
+      });
+      setErrorResponseMsg("");
+      const response = await axios.get('http://127.0.0.1:4192/api/getFlashCards/?thread=' + selectedThread);
+      setFlashCards(response.data["cards"]);
+    } catch (error) {
+      setErrorResponseMsg("Error: " + error.message);
     }
+    setLoading(false);
+  }
 
-    const handleCreateQuiz = () => {
+
+    const handleCreateQuiz = async () => {
       setLoading(true);
-      axios.post('http://127.0.0.1:4192/api/createQuiz/', {"query": query, "model": selectedModel, "thread": selectedThread, "number": numberEx}).
-      then((response) => {
-        // console.log("quizzes type: ", typeof response.data["quizzes"], "quizzes: ", response.data["quizzes"]);
-        let newQuizzes = [...quizzes, ...response.data["quizzes"]];
-        setQuizzes(newQuizzes);
-        setLoading(false);
+      try {
+        const postResponse = await axios.post(
+          'http://127.0.0.1:4192/api/createQuiz/',
+          {
+            query: query,
+            model: selectedModel,
+            thread: selectedThread,
+            number: numberEx
+          }
+        );
+        // // Optional: update quizzes immediately from POST response
+        // let newQuizzes = [...quizzes, ...postResponse.data["quizzes"]];
+        // setQuizzes(newQuizzes);
         setErrorResponseMsg("");
-        // scrollToBottom();
-      })
-      .catch((error) => {
-          setLoading(false);
-          setErrorResponseMsg("Error: " + error.message);
-          // console.error("Error uploading file:", error);
-      })
       
-    }
+        // Now fetch the latest quizzes from the backend
+        const getResponse = await axios.get(
+          'http://127.0.0.1:4192/api/getQuizzes/?thread=' + selectedThread
+        );
+        setQuizzes(getResponse.data["quizzes"]);
+      } catch (error) {
+        setErrorResponseMsg("Error: " + error.message);
+      }
+      setLoading(false);
+    };
+
 
     useEffect(() => { //Get flashcards and quizzes for a selected thread
         setErrorResponseMsg('');//clear old error
@@ -612,7 +619,7 @@ const MainApp = () => {
                   sx={{fontSize: "0.85rem"}}
                   variant="contained" 
                   onClick={(executionType === "Explain simply") ? handleQuery : (executionType === "Create flash cards") ? handleCreateFlashCards : handleCreateQuiz} 
-                  disabled={readToQuery === false || selectedThread === "" || query === ""}>
+                  disabled={readToQuery === false || selectedThread === "" || query === "" || loading}>
                       Submit Prompt
                   </Button>
                   <IconButton>

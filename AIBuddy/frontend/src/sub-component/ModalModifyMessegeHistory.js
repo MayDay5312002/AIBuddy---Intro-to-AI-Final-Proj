@@ -26,7 +26,18 @@ export default function ModalModifyMessegeHistory({setResponse,thread_title, ref
 
 
   const [open, setOpen] = useState(false);
-  const handleOpen = () => setOpen(true);
+  const handleOpen = () => {
+    axios.get("http://127.0.0.1:4192/api/getMessages/"+ "?thread=" + thread_title )
+      .then((response) => {
+        // console.log(response.data["messages"]);
+        setMessages(response.data["messages"]);
+        // console.log(messages);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+    setOpen(true);
+  }
 
   //use state for current variables
   const [messages, setMessages] = useState([]);
@@ -34,7 +45,8 @@ export default function ModalModifyMessegeHistory({setResponse,thread_title, ref
   const [editMode, setEditMode] = useState(false);
 
   const handleClose = () => {
-    
+    setDeleteAll(false);
+    setMessages([]);
     setOpen(false);
   }
 
