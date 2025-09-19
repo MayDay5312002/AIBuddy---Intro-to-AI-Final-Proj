@@ -190,6 +190,7 @@ const MainApp = () => {
       axios.post("http://127.0.0.1:4192/api/deleteFlashCard/", {"title": titleCard, "thread": selectedThread})
       .then((response) => {
         setFlashCards(flashCards.filter(card => card.title !== titleCard));
+        setErrorResponseMsg("");
       })
       .catch((error) => {
           setErrorResponseMsg("Error: " + error.message);
@@ -205,6 +206,7 @@ const MainApp = () => {
       axios.post("http://127.0.0.1:4192/api/deleteQuiz/", {"question": question, "thread": selectedThread})
       .then((response) => {
         setQuizzes(quizzes.filter(quiz => quiz.question !== question));
+        setErrorResponseMsg("");
       })
       .catch((error) => {
         setErrorResponseMsg("Error: " + error.message);
@@ -251,6 +253,7 @@ const MainApp = () => {
               // console.log("DONE!!");
               setLoading(false);
               setRefreshMessageHistory(!refreshMessageHistory);
+              setErrorResponseMsg("");
               return;
           }
           setResponse(prev => prev + event.data);
@@ -279,6 +282,8 @@ const MainApp = () => {
         // console.log(response.data["cards"]);
         let newCards = [...flashCards, ...response.data["cards"]];
         setFlashCards(newCards);
+        setErrorResponseMsg("");
+        
         // scrollToBottom();
       })
       .catch((error) => {
@@ -296,6 +301,7 @@ const MainApp = () => {
         let newQuizzes = [...quizzes, ...response.data["quizzes"]];
         setQuizzes(newQuizzes);
         setLoading(false);
+        setErrorResponseMsg("");
         // scrollToBottom();
       })
       .catch((error) => {
