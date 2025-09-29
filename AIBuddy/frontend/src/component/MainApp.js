@@ -24,15 +24,16 @@ import axios from "axios";
 
 const MainApp = () => {
     const [file, setFile] = useState(null);
+    const [folder, setFolder] = useState(""); 
     const [url, setUrl] = useState("");
     const [query, setQuery] = useState("");
     const [response, setResponse] = useState("");
     const [models, setModels] = useState([])
-    const [readToQuery, setReadToQuery] = useState(false);
+    const [readyToQuery, setReadyToQuery] = useState(false);
     const [inputType, setInputType] = useState("file");
     const [errorResponse, setErrorResponse] = useState("");
     const [colorOfResponse, setColorOfResponse] = useState("red");
-    const [executionType, setExecutionType] = useState("Explain simply")
+    const [executionType, setExecutionType] = useState("Explain Simply");
 
     const [threads, setThreads] = useState([]);
     const [selectedThread, setSelectedThread] = useState('');
@@ -49,6 +50,7 @@ const MainApp = () => {
     const [numberEx, setNumberEx] = useState(1);
 
     const [vectorStoreContent, setVectorStoreContent] = useState("");
+    const [folderPath, setFolderPath] = useState("");
 
 
     const [selectedAnswer, setSelectedAnswer] = useState('');
@@ -101,10 +103,7 @@ const MainApp = () => {
       }
     };
 
-    useEffect(() => {
-      setSelectedAnswer('');
-      setIsAnswerCorrect(null);
-    }, [executionType])
+    
   
 
     const handleFileChange = (event) => {
@@ -140,7 +139,7 @@ const MainApp = () => {
           if(file===null){
             setColorOfResponse("red")
             setErrorResponse("Please select a file")
-            setReadToQuery(false)
+            setReadyToQuery(false)
             return
           }
           formData.append("file", file);
@@ -149,7 +148,7 @@ const MainApp = () => {
           if(url===""){
             setColorOfResponse("red")
             setErrorResponse("Please enter a url")
-            setReadToQuery(false)
+            setReadyToQuery(false)
             return
           }
           formData.append("url", url);
@@ -172,7 +171,7 @@ const MainApp = () => {
             }
             setColorOfResponse("green")
             setErrorResponse("Success")
-            setReadToQuery(true);
+            setReadyToQuery(true);
 
         })
         .catch((error) => {
@@ -242,9 +241,11 @@ const MainApp = () => {
       setErrorResponseMsg('');//clear old error
       setResponse(''); // clear old response
       setLoading(true);
-      const eventSource = new EventSource('http://localhost:4192/api/chatStream/' + '?query=' + query + '&model=' + selectedModel + '&thread=' + selectedThread);
+      const eventSource = new EventSource('http://localhost:4192/api/chatStream/' + '?query=' + query + '&model=' + selectedModel + '&thread=' + selectedThread + "&executionType=" + executionType);
     
       eventSource.onmessage = function(event) {
+        console.log('chunk:', JSON.stringify(event.data));
+
           if (event.data === "[DONE]") {
               eventSource.close();
               // console.log("DONE!!");
@@ -258,7 +259,7 @@ const MainApp = () => {
     
       eventSource.onerror = function(err) {
           // console.error('EventSource failed:', err);
-          // setReadToQuery(false)
+          // setReadyToQuery(false)
           setErrorResponseMsg("Error: " + err.message);
           setLoading(false);
           eventSource.close();
@@ -278,7 +279,8 @@ const MainApp = () => {
         query: query,
         model: selectedModel,
         thread: selectedThread,
-        number: numberEx
+        number: numberEx,
+        inputType: inputType
       });
       setErrorResponseMsg("");
       const response = await axios.get('http://127.0.0.1:4192/api/getFlashCards/?thread=' + selectedThread);
@@ -299,7 +301,8 @@ const MainApp = () => {
             query: query,
             model: selectedModel,
             thread: selectedThread,
-            number: numberEx
+            number: numberEx,
+            inputType: inputType
           }
         );
         // // Optional: update quizzes immediately from POST response
@@ -351,7 +354,7 @@ const MainApp = () => {
     
 
     const handleRadioChange = (event) => {
-      // setReadToQuery(false);
+      // setReadyToQuery(false);
       setInputType(event.target.value);
     };
 
@@ -393,6 +396,85 @@ const MainApp = () => {
         behavior: "smooth", // optional for smooth scrolling animation
       });
     };
+
+    useEffect(() => {
+      console.log(JSON.stringify(response));
+    }, [response])
+
+    const handleSubmitFolder = () => {
+      setErrorResponse(<CircularProgress size={20} />);
+      axios.get('http://127.0.0.1:4192/api/uploadFolder/')
+      .then((response) => {
+        setColorOfResponse("green");
+        setErrorResponse("Success");
+        setFolder(response.data["folderPath"]);
+        setFolderPath(response.data["folderPath"]);
+        setReadyToQuery(true);
+      })
+      .catch((error) => {
+          // console.error("Error uploading file:", error);
+          setColorOfResponse("red");
+          setErrorResponse("Error: " + error.response.data["error"]);
+          setFolderPath("");
+          setReadyToQuery(false);
+      })
+    };
+
+    useEffect(() => {
+      console.log("inputType", inputType);
+      setErrorResponse("");
+      if(executionType === "Create flash cards" || executionType === "Create quiz"){
+        // setReadyToQuery(false);
+        if ((inputType === "model" || inputType === "web search")) {
+          console.log("model or web search");
+          setReadyToQuery(true);
+        } else if (inputType === "Kiwix" && folderPath !== "") {
+          setReadyToQuery(true);
+        } 
+        else if((inputType === "file" || inputType === "url") && vectorStoreContent !== ""){ 
+          setReadyToQuery(true);
+        }
+        else {
+          setReadyToQuery(false);
+        }
+      }
+
+      // Never log readyToQuery right after setReadyToQuery (it won't be updated yet)
+    }, [inputType, folderPath]);
+
+
+    useEffect(() => {
+      setSelectedAnswer('');
+      setIsAnswerCorrect(null);
+      setErrorResponse("");
+      console.log("executionType", executionType);
+      if(executionType !== "Create flash cards" && executionType !== "Create quiz"){
+        if (executionType === "Explain with Kiwix") {
+          // Only set true if folderPath is valid
+          setReadyToQuery(folderPath !== "");
+        } else if (executionType === "Explain with document") {
+          // Only set true if vectorStoreContent is present
+          setReadyToQuery(vectorStoreContent !== "");
+        } else if (
+          executionType === "Explain with web search" ||
+          executionType === "Explain Simply"
+        ) {
+          setReadyToQuery(true);
+        } else {
+          setReadyToQuery(false);
+        }
+      }
+    }, [executionType, folderPath, vectorStoreContent]);
+
+
+
+    // useEffect(() => {
+      
+    //   console.log("Status: " + readyToQuery);
+    // }, [readyToQuery])
+    
+    
+    const lines = response.split('[br]');
 
     return (
       <div style={{display: "flex", flexDirection: "column", height: "100%"}}>
@@ -472,7 +554,8 @@ const MainApp = () => {
                   AI Study Companion
                 </Box>
               </Typography> */}
-
+              {executionType !== "Explain with web search"  && executionType !== "Explain Simply" && executionType !== "Explain with Kiwix" &&
+              <>
               <FormControl>
                 <FormLabel>Choose Input Type</FormLabel>
                 <RadioGroup
@@ -482,9 +565,18 @@ const MainApp = () => {
                 >
                   <FormControlLabel value="file" control={<Radio />} label="Upload a File" />
                   <FormControlLabel value="url" control={<Radio />} label="Enter a youtube URL" />
+                  { (executionType === "Create flash cards" || executionType === "Create quiz") &&
+                    <>
+                    <FormControlLabel value="model" control={<Radio />} label="Model independent" />
+                    <FormControlLabel value="Kiwix" control={<Radio />} label="Upload Kiwix Folder" />
+                    <FormControlLabel value="web search" control={<Radio />} label="Web Search" />
+                    </>
+                  }
                 </RadioGroup>
               </FormControl>
               <Divider />
+              </>
+              }
               <FormControl fullWidth style={{marginTop: "1em", marginBottom: "1em"}}>
                 <InputLabel id="dropdown-label">Select model</InputLabel>
                 <Select
@@ -500,8 +592,10 @@ const MainApp = () => {
                   ))}
                 </Select>
               </FormControl>
+            {(executionType !== "Explain with web search" && executionType !== "Explain Simply")  &&
+              <>
               <Divider sx={{mb:"1em"}}/>
-              {inputType === "file" &&
+              {inputType === "file" && (executionType !== "Explain with Kiwix" && inputType !== "Kiwix") &&
               <Box>
                 <Typography variant="h7" sx={{mb: "0.5em", display: "block", }}>Upload file</Typography>
                 <input
@@ -521,7 +615,7 @@ const MainApp = () => {
                 <Typography variant="body2" sx={{mt: "0.5em", overflow: "auto"}}><span style={{textDecoration: "underline"}}>Selected file</span>: {file ? file.name : "No file selected" }</Typography>
               </Box>
               }
-              {inputType === "url" && 
+              {(inputType === "url" && (executionType !== "Explain with Kiwix" && inputType !== "Kiwix")) &&
               <>
                 <Typography variant="h7" sx={{mb: "0.5em", display: "block"}}>Enter Youtube URL</Typography>
                 <TextField
@@ -534,18 +628,39 @@ const MainApp = () => {
                 />
               </>
               }
-              <Button variant="contained" component="span" onClick={handleSubmitFile} sx={{mt: "1em", fontSize: "0.85rem"}}>
-                  Submit {(inputType === "file") ? "File" : "Youtube URL"}
-              </Button>
+              {(executionType === "Explain with Kiwix" || (inputType === "Kiwix")) &&
+                <>
+                  <Typography variant="h7" sx={{mb: "0.5em", display: "block"}}>Upload Folder Path</Typography>
+                  <Button variant="contained" component="span" sx={{fontSize: "0.85rem"}} onClick={handleSubmitFolder}>
+                    Select Folder
+                  </Button>
+                {/* <Typography variant="body2" sx={{mt: "0.5em", overflow: "auto"}}><span style={{textDecoration: "underline"}}>Selected Folder</span>: {folder !== "" ? folder : "No folder selected" }</Typography> */}
+                </> 
+              }
+              { (executionType !== "Explain with Kiwix" && inputType !== "Kiwix" && inputType !== "web search" && inputType !== "model") &&
+                <Button variant="contained" component="span" onClick={handleSubmitFile} sx={{mt: "1em", fontSize: "0.85rem"}}>
+                    Submit {(inputType === "file") ? "File" : "URL"}
+                </Button>
+              }
               <Typography variant="caption" sx={{display: "block", color: colorOfResponse, height: "0.5em", my:"0.5em"}}>{errorResponse}</Typography> 
 
-              <Divider sx={{mt: "1em"}}/>
 
-              <Typography variant="body2" sx={{ my: "1em"}}> 
-                Vector Store Content: {(vectorStoreContent.includes("youtu.be") || vectorStoreContent.includes("youtube.com")) ? <a href={vectorStoreContent}>{vectorStoreContent}</a> : vectorStoreContent}
-              </Typography>
+              { ((inputType !== "model" && inputType !== "web search") || executionType === "Explain with Kiwix") &&
+              <>
+                <Divider sx={{mt: "1em"}}/>
+                
+
+                <Typography variant="body2" sx={{ my: "1em"}}> {/*///////////////////////////////////////////////////////*/}
+                  {executionType !== "Explain with Kiwix" && inputType !== "Kiwix"? "Vector Store Content" : "Kiwix Folder"}: {(vectorStoreContent.includes("youtu.be") || vectorStoreContent.includes("youtube.com")) ? 
+                  <a href={vectorStoreContent}>{vectorStoreContent}</a> : (executionType === "Explain with Kiwix" || inputType === "Kiwix" ? folderPath : vectorStoreContent)}
+                </Typography>
 
               <Divider sx={{mt: "1em"}}/> 
+              </>
+              }
+
+              </>
+            }
               <Box display="flex" flexDirection="column" gap={1} width={300}>
                 <Box>
                   <ModalAddThread  threads={threads} setThreads={setThreads} />
@@ -583,9 +698,13 @@ const MainApp = () => {
                   value={executionType}
                   onChange={handleExecuteQuery}
                 >
-                  <FormControlLabel value="Explain simply" control={<Radio />} label="Explain Simply" />
+                  <FormControlLabel value="Explain Simply" control={<Radio />} label="Explain Simply" />
+                  <FormControlLabel value="Explain with web search" control={<Radio />} label="Explain with web search" />
+                  <FormControlLabel value="Explain with document" control={<Radio />} label="Explain with document" />
+                  <FormControlLabel value="Explain with Kiwix" control={<Radio />} label="Explain with Kiwix" />
                   <FormControlLabel value="Create flash cards" control={<Radio />} label="Create flash cards" />
                   <FormControlLabel value="Create quiz" control={<Radio />} label="Create quiz" />
+                  
                 </RadioGroup>
               </FormControl>
               <TextField
@@ -601,11 +720,18 @@ const MainApp = () => {
                 onKeyDown={e => {
                   if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
-                    (executionType === "Explain simply") ? handleQuery() : (executionType === "Create flash cards") ? handleCreateFlashCards() : handleCreateQuiz()
+                    // (executionType === "Explain with document") ? handleQuery() : (executionType === "Create flash cards") ? handleCreateFlashCards() : handleCreateQuiz()
+                    if (executionType === "Explain with document" || executionType === "Explain with Kiwix" || executionType === "Explain with web search" || executionType === "Explain Simply") {
+                      handleQuery()
+                    } else if (executionType === "Create flash cards") {
+                      handleCreateFlashCards()
+                    } else if (executionType === "Create quiz") {
+                      handleCreateQuiz()
+                    }
                   }
                 }}
               />
-                  {(executionType !== "Explain simply") &&
+                  {(executionType !== "Explain with document" && executionType !== "Explain with Kiwix" && executionType !== "Explain with web search" && executionType !== "Explain Simply") &&
                   <Box>
                     <Typography variant="h7" sx={{fontWeight: 200, display: "block"}} >Number of {executionType === "Create flash cards" ? "flash cards" : "questions"} to generate:</Typography>
                     <TextField
@@ -625,8 +751,8 @@ const MainApp = () => {
                   sx={{fontSize: "0.85rem"}}
                   variant="contained" 
                   type="submit"
-                  onClick={(executionType === "Explain simply") ? handleQuery : (executionType === "Create flash cards") ? handleCreateFlashCards : handleCreateQuiz} 
-                  disabled={readToQuery === false || selectedThread === "" || query === "" || loading}>
+                  onClick={(executionType === "Explain with document" || executionType === "Explain with Kiwix" || executionType === "Explain with web search" || executionType === "Explain Simply") ? handleQuery : (executionType === "Create flash cards" ? handleCreateFlashCards : handleCreateQuiz)} 
+                  disabled={readyToQuery === false || selectedThread === "" || query === "" || loading }>
                       Submit Prompt
                   </Button>
                   <IconButton>
@@ -638,7 +764,8 @@ const MainApp = () => {
                 </Box>
                 }
 
-                  {selectedThread !== "" && executionType === "Explain simply" &&
+                  {selectedThread !== "" && (executionType === "Explain with document" || executionType === "Explain with Kiwix" || 
+                    executionType === "Explain with web search" || executionType === "Explain Simply") &&
                     <Paper 
                     sx={{
                       px: "3vh",
@@ -664,10 +791,15 @@ const MainApp = () => {
                         {isFullscreen ? <FullscreenExitIcon/> : <FullscreenIcon />}
                       </IconButton>
                       <Typography variant="h5" sx={{fontWeight: "bold", color: "green", mt: "1em", textAlign: "center", color: "#0077b6"}}>Response</Typography>
-                      <ModalModifyMessegeHistory thread_title={selectedThread} refreshMessageHistory={refreshMessageHistory} setRefreshMessageHistory={setRefreshMessageHistory} setResponse={setResponse}/>
-                      <Typography variant="h6" sx={{ fontWeight: "500"}}>
-                        <span dangerouslySetInnerHTML={{ __html: response }} /> 
+                      <ModalModifyMessegeHistory thread_title={selectedThread} refreshMessageHistory={refreshMessageHistory} 
+                      setRefreshMessageHistory={setRefreshMessageHistory} setResponse={setResponse}/>
+                      <Typography variant="h6" sx={{ fontWeight: "500", whiteSpace: "pre-line"}}>
+                        {/* {response.replace('[br]', '\n')} */}
+                        {/* <span dangerouslySetInnerHTML={{ __html: response }} /> */}
+                        {response}
                       </Typography>
+
+
                     </Paper>
                 
                   }

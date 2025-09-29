@@ -37,6 +37,8 @@ cd ..
 python manage.py makemigrations
 python manage.py migrate
 
+docker pull ghcr.io/kiwix/kiwix-serve:3.7.0
+
 
 # Install frontend npm dependencies
 cd ./frontend || exit

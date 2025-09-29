@@ -23,7 +23,10 @@ const style = {
 };
 
 
-export default function ModalModifyMsg({setResponse,thread_title, refreshMessageHistory, setRefreshMessageHistory, oldResponse, oldQuestion, document}) {
+export default function ModalModifyMsg({setResponse,thread_title, refreshMessageHistory, setRefreshMessageHistory, oldResponse, oldQuestion, document,
+  
+  
+}) {
 
 
   const [open, setOpen] = useState(false);
@@ -31,7 +34,7 @@ export default function ModalModifyMsg({setResponse,thread_title, refreshMessage
   const [content, setContent] = useState(oldResponse);
   const [question, setQuestion] = useState(oldQuestion);
   const [file, setFile] = useState(null);
-  const [inputType, setInputType] = useState("file");
+  const [inputType, setInputType] = useState("document");
   const [url, setUrl] = useState("");
   const [vectorStoreContent, setVectorStoreContent] = useState("");
   const [models, setModels] = useState([]);
@@ -42,6 +45,8 @@ export default function ModalModifyMsg({setResponse,thread_title, refreshMessage
   const [modifyOption, setModifyOption] = useState('Auto');
   const [generating, setGenerating] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [folderPath, setFolderPath] = useState("");
+  const [documentType, setDocumentType] = useState('file');
 
 
   useEffect(() => {
@@ -62,13 +67,14 @@ export default function ModalModifyMsg({setResponse,thread_title, refreshMessage
     setContent(oldResponse);
     setQuestion(oldQuestion);
     setFile(null);
-    setInputType("file");
+    setInputType("document");
     setUrl("");
     setVectorStoreContent("");
     setOpen(false);
     setErrorResponse("");
     setErrorResponseMsg('');
     setModifyOption('Auto');
+    setDocumentType('file');
   }
   const handleFileChangeHere = (event) => {
     const fileTemp = event.target.files[0];
@@ -86,14 +92,14 @@ export default function ModalModifyMsg({setResponse,thread_title, refreshMessage
     setVectorStoreContent("");
     setLoading(true);
     const formData = new FormData();
-    if(inputType === "file"){
+    if(documentType === "file"){
       if(file===null){
         console.log("Please select a file");
         return
       }
       formData.append("file", file);
     }
-    else if(inputType === "url"){
+    else if(documentType === "url"){
       if(url===""){
         console.log("Please enter a url");
         return
@@ -111,7 +117,7 @@ export default function ModalModifyMsg({setResponse,thread_title, refreshMessage
       // Handle the response from the server
       // console.log(response.data);
       // setVectorStoreContent(response.data); 
-      setVectorStoreContent(inputType === "file"? file.name : url);
+      setVectorStoreContent(documentType === "file"? file.name : url);
       setErrorResponse("Success");
       setLoading(false);
     })
@@ -122,10 +128,30 @@ export default function ModalModifyMsg({setResponse,thread_title, refreshMessage
     });
   }
 
+  const handleSubmitFolder = () => {
+      setErrorResponse(<CircularProgress size={20} />);
+      setLoading(true);
+      axios.get('http://127.0.0.1:4192/api/uploadFolder/')
+      .then((response) => {
+        setFolderPath(response.data["folderPath"]);
+        // setReadyToQuery(true);
+        setLoading(false);
+        setErrorResponse("Success");
+      })
+      .catch((error) => {
+          // console.error("Error uploading file:", error);
+          setErrorResponse("Error: " + error.response);
+          setLoading(false);
+      });
+  };
+
   const handleQueryAuto = () => {
       let oldDocumentNew = (document.includes("youtube") || document.includes("youtu.be")) ? document.replace("&", "%26") : document //need to replace & with %26 to avoid error
-      const eventSource = new EventSource('http://localhost:4192/api/modifyMessage/' + '?query=' + question + '&model=' + selectedModel + '&thread=' + thread_title + 
-      '&oldQuestion=' + oldQuestion + '&oldDocument=' + oldDocumentNew + '&oldResponse=' + oldResponse + "&newDocument=" + (inputType === "file"? file.name : url.replace("&", "%26"))
+      const eventSource = new EventSource('http://localhost:4192/api/modifyMessage/' + '?query=' + encodeURIComponent(question) + '&model=' 
+      + encodeURIComponent(selectedModel) +  '&thread=' + encodeURIComponent(thread_title) + '&oldQuestion=' + encodeURIComponent(oldQuestion) + 
+      '&oldDocument=' + encodeURIComponent(oldDocumentNew) + '&oldResponse=' + encodeURIComponent(oldResponse) + 
+      "&newDocument=" + (inputType === "document"  && documentType === "file"? encodeURIComponent(file.name) : encodeURIComponent(url)) + 
+      "&executionType=" + encodeURIComponent(inputType)
       );
       setContent('');
       setResponse(''); // clear old response
@@ -158,7 +184,10 @@ export default function ModalModifyMsg({setResponse,thread_title, refreshMessage
 
   const handleQueryManual = () => {
     setErrorResponseMsg(<CircularProgress size={18} />)
-    axios.post("http://localhost:4192/api/modifyMessageManual/", {"thread": thread_title, "oldQuestion": oldQuestion, "oldResponse": oldResponse, "query": question, "newResponse": content, "oldDocument": document, "newDocument": (vectorStoreContent === "") ? document : (inputType === "file" ? file.name : url.replace("&", "%26"))})
+    axios.post("http://localhost:4192/api/modifyMessageManual/", 
+      {"thread":thread_title, "oldQuestion": oldQuestion, "oldResponse": oldResponse, "query": question, 
+        "newResponse": content, "oldDocument": document, 
+        "newDocument": (vectorStoreContent === "") ? document : (documentType === "file" ? file.name : url)})
     .then((response) => {
       // Handle the response from the server
       // console.log(response.data);
@@ -179,6 +208,12 @@ export default function ModalModifyMsg({setResponse,thread_title, refreshMessage
     if(modifyOption == "Auto"){
       setContent(oldResponse);
       setQuestion(oldQuestion);
+      if(documentType === "text"){
+        setDocumentType("file");
+      }
+    }
+    if(modifyOption == "Manual"){
+      setInputType("document");
     }
   }, [modifyOption])
   
@@ -210,8 +245,13 @@ export default function ModalModifyMsg({setResponse,thread_title, refreshMessage
           <Button variant={ modifyOption === "Manual" ? "outlined" : "contained" }
            onClick={() =>{ 
             if (generating) return;
+            if(modifyOption === "Manual" && documentType === "text"){/////////////////////////////////////////////////////
+              setVectorStoreContent("");
+              setUrl("");
+            }
             setModifyOption(modifyOption === "Manual" ? "Auto" : "Manual");
-          }}
+            
+           }}
            component="span" sx={{marginTop: "0.5em", marginBottom: "0.5em", fontSize: "0.85em"}}>{modifyOption}</Button>
           <Divider sx={{my: 1}}/>
 
@@ -237,18 +277,60 @@ export default function ModalModifyMsg({setResponse,thread_title, refreshMessage
             />
             <Divider sx={{my: 1}}/>
 
-              <Typography variant="h6" component="h2" sx={{mb: "0.5em", display: "block", }}>{inputType === "file" ? "Upload file" : "Upload youtube URL"}</Typography>
+              <Typography variant="h6" component="h2" sx={{mb: "0.5em", display: "block", }}>
+                {inputType === "document" ? 
+                "Upload a Document" 
+                : 
+                  (inputType === "Kiwix" ?
+                    "Upload Kiwix folder"
+                    :
+                    (inputType === "Web Search" ?
+                      "Web Search"
+                      :
+                      "Explain Simply"
+                    )
+                  )
+                }
+              </Typography>
                 <FormControl>
-                  <FormLabel>Choose Input Type</FormLabel>
+                  <FormLabel>Choose Execution Type</FormLabel>
                   <RadioGroup
                     row
                     value={inputType}
                     onChange={(event => {setInputType(event.target.value)})}
                   >
-                    <FormControlLabel value="file" control={<Radio />} label="Upload a File" />
-                    <FormControlLabel value="url" control={<Radio />} label="Enter a youtube URL" />
+                    {/* <FormControlLabel value="file" control={<Radio />} label="Upload a File" />
+                    <FormControlLabel value="url" control={<Radio />} label="Enter a youtube URL" /> */}
+                    <FormControlLabel value="document" control={<Radio />} label="Upload a Document" />
+                    {modifyOption === "Auto" &&
+                    <>
+                      <Divider sx={{my: "0.8em"}}/>
+                      <FormControlLabel value="Kiwix" control={<Radio />} label="Upload Kiwix folder" />
+                      <FormControlLabel value="Web Search" control={<Radio />} label="Web Search" />
+                      <FormControlLabel value="Explain Simply" control={<Radio />} label="Explain Simply" />
+                    </>
+                    }
                   </RadioGroup>
                 </FormControl>
+
+                { inputType === "document" &&
+                <FormControl>
+                  <FormLabel>Choose Input Type</FormLabel>
+                  <RadioGroup
+                    row
+                    value={documentType}
+                    onChange={(event => {setDocumentType(event.target.value)})}
+                  >
+                    <FormControlLabel value="file" control={<Radio />} label="Upload a File" />
+                    <FormControlLabel value="url" control={<Radio />} label="Enter a youtube URL" /> 
+                    { modifyOption === "Manual" &&
+                    <FormControlLabel value="text" control={<Radio />} label="Enter New Reference" />
+                    } 
+                  </RadioGroup>
+                </FormControl>
+                }
+
+              
               
               <Box>
                 {modifyOption === "Auto" &&
@@ -270,25 +352,26 @@ export default function ModalModifyMsg({setResponse,thread_title, refreshMessage
                 }
 
 
-              { inputType === "file" ?
-              <Box>
-                <input
-                  accept="*"
-                  type="file"
-                  id="file-upload-here"
-                  style={{ display: "none" }}
-                  onChange={handleFileChangeHere}
-                  component="span"
-                  required
-                />
-                <label htmlFor="file-upload-here" style={{display: "span"}}>
-                  <Button variant="contained" component="span" sx={{ fontSize: "0.85em"}}>
-                    Select File
-                  </Button>
-                </label>
-                <Typography variant="body2" sx={{mt: "0.5em", overflow: "auto"}}><span style={{textDecoration: "underline"}}>Selected file</span>: {file ? file.name : "No file selected" }</Typography>
-              </Box>
-               :
+              { inputType === "document" && documentType === "file"  &&
+                <Box>
+                  <input
+                    accept="*"
+                    type="file"
+                    id="file-upload-here"
+                    style={{ display: "none" }}
+                    onChange={handleFileChangeHere}
+                    component="span"
+                    required
+                  />
+                  <label htmlFor="file-upload-here" style={{display: "span"}}>
+                    <Button variant="contained" component="span" sx={{ fontSize: "0.85em"}}>
+                      Select File
+                    </Button>
+                  </label>
+                  <Typography variant="body2" sx={{mt: "0.5em", overflow: "auto"}}><span style={{textDecoration: "underline"}}>Selected file</span>: {file ? file.name : "No file selected" }</Typography>
+                </Box>
+              }
+              { inputType === "document" && documentType === "url" &&
                <Box>
                 <Typography variant="h7" sx={{mb: "0.5em", display: "block"}}>Enter Youtube URL</Typography>
                 <TextField
@@ -302,16 +385,46 @@ export default function ModalModifyMsg({setResponse,thread_title, refreshMessage
                 <Typography variant="body2" sx={{mt: "0.5em", overflow: "auto"}}><span style={{textDecoration: "underline"}}>Selected youtube URL</span>: {url }</Typography>
                </Box>
               }
+              { inputType === "document" && documentType === "text"  && modifyOption === "Manual" &&
+                <TextField
+                  id="outlined-basic"
+                  label="Enter New Reference"
+                  variant="outlined"
+                  sx={{my: 1}}
+                  value={url}
+                  onChange={(e) => {
+                    setUrl(e.target.value);
+                    setVectorStoreContent(e.target.value);
+                  }}
+                  fullWidth
+                  multiline
+                  rows={2}
+                />
+              }
+              {
+                inputType === "Kiwix" &&
+                <Box>
+                  <Typography variant="h7" sx={{mb: "0.5em", display: "block"}}>Upload Folder Path</Typography>
+                  <Button variant="contained" component="span" sx={{fontSize: "0.85rem"}} onClick={handleSubmitFolder}>
+                    Select Folder
+                  </Button>
+                </Box>
+              }
             </Box>
-            <Typography variant="body2" sx={{mb: "0.5em", overflow: "auto"}}><u>Old reference</u>: {document}</Typography>
-            <Button variant="contained" component="span" 
-              onClick={handleSubmitFile} 
-              sx={{display: "span", fontSize: "0.85em"}}>
-            Submit {(inputType === "file") ? "File" : "Youtube URL"}
-            </Button>
-            <span style={{marginLeft: "0.5em", color: "green", fontSize: "1em"}}>{errorResponse}</span>
-            <Typography variant="body2" sx={{mt: "0.5em", overflow: "auto"}}><u>New reference</u>: {vectorStoreContent}</Typography>
-
+            { inputType === "document"  &&
+            <>
+              <Typography variant="body2" sx={{mb: "0.5em", overflow: "auto"}}><u>Old reference</u>: {document}</Typography>
+              <Button variant="contained" component="span" 
+                onClick={handleSubmitFile} 
+                sx={{display: "span", fontSize: "0.85em"}}>
+              Submit {(documentType === "file") ? "File" : (documentType === "url" ? "Youtube URL" : "Text" )}
+              </Button>
+            
+            
+              <span style={{marginLeft: "0.5em", color: (errorResponse === "Success" ? "green" : "red"), fontSize: "1em", marginTop: "0.5em"}}>{errorResponse}</span>
+              <Typography variant="body2" sx={{mt: "0.5em", overflow: "auto"}}><u>New reference</u>: {vectorStoreContent}</Typography>
+            </>
+            }
             <Divider sx={{my: 1}}/>
 
             <Typography variant="h6" component="h2" >Content</Typography>
@@ -326,6 +439,21 @@ export default function ModalModifyMsg({setResponse,thread_title, refreshMessage
               multiline 
               rows={10}
               inputProps={{readOnly: (modifyOption === "Manual") ? false : true}}
+              // onKeyDown={e => {
+              //     if (e.key === "Enter") {
+              //       e.preventDefault();
+              //       const textarea = e.target;
+              //       const start = textarea.selectionStart;
+              //       const end = textarea.selectionEnd;
+              //       const newValue = content.substring(0, start) + "<br>\n" + content.substring(end);
+              //       setContent(newValue);
+              //       // Set caret position to after the inserted string
+              //       setTimeout(() => {
+              //         textarea.selectionStart = textarea.selectionEnd = start + 5; // 5 is length of "<br>\n"
+              //       }, 0);
+              //     }
+              //   }
+              // }
             />
             
           </Paper>
@@ -335,8 +463,10 @@ export default function ModalModifyMsg({setResponse,thread_title, refreshMessage
             <Button 
             disabled={
               modifyOption === "Auto"
-                ? (vectorStoreContent === "" || loading)
-                : (question === oldQuestion && content === oldResponse && vectorStoreContent === "" || loading)
+                ? 
+                ((inputType === "Kiwix" ? folderPath === "" : (inputType !== "Explain Simply" && inputType !== "Web Search" ? vectorStoreContent === "" : false)) || loading)
+                : 
+                (question === oldQuestion && content === oldResponse && vectorStoreContent === "" || loading)
             }
 
             onClick={modifyOption === "Auto" ? handleQueryAuto : handleQueryManual }

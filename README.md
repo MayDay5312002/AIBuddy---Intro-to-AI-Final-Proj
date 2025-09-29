@@ -7,6 +7,7 @@
 - Python (I used Python 3.13) (https://www.python.org/downloads/)
 - Java 11+ (https://www.oracle.com/java/technologies/downloads/)
 - Microsoft C++ Build Tools (https://visualstudio.microsoft.com/visual-cpp-build-tools/)
+- Docker (https://www.docker.com/)
 
 **How install ollama and pull a model**
 1. Install ollama (https://ollama.com/)

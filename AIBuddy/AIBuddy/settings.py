@@ -12,7 +12,42 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
+import signal
+import sys
+import subprocess
+import docker
 
+
+def start_compose(compose_file):
+    subprocess.run(['docker', 'compose', '-f', compose_file, 'up', '-d'], check=True)
+
+def stop_compose(compose_file):
+    subprocess.run(['docker', 'compose', '-f', compose_file, 'down'], check=True)
+
+def signal_handler(signum, frame): #Force cleanup
+    # Cleanup code here
+    stop_compose('searxng-docker\docker-compose.yaml')
+    listOfContainers = settingsClient.containers.list(all=True, filters={'ancestor': 'ghcr.io/kiwix/kiwix-serve:3.7.0'})
+    for container in listOfContainers:
+        if container.status == 'running':
+            container.stop()
+            container.remove()
+        elif container.status == 'exited':
+            container.remove()
+    print("Signal received, cleaning up")
+    sys.exit(0)
+
+settingsClient = docker.from_env()
+
+
+signal.signal(signal.SIGINT, signal_handler)  # Handle Ctrl+C
+signal.signal(signal.SIGTERM, signal_handler)  # Handle termination
+
+start_compose('searxng-docker\docker-compose.yaml')
+listOfContainers = settingsClient.containers.list(all=True, filters={'ancestor': 'ghcr.io/kiwix/kiwix-serve:3.7.0'})
+for container in listOfContainers:
+    if container.status == 'exited':
+        container.remove()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 print(BASE_DIR)

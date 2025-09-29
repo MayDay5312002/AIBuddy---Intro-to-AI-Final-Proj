@@ -5,6 +5,8 @@ if not exist venv (
 call venv\Scripts\activate.bat
 call python -m pip install -r requirements.txt
 
+call docker pull ghcr.io/kiwix/kiwix-serve:3.7.0
+
 cd AIBuddy
 cd models
 call git clone https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2

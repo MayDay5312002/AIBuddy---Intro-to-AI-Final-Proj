@@ -22,7 +22,7 @@ const style = {
 };
 
 
-export default function ModalModifyMessegeHistory({setResponse,thread_title, refreshMessageHistory, setRefreshMessageHistory}) {
+export default function ModalModifyMessegeHistory({setResponse,thread_title, refreshMessageHistory, setRefreshMessageHistory, handleSubmitFolder}) {
 
 
   const [open, setOpen] = useState(false);
@@ -160,7 +160,7 @@ export default function ModalModifyMessegeHistory({setResponse,thread_title, ref
                         oldResponse={messages[index+1].content} document={message.document} setResponse={setResponse}/>
                       </Box>
                       :
-                      <Typography variant="body1" component="p" ><span dangerouslySetInnerHTML={{ __html: message.content }} /></Typography>
+                      <Typography variant="body1" component="p" sx={{whiteSpace: "pre-line"}}>{message.content}</Typography>
 
                     }
                   </Paper>

@@ -1,7 +1,7 @@
 from django.urls import path, include
 from .views import (GetTextView, GetAllModels, chatWithFile, CreateNewThreadView, GetAllThreadView, DeleteThreadView, CreateFlashCardsView, GetAllFlashCardsView
 , DeleteFlashCardView, ModifyFlashCardView, CreateQuizView, GetAllQuizzesView, DeleteQuizView, ModifyQuizView, DeleteQuizChoiceView, CreateManualFlashCardView, CreateManualQuizView,
-GetAllMessagesView, DeleteMessageView, DeleteAllMessagesView, ModifyMessageView, ModifyMessageManualView)
+GetAllMessagesView, DeleteMessageView, DeleteAllMessagesView, ModifyMessageView, ModifyMessageManualView, UploadFolderView, StopKiwixContainerView)
     
 # from .views import index
 
@@ -29,5 +29,7 @@ urlpatterns = [
     path('deleteAllMessages/', DeleteAllMessagesView.as_view()),
     path('modifyMessage/', ModifyMessageView, name="modify_message"),
     path('modifyMessageManual/', ModifyMessageManualView.as_view()),
+    path('uploadFolder/', UploadFolderView.as_view()),
+    path("stopKiwixContainer/", StopKiwixContainerView.as_view()),
 
 ]
