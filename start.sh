@@ -26,6 +26,6 @@ $PYTHON_CMD manage.py runserver 4192 &
 
 cd ./desktop
 
-npm start
+npm start 
 
 wait

@@ -1,6 +1,7 @@
 @echo off
 call venv\Scripts\activate.bat
 
+
 cd AIBuddy
 
 @REM run this program in the background (without new CMD)
