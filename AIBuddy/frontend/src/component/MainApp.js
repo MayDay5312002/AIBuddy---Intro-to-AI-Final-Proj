@@ -560,9 +560,9 @@ const MainApp = () => {
       <div style={{display: "flex", flexDirection: "column", height: "100%"}}>
         {/* <Box sx={{display: "flex", justifyContent: "center", alignItems: "center"}}> */}
         <Box >
-          <Typography variant="h4" sx={{fontWeight: "bold", textAlign: "center", fontSize: "4.1vh", color: "#383838ff"}}>
+          <Typography variant="h4" sx={{fontWeight: "bold", textAlign: "center", fontSize: "2em", color: "#383838ff"}}>
             <Box sx={{cursor: "pointer" }} component={"span"} onClick={() => window.location.reload()}>
-              <img src="http://127.0.0.1:4192/static/images/Logo.png"  style={{position: "relative", top: "0.2rem", height: "9vh"}}/>
+              <img src="http://127.0.0.1:4192/static/images/Logo.png"  style={{position: "relative", top: "0.2rem", height: "2.3em"}}/>
               <Typography
                 variant="h4"
                 sx={{
@@ -623,7 +623,7 @@ const MainApp = () => {
             flexGrow: 3,
             overflow: "auto",
             minWidth: "20em",
-            minHeight: isPortrait ? "25em" : 0,
+            minHeight: isPortrait ? "15em" : 0,
 
 
           }}>
@@ -773,7 +773,7 @@ const MainApp = () => {
               
           </Paper>
         } 
-          <Paper sx={{p:"1em", borderRadius: 4, top: 0, mx: "1em", flexGrow: 5, overflow: "auto", position: "relative", display: "flex", flexDirection: "column"}}>
+          <Paper sx={{p:"1em", borderRadius: 4, top: 0, mx: "1em", flexGrow: 6, overflow: "auto", position: "relative", display: "flex", flexDirection: "column"}}>
             {isFullscreen === false &&
             <Box>
               <FormControl sx={{mt: "0.2em"}}>
