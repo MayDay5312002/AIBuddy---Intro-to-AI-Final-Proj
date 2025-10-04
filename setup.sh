@@ -46,7 +46,7 @@ npm install
 npm run build 
 
 # Install desktop npm dependencies
-cd ../desktop || exit
+cd ../../desktop || exit
 npm install 
 
 # Keep terminal open (optional)
