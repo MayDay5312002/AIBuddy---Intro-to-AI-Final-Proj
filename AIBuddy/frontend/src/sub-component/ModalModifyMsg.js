@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef} from 'react';
 import { Box, Button, Typography, TextField, Modal, Divider, IconButton, Paper, 
 FormControl, FormLabel, RadioGroup, FormControlLabel, Radio, Select, MenuItem, InputLabel, CircularProgress
 } from '@mui/material';
@@ -47,6 +47,8 @@ export default function ModalModifyMsg({setResponse,thread_title, refreshMessage
   const [loading, setLoading] = useState(false);
   const [folderPath, setFolderPath] = useState("");
   const [documentType, setDocumentType] = useState('file');
+  const TextFieldRef = useRef(null);
+  const [autoScrollComp, setAutoScrollComp] = useState(true);
 
 
   useEffect(() => {
@@ -58,6 +60,17 @@ export default function ModalModifyMsg({setResponse,thread_title, refreshMessage
         console.error("Error uploading file:", error);
     })
   }, [open])
+
+  useEffect(() => {
+    if (autoScrollComp && TextFieldRef.current) {
+      
+      TextFieldRef.current.scrollTop = TextFieldRef.current.scrollHeight;
+      // TextFieldRef.current.scrollTo({
+      //   top: TextFieldRef.current.scrollHeight,
+      //   behavior: 'smooth'
+      // });
+    }
+  }, [content, autoScrollComp]);
   
 
   const handleOpen = () => {
@@ -85,6 +98,18 @@ export default function ModalModifyMsg({setResponse,thread_title, refreshMessage
       // You can now upload or process the file
     }
 
+  };
+
+  const handleScroll = () => {
+     if (!TextFieldRef.current) return;
+     const { scrollTop, scrollHeight, clientHeight } = TextFieldRef.current;
+     // If the user scrolls up (not at bottom), turn off autoScrollComp.
+     // You might add a tolerance (e.g., 20px) for accidental movements.
+     if (scrollTop + clientHeight < scrollHeight - 5) {
+       setAutoScrollComp(false);
+     } else {
+       setAutoScrollComp(true);
+     }
   };
 
   const handleSubmitFile = () => {
@@ -157,6 +182,7 @@ export default function ModalModifyMsg({setResponse,thread_title, refreshMessage
       setResponse(''); // clear old response
       setGenerating(true);
       setErrorResponseMsg(<CircularProgress size={18} />)
+      TextFieldRef.current.scrollTop = TextFieldRef.current.scrollHeight;
       eventSource.onmessage = function(event) {
           if (event.data === "[DONE]") {
               eventSource.close();
@@ -429,6 +455,8 @@ export default function ModalModifyMsg({setResponse,thread_title, refreshMessage
 
             <Typography variant="h6" component="h2" >Content</Typography>
             <TextField
+              inputRef={TextFieldRef}
+              onScroll={handleScroll}
               id="outlined-basic"
               label="Content"
               variant="outlined"

@@ -98,6 +98,7 @@ def chatWithFile(request):
     modelName = request.GET.get("model")
     thread = request.GET.get("thread")
     executionType = request.GET.get("executionType")#########################################################
+    thinking = False
 
     print(executionType)
     # print("Thead: ", thread)
@@ -133,11 +134,17 @@ def chatWithFile(request):
             stream=True)
         for chunk in stream:
             content = chunk["message"]["content"]
-            finalResponse += content
-            lines = content.split("\n")
-            for line in lines:
-                yield f"data: {line}\n"
-            yield "\n"  # end of event
+            if content.lower() == "<think>":
+                thinking = True
+            elif content.lower() == "</think>":
+                thinking = False
+                continue
+            if thinking == False:
+                finalResponse += content
+                lines = content.split("\n")
+                for line in lines:
+                    yield f"data: {line}\n"
+                yield "\n"  # end of event
 
         # for chunk in stream:
         #     content = chunk["message"]["content"]
@@ -433,6 +440,7 @@ def ModifyMessageView(request):
     oldDocument = request.GET.get("oldDocument")
     message = request.GET.get("query")
     messages = messages[1:]
+    thinking = False
     # theQuery = None
     # theResponse = None
     print("This is the old document: ", oldDocument)
@@ -474,11 +482,17 @@ def ModifyMessageView(request):
         
         for chunk in stream:
             content = chunk["message"]["content"]
-            finalResponse += content
-            lines = content.split("\n")
-            for line in lines:
-                yield f"data: {line}\n"
-            yield "\n"  # 
+            if content.lower() == "<think>":
+                thinking = True
+            elif content.lower() == "</think>":
+                thinking = False
+                continue
+            if thinking == False:
+                finalResponse += content
+                lines = content.split("\n")
+                for line in lines:
+                    yield f"data: {line}\n"
+                yield "\n"  # end of event
 
 
         # for chunk in stream:

@@ -30,10 +30,9 @@ function createWindow() {
   win.loadURL('http://127.0.0.1:4192');
 }
 
-
+const pythonPath = path.join(__dirname, '..', 'venv', 'Scripts', 'python.exe');
+const djangoDir = path.join(__dirname, '..', 'AIBuddy');
 app.whenReady().then(() => {
-  const pythonPath = path.join(__dirname, '..', '..', 'venv', 'Scripts', 'python.exe');
-  const djangoDir = path.join(__dirname, '..');
 
   // const command = `"${pythonPath}" manage.py runserver`;
   // console.log(`[Django] Starting server with command: ${command}`);
@@ -66,7 +65,41 @@ app.whenReady().then(() => {
   waitForServer('http://127.0.0.1:4192', createWindow);
 });
 
-app.on('window-all-closed', () => {
+
+function runPythonScript() {
+  return new Promise((resolve, reject) => {
+    const removerProcess = spawn(pythonPath, ["dockerRemover.py"], {
+      cwd: djangoDir,
+      env: { ...process.env, PYTHONIOENCODING: 'utf-8' },
+    });
+
+    removerProcess.stdout.on('data', (data) => {
+      console.log(`[dockerRemover] ${data}`);
+    });
+
+    removerProcess.stderr.on('data', (data) => {
+      console.error(`[dockerRemover Error] ${data}`);
+    });
+
+    removerProcess.on('close', (code) => {
+      if (code === 0) {
+        resolve();
+      } else {
+        reject(new Error(`dockerRemover exited with code ${code}`));
+      }
+    });
+  });
+}
+
+app.on('window-all-closed', async () => {
+  try {
+    await runPythonScript();
+    console.log('dockerRemover.py completed successfully');
+  } catch (error) {
+    console.error('Error running dockerRemover.py:', error);
+  }
+
+  
   if (djangoProcess){
     // djangoProcess.kill('SIGINT');
     // console.log('Django process killed');
@@ -82,4 +115,3 @@ app.on('window-all-closed', () => {
     }, 100);
   }
 });
-

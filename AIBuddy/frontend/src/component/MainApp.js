@@ -1,5 +1,5 @@
 import React from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button, TextField, Typography, Select, MenuItem, FormControl, 
   InputLabel, Box, Radio, RadioGroup, FormControlLabel, FormLabel, Paper, Divider, IconButton, 
   CircularProgress, List,
@@ -24,7 +24,7 @@ import axios from "axios";
 
 const MainApp = () => {
     const [file, setFile] = useState(null);
-    const [folder, setFolder] = useState(""); 
+    // const [folder, setFolder] = useState(""); 
     const [url, setUrl] = useState("");
     const [query, setQuery] = useState("");
     const [response, setResponse] = useState("");
@@ -55,12 +55,18 @@ const MainApp = () => {
 
     const [selectedAnswer, setSelectedAnswer] = useState('');
     const [isAnswerCorrect, setIsAnswerCorrect] = useState(null);
-    const [autoScrollEnabled, setAutoScrollEnabled] = useState(true); //State to control auto-scroll
     const [errorResponseMsg, setErrorResponseMsg] = useState(""); //for when generating response
     const [indexQuizSelected , setIndexQuizSelected] = useState(-1);
     const [isFullscreen, setIsFullscreen] = useState(false);
 
     const [refreshMessageHistory, setRefreshMessageHistory] = useState(false);
+
+    const paperRefResponse = useRef(null);
+    const paperRefFlashCards = useRef(null);
+    const paperRefQuizzes = useRef(null);
+
+
+    const [autoScroll, setAutoScroll] = useState(true);
 
     const [isPortrait, setIsPortrait] = useState(window.matchMedia("(orientation: portrait)").matches);
 
@@ -129,6 +135,133 @@ const MainApp = () => {
 
 
 
+
+    const deleteCard = (titleCard) => {
+      axios.post("http://127.0.0.1:4192/api/deleteFlashCard/", {"title": titleCard, "thread": selectedThread})
+      .then((response) => {
+        
+        setFlashCards(flashCards.filter(card => card.title !== titleCard));
+        setErrorResponseMsg("");
+      })
+      .catch((error) => {
+          setErrorResponseMsg("Error: " + error.message);
+          // console.error("Error uploading file:", error);
+      });
+    }
+
+    const deleteQuiz = (question) => {
+      axios.post("http://127.0.0.1:4192/api/deleteQuiz/", {"question": question, "thread": selectedThread})
+      .then((response) => {
+        setQuizzes(quizzes.filter(quiz => quiz.question !== question));
+        setErrorResponseMsg("");
+      })
+      .catch((error) => {
+        setErrorResponseMsg("Error: " + error.message);
+        // console.error("Error uploading file:", error);
+      })
+    }
+
+    
+
+    
+
+
+    const handleQuery = () => {
+      setErrorResponseMsg('');//clear old error
+      setResponse(''); // clear old response
+      setLoading(true);
+      const eventSource = new EventSource('http://localhost:4192/api/chatStream/' + '?query=' + query + '&model=' + selectedModel + '&thread=' + selectedThread + "&executionType=" + executionType);
+      paperRefResponse.current.scrollTop = paperRefResponse.current.scrollHeight;
+      eventSource.onmessage = function(event) {
+        console.log('chunk:', JSON.stringify(event.data));
+
+          if (event.data === "[DONE]") {
+              eventSource.close();
+              // console.log("DONE!!");
+              setLoading(false);
+              setRefreshMessageHistory(!refreshMessageHistory);
+              setErrorResponseMsg("");
+              return;
+          }
+          setResponse(prev => prev + event.data);
+      };
+    
+      eventSource.onerror = function(err) {
+          // console.error('EventSource failed:', err);
+          // setReadyToQuery(false)
+          setErrorResponseMsg("Error: " + err.message);
+          setLoading(false);
+          eventSource.close();
+      };
+    
+      return () => {
+          setLoading(false);
+          eventSource.close();
+      };
+  };
+
+
+    const handleCreateFlashCards = async () => {
+    setLoading(true);
+    try {
+      await axios.post('http://127.0.0.1:4192/api/createFlashCards/', {
+        query: query,
+        model: selectedModel,
+        thread: selectedThread,
+        number: numberEx,
+        inputType: inputType
+      });
+      setErrorResponseMsg("");
+      
+      const response = await axios.get('http://127.0.0.1:4192/api/getFlashCards/?thread=' + selectedThread);
+      setFlashCards(response.data["cards"]);
+      
+    } catch (error) {
+      setErrorResponseMsg("Error: " + error.message);
+    }
+    setLoading(false);
+  }
+
+
+    const handleCreateQuiz = async () => {
+      setLoading(true);
+      try {
+        const postResponse = await axios.post(
+          'http://127.0.0.1:4192/api/createQuiz/',
+          {
+            query: query,
+            model: selectedModel,
+            thread: selectedThread,
+            number: numberEx,
+            inputType: inputType
+          }
+        );
+        // // Optional: update quizzes immediately from POST response
+        // let newQuizzes = [...quizzes, ...postResponse.data["quizzes"]];
+        // setQuizzes(newQuizzes);
+        setErrorResponseMsg("");
+        
+      
+        // Now fetch the latest quizzes from the backend
+        const getResponse = await axios.get(
+          'http://127.0.0.1:4192/api/getQuizzes/?thread=' + selectedThread
+        );
+        setQuizzes(getResponse.data["quizzes"]);
+        // paperRefQuizzes.current.scrollTo({
+        //   top: paperRefQuizzes.current.scrollHeight,
+        //   behavior: 'smooth'
+        // });
+      } catch (error) {
+        setErrorResponseMsg("Error: " + error.message);
+      }
+      setLoading(false);
+    };
+
+    const handleRadioChange = (event) => {
+      // setReadyToQuery(false);
+      setInputType(event.target.value);
+    };
+
     const handleSubmitFile = () => {
         setErrorResponse("");
         setErrorResponseMsg('');//clear old error
@@ -181,144 +314,36 @@ const MainApp = () => {
         });
     }
 
-    const deleteCard = (titleCard) => {
-      // if(loading){
-      //   setErrorResponseMsg("Warning: Cannot delete while generating response");
-      //   return;
-      // }
-      axios.post("http://127.0.0.1:4192/api/deleteFlashCard/", {"title": titleCard, "thread": selectedThread})
+    const handleSubmitFolder = () => {
+      setErrorResponse(<CircularProgress size={20} />);
+      axios.get('http://127.0.0.1:4192/api/uploadFolder/')
       .then((response) => {
-        
-        setFlashCards(flashCards.filter(card => card.title !== titleCard));
-        setErrorResponseMsg("");
-      })
+        setColorOfResponse("green");
+        setErrorResponse("Success");
+        // setFolder(response.data["folderPath"]);
+        setFolderPath(response.data["folderPath"]);
+        setReadyToQuery(true);
+      }) 
       .catch((error) => {
-          setErrorResponseMsg("Error: " + error.message);
           // console.error("Error uploading file:", error);
-      });
-    }
-
-    const deleteQuiz = (question) => {
-      axios.post("http://127.0.0.1:4192/api/deleteQuiz/", {"question": question, "thread": selectedThread})
-      .then((response) => {
-        setQuizzes(quizzes.filter(quiz => quiz.question !== question));
-        setErrorResponseMsg("");
+          setColorOfResponse("red");
+          setErrorResponse("Error: " + error.response.data["error"]);
+          setFolderPath("");
+          setReadyToQuery(false);
       })
-      .catch((error) => {
-        setErrorResponseMsg("Error: " + error.message);
-        // console.error("Error uploading file:", error);
-      })
-    }
+    };
 
-    
+    const handleScroll = () => {
+       if (!paperRefResponse.current) return;
+       const { scrollTop, scrollHeight, clientHeight } = paperRefResponse.current;
 
-    useEffect(() => {
-        axios.get('http://127.0.0.1:4192/api/models/')
-        .then((response) => {
-            // console.log(response)
-            setModels(response.data["models"])
-            setSelectedModel(response.data["models"][0])
-        })
-        .catch((error) => {
-            setErrorResponseMsg("Error: " + error.message);
-            // console.error("Error uploading file:", error);
-        })
-
-        axios.get('http://127.0.0.1:4192/api/getThreads/')
-        .then((response) => {
-            setThreads(response.data["threads"]);
-        })
-        .catch((error) => {
-            setErrorResponseMsg("Error: " + error.message);
-            // console.error("Error uploading file:", error);
-        })
-
-        // axios.get('http://127.0.0.1:4192/api/getQuizzes/' + '?thread=' + selectedThread)
-    }, [])
-
-
-    const handleQuery = () => {
-      setErrorResponseMsg('');//clear old error
-      setResponse(''); // clear old response
-      setLoading(true);
-      const eventSource = new EventSource('http://localhost:4192/api/chatStream/' + '?query=' + query + '&model=' + selectedModel + '&thread=' + selectedThread + "&executionType=" + executionType);
-    
-      eventSource.onmessage = function(event) {
-        console.log('chunk:', JSON.stringify(event.data));
-
-          if (event.data === "[DONE]") {
-              eventSource.close();
-              // console.log("DONE!!");
-              setLoading(false);
-              setRefreshMessageHistory(!refreshMessageHistory);
-              setErrorResponseMsg("");
-              return;
-          }
-          setResponse(prev => prev + event.data);
-      };
-    
-      eventSource.onerror = function(err) {
-          // console.error('EventSource failed:', err);
-          // setReadyToQuery(false)
-          setErrorResponseMsg("Error: " + err.message);
-          setLoading(false);
-          eventSource.close();
-      };
-    
-      return () => {
-          setLoading(false);
-          eventSource.close();
-      };
-  };
-
-
-    const handleCreateFlashCards = async () => {
-    setLoading(true);
-    try {
-      await axios.post('http://127.0.0.1:4192/api/createFlashCards/', {
-        query: query,
-        model: selectedModel,
-        thread: selectedThread,
-        number: numberEx,
-        inputType: inputType
-      });
-      setErrorResponseMsg("");
-      const response = await axios.get('http://127.0.0.1:4192/api/getFlashCards/?thread=' + selectedThread);
-      setFlashCards(response.data["cards"]);
-    } catch (error) {
-      setErrorResponseMsg("Error: " + error.message);
-    }
-    setLoading(false);
-  }
-
-
-    const handleCreateQuiz = async () => {
-      setLoading(true);
-      try {
-        const postResponse = await axios.post(
-          'http://127.0.0.1:4192/api/createQuiz/',
-          {
-            query: query,
-            model: selectedModel,
-            thread: selectedThread,
-            number: numberEx,
-            inputType: inputType
-          }
-        );
-        // // Optional: update quizzes immediately from POST response
-        // let newQuizzes = [...quizzes, ...postResponse.data["quizzes"]];
-        // setQuizzes(newQuizzes);
-        setErrorResponseMsg("");
-      
-        // Now fetch the latest quizzes from the backend
-        const getResponse = await axios.get(
-          'http://127.0.0.1:4192/api/getQuizzes/?thread=' + selectedThread
-        );
-        setQuizzes(getResponse.data["quizzes"]);
-      } catch (error) {
-        setErrorResponseMsg("Error: " + error.message);
-      }
-      setLoading(false);
+       // If the user scrolls up (not at bottom), turn off autoScroll.
+       // You might add a tolerance (e.g., 20px) for accidental movements.
+       if (scrollTop + clientHeight < scrollHeight - 5) {
+         setAutoScroll(false);
+       } else {
+         setAutoScroll(true);
+       }
     };
 
 
@@ -344,109 +369,132 @@ const MainApp = () => {
 
     }, [selectedThread]);
 
-    // useEffect(() => {
-      // console.log(flashCards)
-    // }, [flashCards])
-
-    // useEffect(() => {
-      // console.log("quizzes", quizzes)
-    // }, [quizzes])
     
 
-    const handleRadioChange = (event) => {
-      // setReadyToQuery(false);
-      setInputType(event.target.value);
-    };
 
-    useEffect(() => {// auto scroll
-    function onScroll() {
-        const scrollPosition = window.innerHeight + window.pageYOffset; // window.pageYOffset =  number of pixels the document has been scrolled vertically from the top.
-                                                                        // window.innerHeight = height of the visible viewport
-        const bottomPosition = document.documentElement.scrollHeight; //gets the full height of the page
-        const distanceFromBottom = bottomPosition - scrollPosition;
+    // useEffect(() => {// auto scroll
+    // function onScroll() {
+    //     const scrollPosition = window.innerHeight + window.pageYOffset; // window.pageYOffset =  number of pixels the document has been scrolled vertically from the top.
+    //                                                                     // window.innerHeight = height of the visible viewport
+    //     const bottomPosition = document.documentElement.scrollHeight; //gets the full height of the page
+    //     const distanceFromBottom = bottomPosition - scrollPosition;
 
-        if (distanceFromBottom < 100) {
-          // User is near bottom, enable auto-scroll
-          setAutoScrollEnabled(true);
-        } else {
-          // User scrolled up, disable auto-scroll
-          setAutoScrollEnabled(false);
-        }
-      }
+    //     if (distanceFromBottom < 100) {
+    //       // User is near bottom, enable auto-scroll
+    //       setAutoScrollEnabled(true);
+    //     } else {
+    //       // User scrolled up, disable auto-scroll
+    //       setAutoScrollEnabled(false);
+    //     }
+    //   }
 
-      window.addEventListener("scroll", onScroll);
-      return () => window.removeEventListener("scroll", onScroll);
-    }, []);
+    //   window.addEventListener("scroll", onScroll);
+    //   return () => window.removeEventListener("scroll", onScroll);
+    // }, []);
     
+    useEffect(() => {
+        axios.get('http://127.0.0.1:4192/api/models/')
+        .then((response) => {
+            // console.log(response)
+            setModels(response.data["models"])
+            setSelectedModel(response.data["models"][0])
+        })
+        .catch((error) => {
+            setErrorResponseMsg("Error: " + error.message);
+            // console.error("Error uploading file:", error);
+        })
+
+        axios.get('http://127.0.0.1:4192/api/getThreads/')
+        .then((response) => {
+            setThreads(response.data["threads"]);
+        })
+        .catch((error) => {
+            setErrorResponseMsg("Error: " + error.message);
+            // console.error("Error uploading file:", error);
+        })
+
+        // axios.get('http://127.0.0.1:4192/api/getQuizzes/' + '?thread=' + selectedThread)
+    }, [])
 
     useEffect(() => {
-      if (response && autoScrollEnabled) {
-        window.scrollTo({
-          top: document.documentElement.scrollHeight,
-          behavior: "smooth",//optional for smooth scrolling
-        });
+      if (autoScroll && paperRefResponse.current) {
+        
+        paperRefResponse.current.scrollTop = paperRefResponse.current.scrollHeight;
+        // paperRefResponse.current.scrollTo({
+        //   top: paperRefResponse.current.scrollHeight,
+        //   behavior: 'smooth'
+        // });
       }
-    }, [response, autoScrollEnabled]);
+    }, [response, autoScroll]);
+
+    // useEffect(() => {
+    //   if (response && autoScrollEnabled) {
+    //     window.scrollTo({
+    //       top: document.documentElement.scrollHeight,
+    //       behavior: "smooth",//optional for smooth scrolling
+    //     });
+    //   }
+    // }, [response, autoScrollEnabled]);
 
 
 
-    const scrollToBottom = () => {
-      window.scrollTo({
-        top: document.documentElement.scrollHeight,
-        behavior: "smooth", // optional for smooth scrolling animation
-      });
-    };
 
     useEffect(() => {
       console.log(JSON.stringify(response));
     }, [response])
 
-    const handleSubmitFolder = () => {
-      setErrorResponse(<CircularProgress size={20} />);
-      axios.get('http://127.0.0.1:4192/api/uploadFolder/')
-      .then((response) => {
-        setColorOfResponse("green");
-        setErrorResponse("Success");
-        setFolder(response.data["folderPath"]);
-        setFolderPath(response.data["folderPath"]);
-        setReadyToQuery(true);
-      })
-      .catch((error) => {
-          // console.error("Error uploading file:", error);
-          setColorOfResponse("red");
-          setErrorResponse("Error: " + error.response.data["error"]);
-          setFolderPath("");
-          setReadyToQuery(false);
-      })
-    };
+    
 
     useEffect(() => {
       console.log("inputType", inputType);
-      setErrorResponse("");
+      // setErrorResponse("");
       if(executionType === "Create flash cards" || executionType === "Create quiz"){
         // setReadyToQuery(false);
         if ((inputType === "model" || inputType === "web search")) {
+          setErrorResponse("");
           console.log("model or web search");
           setReadyToQuery(true);
         } else if (inputType === "Kiwix" && folderPath !== "") {
           setReadyToQuery(true);
+          // setErrorResponse("");
         } 
         else if((inputType === "file" || inputType === "url") && vectorStoreContent !== ""){ 
           setReadyToQuery(true);
+          // setErrorResponse("");
         }
         else {
           setReadyToQuery(false);
+          setErrorResponse("");
         }
       }
 
       // Never log readyToQuery right after setReadyToQuery (it won't be updated yet)
-    }, [inputType, folderPath]);
+    }, [inputType, folderPath, executionType]);
+
+    useEffect(() => {
+      if((inputType === "file" || inputType === "url") && vectorStoreContent === "") {
+          setErrorResponse("");
+      }
+       if((inputType === "file" || inputType === "url") && vectorStoreContent !== "") {
+          setErrorResponse("Success");
+      }
+      else if (inputType === "Kiwix" && folderPath === "") {
+          setErrorResponse("");
+      }
+      else if (inputType === "Kiwix" && folderPath !== "") {
+          setErrorResponse("Success");
+      }
+      else{
+          setErrorResponse("");
+      }
+    }, [inputType]);
+    
 
 
     useEffect(() => {
       setSelectedAnswer('');
       setIsAnswerCorrect(null);
-      setErrorResponse("");
+      // setErrorResponse("");
       console.log("executionType", executionType);
       if(executionType !== "Create flash cards" && executionType !== "Create quiz"){
         if (executionType === "Explain with Kiwix") {
@@ -466,15 +514,47 @@ const MainApp = () => {
       }
     }, [executionType, folderPath, vectorStoreContent]);
 
+    useEffect(() => {
+      if(executionType == "Explain with Kiwix" && folderPath === "") {
+        setErrorResponse("");
+      }
+      else if (executionType == "Explain with Kiwix" && folderPath !== "") {
+        setErrorResponse("Success");
+      }
+      else if (executionType == "Explain with document" && vectorStoreContent === "") {
+        setErrorResponse("");
+      }
+      else if (executionType == "Explain with document" && vectorStoreContent !== "") {
+        setErrorResponse("Success");
+      }
 
-
-    // useEffect(() => {
       
-    //   console.log("Status: " + readyToQuery);
-    // }, [readyToQuery])
+    }, [executionType]);
+
+    useEffect(() => {
+      if (flashCards.length && paperRefFlashCards.current) {
+        paperRefFlashCards.current.scrollTo({
+          top: paperRefFlashCards.current.scrollHeight,
+          behavior: 'smooth'
+        });
+      }
+    }, [flashCards]);
+
+    useEffect (() => {
+      if (quizzes.length && paperRefQuizzes.current) {
+        paperRefQuizzes.current.scrollTo({
+          top: paperRefQuizzes.current.scrollHeight,
+          behavior: 'smooth'
+        });
+      }
+    }, [quizzes]);
+
+
+
+    useEffect(() => {
+      console.log("readyToQuery", readyToQuery);
+    }, [readyToQuery])
     
-    
-    const lines = response.split('[br]');
 
     return (
       <div style={{display: "flex", flexDirection: "column", height: "100%"}}>
@@ -638,10 +718,15 @@ const MainApp = () => {
                 </> 
               }
               { (executionType !== "Explain with Kiwix" && inputType !== "Kiwix" && inputType !== "web search" && inputType !== "model") &&
+              <>
                 <Button variant="contained" component="span" onClick={handleSubmitFile} sx={{mt: "1em", fontSize: "0.85rem"}}>
                     Submit {(inputType === "file") ? "File" : "URL"}
                 </Button>
+              
+                
+              </>
               }
+
               <Typography variant="caption" sx={{display: "block", color: colorOfResponse, height: "0.5em", my:"0.5em"}}>{errorResponse}</Typography> 
 
 
@@ -751,7 +836,13 @@ const MainApp = () => {
                   sx={{fontSize: "0.85rem"}}
                   variant="contained" 
                   type="submit"
-                  onClick={(executionType === "Explain with document" || executionType === "Explain with Kiwix" || executionType === "Explain with web search" || executionType === "Explain Simply") ? handleQuery : (executionType === "Create flash cards" ? handleCreateFlashCards : handleCreateQuiz)} 
+                  onClick={
+                    (executionType === "Explain with document" || executionType === "Explain with Kiwix" || executionType === "Explain with web search" || executionType === "Explain Simply") 
+                    ? 
+                    handleQuery 
+                    : 
+                    (executionType === "Create flash cards" ? handleCreateFlashCards : handleCreateQuiz)
+                  } 
                   disabled={readyToQuery === false || selectedThread === "" || query === "" || loading }>
                       Submit Prompt
                   </Button>
@@ -767,6 +858,8 @@ const MainApp = () => {
                   {selectedThread !== "" && (executionType === "Explain with document" || executionType === "Explain with Kiwix" || 
                     executionType === "Explain with web search" || executionType === "Explain Simply") &&
                     <Paper 
+                    ref={paperRefResponse}
+                    onScroll={handleScroll}
                     sx={{
                       px: "3vh",
                       pt: "2vh",
@@ -794,8 +887,6 @@ const MainApp = () => {
                       <ModalModifyMessegeHistory thread_title={selectedThread} refreshMessageHistory={refreshMessageHistory} 
                       setRefreshMessageHistory={setRefreshMessageHistory} setResponse={setResponse}/>
                       <Typography variant="h6" sx={{ fontWeight: "500", whiteSpace: "pre-line"}}>
-                        {/* {response.replace('[br]', '\n')} */}
-                        {/* <span dangerouslySetInnerHTML={{ __html: response }} /> */}
                         {response}
                       </Typography>
 
@@ -805,6 +896,7 @@ const MainApp = () => {
                   }
                   {selectedThread !== "" && executionType === "Create flash cards" && flashCards != [] &&
                     <Paper 
+                    ref={paperRefFlashCards}
                     sx={{
                       px: "3vh",
                       pt: "2vh",
@@ -850,6 +942,7 @@ const MainApp = () => {
                   }
                   {selectedThread !== "" && executionType === "Create quiz" && quizzes != [] &&
                     <Paper 
+                    ref={paperRefQuizzes}
                     sx={{
                       px: "3vh",
                       pt: "2vh",

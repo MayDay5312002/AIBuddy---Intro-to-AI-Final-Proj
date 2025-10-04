@@ -7,7 +7,7 @@
     "productName": "AI Study Companion",
     "win": {
       "target": "nsis",
-      "icon": "icon.ico"
+      "icon": "Logo.ico"
     },
     "files": [
       "dist/**/*",
@@ -20,9 +20,9 @@
     "dist": "electron-builder"
   },
   "keywords": [],
-  "author": "",
+  "author": "Luke Evarretta",
   "license": "ISC",
-  "description": "",
+  "description": "AI Study Companion",
   "devDependencies": {
     "electron": "^36.8.1",
     "electron-builder": "^26.0.12"

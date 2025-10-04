@@ -24,7 +24,7 @@ cd AIBuddy
 # Use dynamic python command to run server
 $PYTHON_CMD manage.py runserver 4192 &
 
-cd ./desktop
+cd ../desktop
 
 npm start 
 
