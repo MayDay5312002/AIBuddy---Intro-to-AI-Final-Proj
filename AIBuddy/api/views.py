@@ -98,7 +98,6 @@ def chatWithFile(request):
     modelName = request.GET.get("model")
     thread = request.GET.get("thread")
     executionType = request.GET.get("executionType")#########################################################
-    thinking = False
 
     print(executionType)
     # print("Thead: ", thread)
@@ -120,6 +119,7 @@ def chatWithFile(request):
     # finalResponse = ""
     def event_stream(results = results):
         global vectorStore
+        thinking = False
         # query = request.GET.get("query")
         # modelName = request.GET.get("model")
         # results = query_vectorstore(query)
@@ -440,7 +440,7 @@ def ModifyMessageView(request):
     oldDocument = request.GET.get("oldDocument")
     message = request.GET.get("query")
     messages = messages[1:]
-    thinking = False
+    
     # theQuery = None
     # theResponse = None
     print("This is the old document: ", oldDocument)
@@ -472,6 +472,7 @@ def ModifyMessageView(request):
 
     def event_stream():
         finalResponse = ""
+        thinking = False
         if(executionType != "Explain Simply"):
             message = f"Read the following prompt and content carefully. Provide a comprehensive, detailed, and well-structured response to the prompt, directly utilizing the supplied content for support and context. Clearly explain your reasoning and organize your answer with appropriate headings, bullet points, or lists as needed for readability. If any aspect is unclear, state your assumptions. Try not to reference prior conversations—focus only on the information provided. The provided content might be not directly related to the prompt.\n\nPrompt:{theQuery.content}\nContent:{results}"
         else:
