@@ -99,6 +99,17 @@ def chatWithFile(request):
     thread = request.GET.get("thread")
     executionType = request.GET.get("executionType")#########################################################
 
+    if executionType == "Explain with web search" or executionType == "Explain with Kiwix": #Check if docker is running for these execution types. If not started return proper error
+        try:
+            docker.from_env()
+        except:
+            def error_stream():
+                yield "data: {\"error\": \"Docker is not running\"}\n\n"
+                yield "data: [DONE]\n\n"
+            return StreamingHttpResponse(error_stream(), content_type="text/event-stream")
+        
+
+
     print(executionType)
     # print("Thead: ", thread)
     thread = Thread.objects.get(title=thread)
@@ -315,12 +326,12 @@ class GetAllFlashCardsView(APIView):
         cards = FlashCards.objects.filter(thread=thread)
         result = []
         for card in cards:
-            result.append({"title": card.title, "content": card.content})
+            result.append({"title": card.title, "content": card.content, "id": card.id})
         return Response({"cards": result}, status=200)
 class DeleteFlashCardView(APIView):
     def post(self, request):
         thread = Thread.objects.get(title=request.data.get("thread"))
-        flashcard = FlashCards.objects.get(thread=thread, title=request.data.get("title"))
+        flashcard = FlashCards.objects.get(thread=thread, title=request.data.get("title"), content=request.data.get("contentCard"), id=request.data.get("id"))
         flashcard.delete()
         return Response({"message": "Flashcard deleted"}, status=200)
     
@@ -328,7 +339,7 @@ class DeleteFlashCardView(APIView):
 class ModifyFlashCardView(APIView):
     def post(self, request):
         thread = Thread.objects.get(title=request.data.get("thread"))
-        flashcard = FlashCards.objects.get(thread=thread, title=request.data.get("oldTitle"))
+        flashcard = FlashCards.objects.get(thread=thread, title=request.data.get("oldTitle"), id=request.data.get("id"))
         flashcard.title = request.data.get("title")
         flashcard.content = request.data.get("content")
         flashcard.save()
@@ -351,13 +362,13 @@ class GetAllQuizzesView(APIView):
         for card in cards:
             choices = ast.literal_eval(card.choices)
             random.shuffle(choices)
-            result.append({"question": card.question, "answer": card.answer, "choices": choices})
+            result.append({"question": card.question, "answer": card.answer, "choices": choices, "id": card.id})
         return Response({"quizzes": result}, status=200)
     
 class DeleteQuizView(APIView):
     def post(self, request):
         thread = Thread.objects.get(title=request.data.get("thread"))
-        quiz = Quizzes.objects.get(thread=thread, question=request.data.get("question"))
+        quiz = Quizzes.objects.get(thread=thread, question=request.data.get("question"), id=request.data.get("id"))
         quiz.delete()
         return Response({"message": "Quiz deleted"}, status=200)
     
@@ -365,7 +376,7 @@ class ModifyQuizView(APIView):
     def post(self, request):
 
         thread = Thread.objects.get(title=request.data.get("thread"))
-        quiz = Quizzes.objects.get(thread=thread, question=request.data.get("question"))
+        quiz = Quizzes.objects.get(thread=thread, question=request.data.get("question"), id=request.data.get("id"))
         print(request.data.get("answer"))
         quiz.question = request.data.get("question")
         quiz.answer = request.data.get("answer")
@@ -399,13 +410,13 @@ class GetAllMessagesView(APIView):
         thread = Thread.objects.get(title=thread)
         messages = Message.objects.filter(thread=thread).order_by("created_at")
         messages = messages[1:]
-        messages = [{"role": msg.role, "content": msg.content} if msg.role == "assistant" else {"role": msg.role, "content": msg.content, "document": msg.document} for msg in messages]
+        messages = [{"role": msg.role, "content": msg.content, "id": msg.id} if msg.role == "assistant" else {"role": msg.role, "content": msg.content, "document": msg.document, "id": msg.id} for msg in messages]
         return Response({"messages": messages}, status=200)
     
 class DeleteMessageView(APIView):
     def post(self, request):
         thread = Thread.objects.get(title=request.data.get("thread"))
-        queries = Message.objects.filter(thread=thread, content=request.data.get("content"), role="user", document=request.data.get("document"))
+        queries = Message.objects.filter(thread=thread, content=request.data.get("content"), role="user", document=request.data.get("document"), id=request.data.get("id"))
         if len(queries) == 0:
             return Response({"message": "Message not found"}, status=404)
         responses = Message.objects.filter(thread=thread, role="assistant", content=request.data.get("response"))
@@ -440,6 +451,16 @@ def ModifyMessageView(request):
     oldDocument = request.GET.get("oldDocument")
     message = request.GET.get("query")
     messages = messages[1:]
+
+
+    if executionType == "Web Search" or executionType == "Kiwix": #Check if docker is running for these execution types. If not started return proper error
+        try:
+            docker.from_env()
+        except:
+            def error_stream():
+                yield "data: {\"error\": \"Docker is not running\"}\n\n"
+                yield "data: [DONE]\n\n"
+            return StreamingHttpResponse(error_stream(), content_type="text/event-stream")
     
     # theQuery = None
     # theResponse = None
@@ -454,6 +475,8 @@ def ModifyMessageView(request):
                     break
     messagesUser = [{"role": msg.role, "content": msg.instructions if msg.role == "user" else msg.content} for msg in messages if msg.created_at < theQuery.created_at]
     results = []
+
+
     if(executionType == "document"):
         print(executionType)
         results = query_vectorstore2(message)
@@ -639,7 +662,11 @@ class UploadFolderView(APIView):
         # Check if subprocess succeeded
         if result.returncode == 0:
             # Process completed successfully
-            client = docker.from_env()
+            try:
+                client = docker.from_env()
+            except Exception as e:
+                print(e)
+                return Response({"error": "Docker is not running"}, status=500)
             global kiwixContainer 
             kiwixContainerList = client.containers.list(all=True, filters={'ancestor': 'ghcr.io/kiwix/kiwix-serve:3.7.0'})
             print("Kiwix container list total:", len(kiwixContainerList))

@@ -24,14 +24,15 @@ export default function BasicModalAdd({threads, setThreads}) {
 
 
   const [open, setOpen] = useState(false);
+  const [errorResponse, setErrorResponse] = useState("");
+  const [name , setName] = useState(""); //use state for current variables
   const handleOpen = () => setOpen(true);
+
   const handleClose = () => {
     setName("");
     setOpen(false);
   }
 
-  //use state for current variables
-  const [ name , setName] = useState("");
 
 
   const handleThread = async () => {
@@ -39,17 +40,18 @@ export default function BasicModalAdd({threads, setThreads}) {
     .then((response) => {
       let updatedThreads = [...threads, name.trim()];
       setThreads(updatedThreads);
+      setName("");
+      setErrorResponse("");
+      handleClose();
     })
     .catch((error) => {
       console.log(error);
-      setName("");
-      handleClose();
+      setErrorResponse("Error: " + error.response.data["message"]);
+      // handleClose();
     });
     // let updatedThreads = [...threads, name.trim()];
     // setThreads(updatedThreads);
     
-    setName("");
-    handleClose();
   }
 
   return (
@@ -80,10 +82,17 @@ export default function BasicModalAdd({threads, setThreads}) {
 
           <div>
             <Typography variant="h6" component="h2" >Thread Name</Typography>
-            <TextField id="Thread Name" label="Thread Name" value={name} onChange={(e) => setName(e.target.value)} variant="filled" required/>
+            <TextField id="Thread Name" label="Thread Name" value={name} onChange={(e) => setName(e.target.value)} variant="filled" required
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  handleThread();
+                }
+              }}
+            />
           </div>
       
           <div>
+            <Typography variant="body2" sx={{display: "block", color: "red", mt:"0.2em", height: "0.5em", fontSize:"0.8rem", mb: "0.1em"}}>{errorResponse}</Typography>
             <Button disabled={name === "" ? true : false} onClick={handleThread} variant='contained' sx={{my: "1em", fontSize: "0.85rem"}}>Submit</Button>
           </div>
           

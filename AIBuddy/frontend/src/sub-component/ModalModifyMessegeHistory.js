@@ -134,7 +134,7 @@ export default function ModalModifyMessegeHistory({setResponse,thread_title, ref
             <Divider sx={{my: 1}}/>
             <Box sx={{display: 'flex', flexDirection: 'column', gap: 1}}>
               {messages.map((message, index) => (
-                <Box key={index} sx={{display: 'flex', justifyContent: 'space-between'}}>
+                <Box key={message.id} sx={{display: 'flex', justifyContent: 'space-between'}}>
                   <Paper sx={{ p:1}}>
                     {
                       message.role === "user" ?
@@ -144,7 +144,7 @@ export default function ModalModifyMessegeHistory({setResponse,thread_title, ref
                           </Typography>
                         <IconButton 
                         onClick={() => {
-                          axios.post("http://127.0.0.1:4192/api/deleteMessage/", {"thread": thread_title, "content": message.content, "document": message.document, "response": messages[index+1].content})
+                          axios.post("http://127.0.0.1:4192/api/deleteMessage/", {"thread": thread_title, "content": message.content, "document": message.document, "response": messages[index+1].content, id: message.id})
                           .then((response) => {
                             setRefreshMessageHistory(!refreshMessageHistory);
                           })
@@ -157,7 +157,7 @@ export default function ModalModifyMessegeHistory({setResponse,thread_title, ref
                         </IconButton>
                         <ModalModifyMsg thread_title={thread_title} refreshMessageHistory={refreshMessageHistory} 
                         setRefreshMessageHistory={setRefreshMessageHistory} oldQuestion={message.content} 
-                        oldResponse={messages[index+1].content} document={message.document} setResponse={setResponse}/>
+                        oldResponse={messages[index+1].content} document={message.document} setResponse={setResponse} id={message.id}/>
                       </Box>
                       :
                       <Typography variant="body1" component="p" sx={{whiteSpace: "pre-line"}}>{message.content}</Typography>

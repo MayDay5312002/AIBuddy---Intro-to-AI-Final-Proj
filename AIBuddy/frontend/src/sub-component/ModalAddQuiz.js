@@ -23,7 +23,7 @@ const style = {
 };
 
 
-export default function ModalAddQuiz({setQuizzes, quizzes, thread_title}) {
+export default function ModalAddQuiz({setQuizzes, thread_title, setNewQuizzes}) {
 
 
   const [open, setOpen] = useState(false);
@@ -44,14 +44,24 @@ export default function ModalAddQuiz({setQuizzes, quizzes, thread_title}) {
   const handleThread = async () => {
     axios.post("http://127.0.0.1:4192/api/createManualQuiz/", {"question": question,  "choices": choices, "answer": answer, "thread": thread_title})
     .then((response) => {
-      setQuizzes([...quizzes, {"question": question, "answer": answer, "choices": choices}]);
+      // setQuizzes([...quizzes, {"question": question, "answer": answer, "choices": choices}]);
+      axios.get('http://127.0.0.1:4192/api/getQuizzes/?thread=' + thread_title)
+      .then((response) => {
+        setQuizzes(response.data["quizzes"]);
+        setNewQuizzes(true);
+        handleClose();
+      })
+      .catch((error) => {
+        console.log(error);
+        handleClose();
+      });
+
     })
     .catch((error) => {
       console.log(error);
       handleClose();
     });
     
-    handleClose();
   }
 
   return (

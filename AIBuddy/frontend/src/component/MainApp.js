@@ -65,10 +65,15 @@ const MainApp = () => {
     const paperRefFlashCards = useRef(null);
     const paperRefQuizzes = useRef(null);
 
+    const [newQuizzes, setNewQuizzes] = useState(false);
+    const [newFlashCards, setNewFlashCards] = useState(false);
+
 
     const [autoScroll, setAutoScroll] = useState(true);
 
     const [isPortrait, setIsPortrait] = useState(window.matchMedia("(orientation: portrait)").matches);
+
+    const submitButtonRef = useRef(null);
 
     const handleChoiceClick = (choice, answer, index) => {
       if(selectedAnswer === choice){
@@ -136,11 +141,10 @@ const MainApp = () => {
 
 
 
-    const deleteCard = (titleCard) => {
-      axios.post("http://127.0.0.1:4192/api/deleteFlashCard/", {"title": titleCard, "thread": selectedThread})
+    const deleteCard = (titleCard, contentCard, id) => {
+      axios.post("http://127.0.0.1:4192/api/deleteFlashCard/", {"title": titleCard, "thread": selectedThread, "contentCard": contentCard, "id": id})
       .then((response) => {
-        
-        setFlashCards(flashCards.filter(card => card.title !== titleCard));
+        setFlashCards(flashCards.filter(card => card.id !== id));
         setErrorResponseMsg("");
       })
       .catch((error) => {
@@ -149,10 +153,10 @@ const MainApp = () => {
       });
     }
 
-    const deleteQuiz = (question) => {
-      axios.post("http://127.0.0.1:4192/api/deleteQuiz/", {"question": question, "thread": selectedThread})
+    const deleteQuiz = (question, id) => {
+      axios.post("http://127.0.0.1:4192/api/deleteQuiz/", {"question": question, "thread": selectedThread, "id": id})
       .then((response) => {
-        setQuizzes(quizzes.filter(quiz => quiz.question !== question));
+        setQuizzes(quizzes.filter(quiz => quiz.id !== id));
         setErrorResponseMsg("");
       })
       .catch((error) => {
@@ -173,8 +177,8 @@ const MainApp = () => {
       const eventSource = new EventSource('http://localhost:4192/api/chatStream/' + '?query=' + query + '&model=' + selectedModel + '&thread=' + selectedThread + "&executionType=" + executionType);
       paperRefResponse.current.scrollTop = paperRefResponse.current.scrollHeight;
       eventSource.onmessage = function(event) {
-        console.log('chunk:', JSON.stringify(event.data));
-
+        // console.log('chunk:', JSON.stringify(event.data));
+          // console.log(String(event.data), String(event.data).startsWith('{"error":'));
           if (event.data === "[DONE]") {
               eventSource.close();
               // console.log("DONE!!");
@@ -182,6 +186,14 @@ const MainApp = () => {
               setRefreshMessageHistory(!refreshMessageHistory);
               setErrorResponseMsg("");
               return;
+          }
+          if(String(event.data).startsWith('{"error":')){
+            setErrorResponseMsg("Error: " + JSON.parse(event.data).error);
+            eventSource.close();
+            setLoading(false);
+            setRefreshMessageHistory(!refreshMessageHistory);
+            // setErrorResponseMsg("");
+            return;
           }
           setResponse(prev => prev + event.data);
       };
@@ -214,6 +226,7 @@ const MainApp = () => {
       setErrorResponseMsg("");
       
       const response = await axios.get('http://127.0.0.1:4192/api/getFlashCards/?thread=' + selectedThread);
+      setNewFlashCards(true);
       setFlashCards(response.data["cards"]);
       
     } catch (error) {
@@ -246,6 +259,7 @@ const MainApp = () => {
         const getResponse = await axios.get(
           'http://127.0.0.1:4192/api/getQuizzes/?thread=' + selectedThread
         );
+        setNewQuizzes(true);
         setQuizzes(getResponse.data["quizzes"]);
         // paperRefQuizzes.current.scrollTo({
         //   top: paperRefQuizzes.current.scrollHeight,
@@ -439,9 +453,9 @@ const MainApp = () => {
 
 
 
-    useEffect(() => {
-      console.log(JSON.stringify(response));
-    }, [response])
+    // useEffect(() => {
+    //   console.log(JSON.stringify(response));
+    // }, [response])
 
     
 
@@ -532,22 +546,24 @@ const MainApp = () => {
     }, [executionType]);
 
     useEffect(() => {
-      if (flashCards.length && paperRefFlashCards.current) {
+      if (flashCards.length && paperRefFlashCards.current && newFlashCards) {
         paperRefFlashCards.current.scrollTo({
           top: paperRefFlashCards.current.scrollHeight,
           behavior: 'smooth'
         });
+        setNewFlashCards(false);
       }
-    }, [flashCards]);
+    }, [newFlashCards, flashCards]);
 
     useEffect (() => {
-      if (quizzes.length && paperRefQuizzes.current) {
+      if (quizzes.length && paperRefQuizzes.current && newQuizzes) {
         paperRefQuizzes.current.scrollTo({
           top: paperRefQuizzes.current.scrollHeight,
           behavior: 'smooth'
         });
+        setNewQuizzes(false);
       }
-    }, [quizzes]);
+    }, [newQuizzes, quizzes]);
 
 
 
@@ -792,30 +808,44 @@ const MainApp = () => {
                   
                 </RadioGroup>
               </FormControl>
-              <TextField
+              <TextField //################input for query#################
                 label="Enter Prompt"
                 variant="outlined"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                sx={{my: "1em"}}
+                sx={{ 
+                  my: "1em",
+                  '& .MuiInputBase-input': {
+                    resize: "vertical",
+                    maxHeight: 110 // enforce max height for 4 rows
+                  }
+                }}
                 fullWidth
                 required
                 multiline
-                rows={1}
+                // rows={1}
+                minRows={1}
+                maxRows={4}
+                inputProps={{
+                  style: { resize: "vertical", overflow: "auto" }
+                }}
                 onKeyDown={e => {
                   if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
-                    // (executionType === "Explain with document") ? handleQuery() : (executionType === "Create flash cards") ? handleCreateFlashCards() : handleCreateQuiz()
-                    if (executionType === "Explain with document" || executionType === "Explain with Kiwix" || executionType === "Explain with web search" || executionType === "Explain Simply") {
-                      handleQuery()
-                    } else if (executionType === "Create flash cards") {
-                      handleCreateFlashCards()
-                    } else if (executionType === "Create quiz") {
-                      handleCreateQuiz()
+                    console.log("submit button disabled", submitButtonRef.current.disabled);
+                    if(submitButtonRef.current.disabled === false){
+                      // (executionType === "Explain with document") ? handleQuery() : (executionType === "Create flash cards") ? handleCreateFlashCards() : handleCreateQuiz()
+                      if (executionType === "Explain with document" || executionType === "Explain with Kiwix" || executionType === "Explain with web search" || executionType === "Explain Simply") {
+                        handleQuery()
+                      } else if (executionType === "Create flash cards") {
+                        handleCreateFlashCards()
+                      } else if (executionType === "Create quiz") {
+                        handleCreateQuiz()
+                      }
                     }
                   }
                 }}
-              />
+                />
                   {(executionType !== "Explain with document" && executionType !== "Explain with Kiwix" && executionType !== "Explain with web search" && executionType !== "Explain Simply") &&
                   <Box>
                     <Typography variant="h7" sx={{fontWeight: 200, display: "block"}} >Number of {executionType === "Create flash cards" ? "flash cards" : "questions"} to generate:</Typography>
@@ -833,6 +863,7 @@ const MainApp = () => {
                   </Box>
                   }
                   <Button 
+                  ref={submitButtonRef}
                   sx={{fontSize: "0.85rem"}}
                   variant="contained" 
                   type="submit"
@@ -921,18 +952,19 @@ const MainApp = () => {
                         {isFullscreen ? <FullscreenExitIcon /> : <FullscreenIcon />}
                       </IconButton>
                       <Typography variant="h5" sx={{fontWeight: "bold", color: "green", mt: "1em", textAlign: "center", color: "#0077b6"}}>Flash Cards</Typography>
-                      <ModalAddFlashCard setFlashCards={setFlashCards} flashCards={flashCards} thread_title={selectedThread}/>
+                      <ModalAddFlashCard setFlashCards={setFlashCards} thread_title={selectedThread} setNewFlashCards={setNewFlashCards}/>
                       {flashCards.map((card, index) => (
                         <Paper key={card.title} sx={{ p: 2, mb: 2, display: "inline-block", mx: 1, maxWidth: "30em"}}>
                           <Typography variant="h6" sx={{ fontWeight: "500" }} component={"span"}>
                             {card["title"]}
                           </Typography>
-                          <IconButton onClick={() => deleteCard(card["title"])} sx={{mx: 1}}>
+                          <IconButton onClick={() => deleteCard(card["title"], card["content"], card["id"])} sx={{mx: 1}}>
                             <DeleteIcon />
                           </IconButton>
-                          <ModalChangeFlashCard oldTitle={card["title"]}  oldContent={card["content"]} setFlashCards={setFlashCards} flashCards={flashCards} thread_title={selectedThread}/>
+                          <ModalChangeFlashCard oldTitle={card["title"]}  oldContent={card["content"]} setFlashCards={setFlashCards} 
+                          flashCards={flashCards} thread_title={selectedThread} id_card={card["id"]}/>
                           <Divider sx={{ my: 1 }} />
-                          <Typography variant="body1" sx={{ fontWeight: "400" }}>
+                          <Typography variant="body1" sx={{ fontWeight: "400", whiteSpace: "pre-line"}}>
                             {card["content"]}
                           </Typography>
                       
@@ -968,16 +1000,17 @@ const MainApp = () => {
                       </IconButton>
                       <Typography variant="h5" sx={{fontWeight: "bold", color: "green", mt: "1em", textAlign: "center", color:"#0077b6"}}>Quizzes</Typography>
                       {/* <Typography variant="h6" sx={{fontWeight: "500"}}>{response}</Typography> */}
-                      <ModalAddQuiz setQuizzes={setQuizzes} quizzes={quizzes} thread_title={selectedThread}/>
+                      <ModalAddQuiz setQuizzes={setQuizzes} thread_title={selectedThread} setNewQuizzes={setNewQuizzes}/>
                       {quizzes.map((quiz, indexQuiz) => (
-                        <Paper key={quiz.question} sx={{ p: 2, mb: 2, display: "inline-block", mx: 1}}>
+                        <Paper key={quiz.id_quiz} sx={{ p: 2, mb: 2, display: "inline-block", mx: 1}}>
                           <Typography variant="h6" sx={{ fontWeight: "500" }} component={"span"}>
                             {quiz["question"]}
                           </Typography>
-                          <IconButton onClick={() => deleteQuiz(quiz["question"])} sx={{mx: 1}}>
+                          <IconButton onClick={() => deleteQuiz(quiz["question"], quiz["id"])} sx={{mx: 1}}>
                             <DeleteIcon />
                           </IconButton>
-                          <ModalChangeQuiz oldAnswer={quiz.answer} oldQuestion={quiz.question} oldChoices={quiz.choices} setQuizzes={setQuizzes} quizzes={quizzes} thread_title={selectedThread}/>
+                          <ModalChangeQuiz oldAnswer={quiz.answer} oldQuestion={quiz.question} oldChoices={quiz.choices} 
+                          setQuizzes={setQuizzes} quizzes={quizzes} thread_title={selectedThread} id_quiz={quiz.id}/>
                           <Divider sx={{ my: 1 }} />
                           <List>
                             {quiz.choices.map((choice, index) => (

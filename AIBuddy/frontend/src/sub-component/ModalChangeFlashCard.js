@@ -20,7 +20,7 @@ const style = {
 };
 
 
-export default function ModalChangeFlashCard({oldTitle, oldContent, setFlashCards, flashCards, thread_title}) {
+export default function ModalChangeFlashCard({oldTitle, oldContent, setFlashCards, flashCards, thread_title, id_card}) {
 
 
   const [open, setOpen] = useState(false);
@@ -41,12 +41,12 @@ export default function ModalChangeFlashCard({oldTitle, oldContent, setFlashCard
   }, [oldTitle, oldContent]);
 
   const handleThread = async () => {
-    axios.post("http://127.0.0.1:4192/api/modifyFlashCard/", {"title": title,  "content": content, "thread": thread_title, "oldTitle": oldTitle})
+    axios.post("http://127.0.0.1:4192/api/modifyFlashCard/", {"title": title,  "content": content, "thread": thread_title, "oldTitle": oldTitle, "id": id_card})
     .then((response) => {
       // setFlashCards(flashCards.map(card => card.title === oldTitle ? {...card, title: title, content: content} : card));
-      let index = flashCards.findIndex(card => card.title === oldTitle);
+      let index = flashCards.findIndex(card => card.id === id_card);
       if(index !== -1){
-        let updatedFlashCards = [...flashCards.slice(0, index), {"title": title, "content": content}, ...flashCards.slice(index + 1)];
+        let updatedFlashCards = [...flashCards.slice(0, index), {"title": title, "content": content, "id": id_card}, ...flashCards.slice(index + 1)];
         setFlashCards(updatedFlashCards);
       }
     })

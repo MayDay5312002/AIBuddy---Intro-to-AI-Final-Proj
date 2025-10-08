@@ -1,14 +1,19 @@
 @echo off
 call venv\Scripts\activate.bat
 
+call docker desktop start
 
-cd AIBuddy
 
+cd desktop
+
+start /b npm start
+
+cd ..\AIBuddy
 @REM run this program in the background (without new CMD)
-start /b python manage.py runserver 4192
+call python manage.py runserver 4192
 
 cd ..\desktop
 
-call npm start
+@REM call npm start
 
 pause

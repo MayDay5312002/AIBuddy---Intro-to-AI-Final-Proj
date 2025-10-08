@@ -23,9 +23,8 @@ const style = {
 };
 
 
-export default function ModalModifyMsg({setResponse,thread_title, refreshMessageHistory, setRefreshMessageHistory, oldResponse, oldQuestion, document,
-  
-  
+export default function ModalModifyMsg({setResponse,thread_title, refreshMessageHistory, 
+  setRefreshMessageHistory, oldResponse, oldQuestion, document, id
 }) {
 
 
@@ -34,7 +33,7 @@ export default function ModalModifyMsg({setResponse,thread_title, refreshMessage
   const [content, setContent] = useState(oldResponse);
   const [question, setQuestion] = useState(oldQuestion);
   const [file, setFile] = useState(null);
-  const [inputType, setInputType] = useState("document");
+  const [executionType, setExecutionType] = useState("document");
   const [url, setUrl] = useState("");
   const [vectorStoreContent, setVectorStoreContent] = useState("");
   const [models, setModels] = useState([]);
@@ -46,31 +45,11 @@ export default function ModalModifyMsg({setResponse,thread_title, refreshMessage
   const [generating, setGenerating] = useState(false);
   const [loading, setLoading] = useState(false);
   const [folderPath, setFolderPath] = useState("");
-  const [documentType, setDocumentType] = useState('file');
+  const [inputType, setInputType] = useState('file'); //This is only for document execution type
   const TextFieldRef = useRef(null);
   const [autoScrollComp, setAutoScrollComp] = useState(true);
 
 
-  useEffect(() => {
-    axios.get('http://localhost:4192/api/models/').then((response) => {
-      setModels(response.data["models"]);
-      setSelectedModel(response.data["models"][0]);
-    })
-    .catch((error) => {
-        console.error("Error uploading file:", error);
-    })
-  }, [open])
-
-  useEffect(() => {
-    if (autoScrollComp && TextFieldRef.current) {
-      
-      TextFieldRef.current.scrollTop = TextFieldRef.current.scrollHeight;
-      // TextFieldRef.current.scrollTo({
-      //   top: TextFieldRef.current.scrollHeight,
-      //   behavior: 'smooth'
-      // });
-    }
-  }, [content, autoScrollComp]);
   
 
   const handleOpen = () => {
@@ -80,14 +59,14 @@ export default function ModalModifyMsg({setResponse,thread_title, refreshMessage
     setContent(oldResponse);
     setQuestion(oldQuestion);
     setFile(null);
-    setInputType("document");
+    setExecutionType("document");
     setUrl("");
     setVectorStoreContent("");
     setOpen(false);
     setErrorResponse("");
     setErrorResponseMsg('');
     setModifyOption('Auto');
-    setDocumentType('file');
+    setInputType('file');
   }
   const handleFileChangeHere = (event) => {
     const fileTemp = event.target.files[0];
@@ -117,14 +96,14 @@ export default function ModalModifyMsg({setResponse,thread_title, refreshMessage
     setVectorStoreContent("");
     setLoading(true);
     const formData = new FormData();
-    if(documentType === "file"){
+    if(inputType === "file"){
       if(file===null){
         console.log("Please select a file");
         return
       }
       formData.append("file", file);
     }
-    else if(documentType === "url"){
+    else if(inputType === "url"){
       if(url===""){
         console.log("Please enter a url");
         return
@@ -142,18 +121,20 @@ export default function ModalModifyMsg({setResponse,thread_title, refreshMessage
       // Handle the response from the server
       // console.log(response.data);
       // setVectorStoreContent(response.data); 
-      setVectorStoreContent(documentType === "file"? file.name : url);
+      setVectorStoreContent(inputType === "file"? file.name : url);
       setErrorResponse("Success");
       setLoading(false);
     })
     .catch(error => {
       // Handle any errors that occurred during the request
+      setVectorStoreContent("[Error]");
+      setFolderPath("");
       setErrorResponse("Error uploading file");
       console.error(error);
     });
   }
 
-  const handleSubmitFolder = () => {
+  const handleSubmitFolder = () => { //This will open a tkinter folder dialog
       setErrorResponse(<CircularProgress size={20} />);
       setLoading(true);
       axios.get('http://127.0.0.1:4192/api/uploadFolder/')
@@ -165,7 +146,9 @@ export default function ModalModifyMsg({setResponse,thread_title, refreshMessage
       })
       .catch((error) => {
           // console.error("Error uploading file:", error);
-          setErrorResponse("Error: " + error.response);
+          setFolderPath("[Error]");
+          setVectorStoreContent("");
+          setErrorResponse("Error: " + error.response.data["error"]);
           setLoading(false);
       });
   };
@@ -175,8 +158,8 @@ export default function ModalModifyMsg({setResponse,thread_title, refreshMessage
       const eventSource = new EventSource('http://localhost:4192/api/modifyMessage/' + '?query=' + encodeURIComponent(question) + '&model=' 
       + encodeURIComponent(selectedModel) +  '&thread=' + encodeURIComponent(thread_title) + '&oldQuestion=' + encodeURIComponent(oldQuestion) + 
       '&oldDocument=' + encodeURIComponent(oldDocumentNew) + '&oldResponse=' + encodeURIComponent(oldResponse) + 
-      "&newDocument=" + (inputType === "document"  && documentType === "file"? encodeURIComponent(file.name) : encodeURIComponent(url)) + 
-      "&executionType=" + encodeURIComponent(inputType)
+      "&newDocument=" + (executionType === "document"  && inputType === "file"? encodeURIComponent(file.name) : encodeURIComponent(url)) + 
+      "&executionType=" + encodeURIComponent(executionType) + "&id=" + encodeURIComponent(id)
       );
       setContent('');
       setResponse(''); // clear old response
@@ -191,6 +174,14 @@ export default function ModalModifyMsg({setResponse,thread_title, refreshMessage
               setGenerating(false);
               setErrorResponseMsg("Success");
               return;
+          }
+          if(String(event.data).startsWith('{"error":')){
+            setErrorResponseMsg("Error: " + JSON.parse(event.data).error);
+            eventSource.close();
+            setGenerating(false);
+            setRefreshMessageHistory(!refreshMessageHistory);
+            // setErrorResponseMsg("");
+            return;
           }
           setContent(prev => prev + event.data);
           setResponse(prev => prev + event.data);
@@ -212,8 +203,9 @@ export default function ModalModifyMsg({setResponse,thread_title, refreshMessage
     setErrorResponseMsg(<CircularProgress size={18} />)
     axios.post("http://localhost:4192/api/modifyMessageManual/", 
       {"thread":thread_title, "oldQuestion": oldQuestion, "oldResponse": oldResponse, "query": question, 
-        "newResponse": content, "oldDocument": document, 
-        "newDocument": (vectorStoreContent === "") ? document : (documentType === "file" ? file.name : url)})
+        "newResponse": content, "oldDocument": document, "id": id,
+        "newDocument": (vectorStoreContent === "") ? document : (inputType === "file" ? file.name : url)}
+    )
     .then((response) => {
       // Handle the response from the server
       // console.log(response.data);
@@ -234,14 +226,37 @@ export default function ModalModifyMsg({setResponse,thread_title, refreshMessage
     if(modifyOption == "Auto"){
       setContent(oldResponse);
       setQuestion(oldQuestion);
-      if(documentType === "text"){
-        setDocumentType("file");
+      if(inputType === "text"){
+        setInputType("file");
       }
     }
     if(modifyOption == "Manual"){
-      setInputType("document");
+      setExecutionType("document");
     }
   }, [modifyOption])
+
+  useEffect(() => {
+    axios.get('http://localhost:4192/api/models/').then((response) => {
+      setModels(response.data["models"]);
+      setSelectedModel(response.data["models"][0]);
+    })
+    .catch((error) => {
+        console.error("Error uploading file:", error);
+    })
+  }, [open])
+
+  useEffect(() => {
+    if (autoScrollComp && TextFieldRef.current) {
+      
+      TextFieldRef.current.scrollTop = TextFieldRef.current.scrollHeight;
+      // TextFieldRef.current.scrollTo({
+      //   top: TextFieldRef.current.scrollHeight,
+      //   behavior: 'smooth'
+      // });
+    }
+  }, [content, autoScrollComp]);
+
+
   
 
 
@@ -271,7 +286,7 @@ export default function ModalModifyMsg({setResponse,thread_title, refreshMessage
           <Button variant={ modifyOption === "Manual" ? "outlined" : "contained" }
            onClick={() =>{ 
             if (generating) return;
-            if(modifyOption === "Manual" && documentType === "text"){/////////////////////////////////////////////////////
+            if(modifyOption === "Manual" && inputType === "text"){/////////////////////////////////////////////////////
               setVectorStoreContent("");
               setUrl("");
             }
@@ -304,13 +319,13 @@ export default function ModalModifyMsg({setResponse,thread_title, refreshMessage
             <Divider sx={{my: 1}}/>
 
               <Typography variant="h6" component="h2" sx={{mb: "0.5em", display: "block", }}>
-                {inputType === "document" ? 
+                {executionType === "document" ? 
                 "Upload a Document" 
                 : 
-                  (inputType === "Kiwix" ?
+                  (executionType === "Kiwix" ?
                     "Upload Kiwix folder"
                     :
-                    (inputType === "Web Search" ?
+                    (executionType === "Web Search" ?
                       "Web Search"
                       :
                       "Explain Simply"
@@ -322,8 +337,8 @@ export default function ModalModifyMsg({setResponse,thread_title, refreshMessage
                   <FormLabel>Choose Execution Type</FormLabel>
                   <RadioGroup
                     row
-                    value={inputType}
-                    onChange={(event => {setInputType(event.target.value)})}
+                    value={executionType}
+                    onChange={(event => {setExecutionType(event.target.value)})}
                   >
                     {/* <FormControlLabel value="file" control={<Radio />} label="Upload a File" />
                     <FormControlLabel value="url" control={<Radio />} label="Enter a youtube URL" /> */}
@@ -339,13 +354,13 @@ export default function ModalModifyMsg({setResponse,thread_title, refreshMessage
                   </RadioGroup>
                 </FormControl>
 
-                { inputType === "document" &&
+                { executionType === "document" &&
                 <FormControl>
                   <FormLabel>Choose Input Type</FormLabel>
                   <RadioGroup
                     row
-                    value={documentType}
-                    onChange={(event => {setDocumentType(event.target.value)})}
+                    value={inputType}
+                    onChange={(event => {setInputType(event.target.value)})}
                   >
                     <FormControlLabel value="file" control={<Radio />} label="Upload a File" />
                     <FormControlLabel value="url" control={<Radio />} label="Enter a youtube URL" /> 
@@ -378,7 +393,7 @@ export default function ModalModifyMsg({setResponse,thread_title, refreshMessage
                 }
 
 
-              { inputType === "document" && documentType === "file"  &&
+              { executionType === "document" && inputType === "file"  &&
                 <Box>
                   <input
                     accept="*"
@@ -397,7 +412,7 @@ export default function ModalModifyMsg({setResponse,thread_title, refreshMessage
                   <Typography variant="body2" sx={{mt: "0.5em", overflow: "auto"}}><span style={{textDecoration: "underline"}}>Selected file</span>: {file ? file.name : "No file selected" }</Typography>
                 </Box>
               }
-              { inputType === "document" && documentType === "url" &&
+              { executionType === "document" && inputType === "url" &&
                <Box>
                 <Typography variant="h7" sx={{mb: "0.5em", display: "block"}}>Enter Youtube URL</Typography>
                 <TextField
@@ -411,7 +426,7 @@ export default function ModalModifyMsg({setResponse,thread_title, refreshMessage
                 <Typography variant="body2" sx={{mt: "0.5em", overflow: "auto"}}><span style={{textDecoration: "underline"}}>Selected youtube URL</span>: {url }</Typography>
                </Box>
               }
-              { inputType === "document" && documentType === "text"  && modifyOption === "Manual" &&
+              { executionType === "document" && inputType === "text"  && modifyOption === "Manual" &&
                 <TextField
                   id="outlined-basic"
                   label="Enter New Reference"
@@ -428,26 +443,31 @@ export default function ModalModifyMsg({setResponse,thread_title, refreshMessage
                 />
               }
               {
-                inputType === "Kiwix" &&
+                executionType === "Kiwix" &&
                 <Box>
                   <Typography variant="h7" sx={{mb: "0.5em", display: "block"}}>Upload Folder Path</Typography>
                   <Button variant="contained" component="span" sx={{fontSize: "0.85rem"}} onClick={handleSubmitFolder}>
                     Select Folder
                   </Button>
+                  <span style={{marginLeft: "0.5em", color: (errorResponse === "Success" ? "green" : "red"), fontSize: "0.85em", marginTop: "0.5em"}}>
+                    {folderPath === "[Error]" || loading ? errorResponse : ""}
+                    </span>
                 </Box>
               }
             </Box>
-            { inputType === "document"  &&
+            { executionType === "document"  &&
             <>
               <Typography variant="body2" sx={{mb: "0.5em", overflow: "auto"}}><u>Old reference</u>: {document}</Typography>
               <Button variant="contained" component="span" 
                 onClick={handleSubmitFile} 
                 sx={{display: "span", fontSize: "0.85em"}}>
-              Submit {(documentType === "file") ? "File" : (documentType === "url" ? "Youtube URL" : "Text" )}
+              Submit {(inputType === "file") ? "File" : (inputType === "url" ? "Youtube URL" : "Text" )}
               </Button>
             
             
-              <span style={{marginLeft: "0.5em", color: (errorResponse === "Success" ? "green" : "red"), fontSize: "1em", marginTop: "0.5em"}}>{errorResponse}</span>
+              <span style={{marginLeft: "0.5em", color: (errorResponse === "Success" ? "green" : "red"), fontSize: "0.85em", marginTop: "0.5em"}}>
+                {vectorStoreContent === "[Error]" || loading ? errorResponse : ""}
+                </span>
               <Typography variant="body2" sx={{mt: "0.5em", overflow: "auto"}}><u>New reference</u>: {vectorStoreContent}</Typography>
             </>
             }
@@ -492,7 +512,7 @@ export default function ModalModifyMsg({setResponse,thread_title, refreshMessage
             disabled={
               modifyOption === "Auto"
                 ? 
-                ((inputType === "Kiwix" ? folderPath === "" : (inputType !== "Explain Simply" && inputType !== "Web Search" ? vectorStoreContent === "" : false)) || loading)
+                ((executionType === "Kiwix" ? (folderPath === "" || folderPath === "[Error]") : (executionType !== "Explain Simply" && executionType !== "Web Search" ? (vectorStoreContent === "" || vectorStoreContent === "[Error]") : false)) || loading)
                 : 
                 (question === oldQuestion && content === oldResponse && vectorStoreContent === "" || loading)
             }

@@ -24,7 +24,7 @@ const style = {
 };
 
 
-export default function ModalChangeQuiz({oldAnswer,oldQuestion, oldChoices, setQuizzes, quizzes, thread_title}) {
+export default function ModalChangeQuiz({oldAnswer,oldQuestion, oldChoices, setQuizzes, quizzes, thread_title, id_quiz}) {
 
 
   const [open, setOpen] = useState(false);
@@ -48,12 +48,12 @@ export default function ModalChangeQuiz({oldAnswer,oldQuestion, oldChoices, setQ
   }, [oldQuestion, oldChoices, oldAnswer]);
 
   const handleThread = async () => {
-    axios.post("http://127.0.0.1:4192/api/modifyQuizCard/", {"question": question,  "choices": choices, "answer": answer, "thread": thread_title,})
+    axios.post("http://127.0.0.1:4192/api/modifyQuizCard/", {"question": question,  "choices": choices, "answer": answer, "thread": thread_title, "id": id_quiz})
     .then((response) => {
       // setQuizzes(quizzes.map(card => card.title === oldTitle ? {...card, title: title, content: content} : card));
-      let index = quizzes.findIndex(card => card.question === oldQuestion);
+      let index = quizzes.findIndex(card => card.id === id_quiz);
       if(index !== -1){
-        let updatedquizzes = [...quizzes.slice(0, index), {"question": question, "answer": answer, "choices": choices}, ...quizzes.slice(index + 1)];
+        let updatedquizzes = [...quizzes.slice(0, index), {"question": question, "answer": answer, "choices": choices, "id": id_quiz}, ...quizzes.slice(index + 1)];
         setQuizzes(updatedquizzes);
       }
     })

@@ -24,6 +24,16 @@ def start_compose(compose_file):
 def stop_compose(compose_file):
     subprocess.run(['docker', 'compose', '-f', compose_file, 'down'], check=True)
 
+def checkIfDockerRun(dockerClient):
+    try:
+        dockerClient = docker.from_env()
+        dockerClient.version()
+        print("Docker is running")
+        return dockerClient
+    except:
+        print("Docker is not running")
+        return None
+
 def signal_handler(signum, frame): #Force cleanup
     # Cleanup code here
     stop_compose('searxng-docker\docker-compose.yaml')
@@ -37,17 +47,22 @@ def signal_handler(signum, frame): #Force cleanup
     print("Signal received, cleaning up")
     sys.exit(0)
 
-settingsClient = docker.from_env()
+settingsClient = checkIfDockerRun(None)
 
 
-signal.signal(signal.SIGINT, signal_handler)  # Handle Ctrl+C
-signal.signal(signal.SIGTERM, signal_handler)  # Handle termination
+if(settingsClient is not None):
+    signal.signal(signal.SIGINT, signal_handler)  
+    signal.signal(signal.SIGTERM, signal_handler)  
 
-start_compose('searxng-docker\docker-compose.yaml')
-listOfContainers = settingsClient.containers.list(all=True, filters={'ancestor': 'ghcr.io/kiwix/kiwix-serve:3.7.0'})
-for container in listOfContainers:
-    if container.status == 'exited':
-        container.remove()
+    start_compose('searxng-docker\docker-compose.yaml')
+    listOfContainers = settingsClient.containers.list(all=True, filters={'ancestor': 'ghcr.io/kiwix/kiwix-serve:3.7.0'})
+    for container in listOfContainers:
+        if container.status == 'exited':
+            container.remove()
+
+
+
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 print(BASE_DIR)

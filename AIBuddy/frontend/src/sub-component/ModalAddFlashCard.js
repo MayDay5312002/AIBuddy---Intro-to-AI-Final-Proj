@@ -20,7 +20,7 @@ const style = {
 };
 
 
-export default function ModalAddFlashCard({setFlashCards, flashCards, thread_title}) {
+export default function ModalAddFlashCard({setFlashCards, thread_title, setNewFlashCards}) {
 
 
   const [open, setOpen] = useState(false);
@@ -40,7 +40,19 @@ export default function ModalAddFlashCard({setFlashCards, flashCards, thread_tit
     axios.post("http://127.0.0.1:4192/api/createManualFlashCard/", {"title": title,  "content": content, "thread": thread_title})
     .then((response) => {
       // setFlashCards(flashCards.map(card => card.title === oldTitle ? {...card, title: title, content: content} : card));
-      setFlashCards([...flashCards, {"title": title, "content": content}]);
+      // setFlashCards([...flashCards, {"title": title, "content": content}]);
+      axios.get('http://127.0.0.1:4192/api/getFlashCards/?thread=' + thread_title)
+      .then((response) => {
+        setFlashCards(response.data["cards"]);
+        setNewFlashCards(true);
+        // setErrorResponseMsg("");
+      })
+      .catch((error) => {
+        console.log(error);
+        handleClose();
+      });
+
+      
     })
     .catch((error) => {
       console.log(error);
