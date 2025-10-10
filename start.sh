@@ -19,6 +19,8 @@ fi
 # Activate virtual environment
 . venv/bin/activate
 
+docker desktop start
+
 cd AIBuddy
 
 # Use dynamic python command to run server
@@ -27,5 +29,7 @@ $PYTHON_CMD manage.py runserver 4192 &
 cd ../desktop
 
 npm start 
+
+
 
 wait

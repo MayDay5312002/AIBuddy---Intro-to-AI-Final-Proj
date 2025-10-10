@@ -1,7 +1,7 @@
 import subprocess
 import docker
+import tkinter as tk
 from tkinter.messagebox import askyesno
-
 def start_compose(compose_file):
     subprocess.run(['docker', 'compose', '-f', compose_file, 'up', '-d'], check=True)
 
@@ -30,7 +30,14 @@ try:
 
     # from tkinter.messagebox import askyesno
 
+    root = tk.Tk()
+    root.withdraw()  # Hide the root window
+    root.attributes('-topmost', True)  # Make the root window stay on top temporarily
+    
     answer = askyesno(title="Confirm", message="Do you want to stop Docker?")
+    
+    root.attributes('-topmost', False)  # Return to normal stacking behavior
+    root.destroy()  # Destroy the hidden root win
     # if answer:
     print("answer:", answer)
         # DETACHED_PROCESS = 0x00000008  # Windows only

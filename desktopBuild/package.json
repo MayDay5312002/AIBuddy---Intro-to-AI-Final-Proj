@@ -1,0 +1,65 @@
+{
+  "name": "desktop",
+  "version": "0.9.0",
+  "main": "runnable.js",
+  "build": {
+    "extraResources": [
+      {
+        "from": "../venv_cpy",
+        "to": "python_env"
+      },
+      {
+        "from": "../AIBuddy_Copy",
+        "to": "django_project"
+      },
+      {
+        "from": "../Progress/progress.html",
+        "to": "progress.html"
+      },
+      {
+        "from": "../Progress/preload.js",
+        "to": "preload.js"
+      }
+    ],
+    "appId": "com.example.myapp",
+    "productName": "AI Study Companion",
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "Logo.ico"
+    },
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "category": "public.app-category.education",
+      "icon": "Logo.icns"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "icon": "Logo.png"
+    },
+    "files": [
+      "dist/**/*",
+      "runnable.js",
+      "package.json"
+    ]
+  },
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder"
+  },
+  "keywords": [],
+  "author": "Luke Evarretta",
+  "license": "ISC",
+  "description": "AI Study Companion",
+  "devDependencies": {
+    "electron": "^36.8.1",
+    "electron-builder": "^26.0.12"
+  }
+}

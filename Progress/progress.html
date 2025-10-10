@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Installation Progress</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 10px;
+      background: #f0f0f0;
+    }
+    #log {
+      white-space: pre-wrap;
+      background: #222;
+      color: #0f0;
+      padding: 10px;
+      height: 200px;
+      overflow-y: auto;
+      border-radius: 5px;
+      font-family: monospace;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <h3>Installing Requirements</h3>
+  <div id="log">Waiting for output...</div>
+
+  <script>
+  const logDiv = document.getElementById('log');
+
+  window.electronAPI.onMessage((message) => {
+    logDiv.textContent += message;
+    logDiv.scrollTop = logDiv.scrollHeight; // Auto-scroll to bottom
+  });
+  </script>
+
+</body>
+</html>

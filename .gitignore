@@ -17,3 +17,5 @@ dist/
 all-MiniLM-L6-v2/
 all-mpnet-base-v2/
 dist/
+venv_cpy/
+venv_lm/

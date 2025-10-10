@@ -65,8 +65,14 @@ if(settingsClient is not None):
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-print(BASE_DIR)
-os.environ["TIKA_SERVER_JAR"] = "file:///" + str(BASE_DIR).strip().replace("\\", "/") + "/tika/tika-server.jar"
+# print(BASE_DIR)
+# os.environ["TIKA_SERVER_JAR"] = "file:///" + str(BASE_DIR).strip().replace("\\", "/") + "/tika/tika-server.jar"
+tika_path = BASE_DIR / "tika" / "tika-server.jar"
+
+# Convert path to proper file URI for the current OS (Windows/Linux/Mac)
+tika_uri = tika_path.as_uri()
+
+os.environ["TIKA_SERVER_JAR"] = tika_uri
 
 
 

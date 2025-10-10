@@ -16,6 +16,35 @@
 3. To see if the model is succefully pulled, simply do `ollama list`. With this command, you will see all the models you have currently.
 - For more guide https://github.com/ollama/ollama/blob/main/README.md#quickstart
 
+---
+***NEW INSTRUCTION***
+
+**To create installer**:
+1. Go to desktopBuild and then `npm install` to install the needed modules for electron.
+2. Go to `AIBuddy_Copy/models` then `git clone https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2` to get the embedding model.
+2. Click on the package.json and look for this:
+```
+      {
+        "from": "../venv_cpy",
+        "to": "python_env"
+      }
+```
+3. Create a clean python virtual environment at the root directory of this repo, and then change the `venv_cpy` to the name of your newly created python virtual environment. 
+    - To create a python venv: `python -m venv venvName`
+    ```
+            {
+                "from": "../venvName",
+                "to": "python_env"
+            }
+    ```
+4. It will take some time to create the installer, but after it is done you should be able to get it in `desktopBuild/dist/`.
+5. Install or run it.
+
+
+---
+
+***OLD INSTRUCTION***
+
 **Instructions to install application**:
 + Note: Ensure you have internet connection.
 - Windows installation:
@@ -40,22 +69,33 @@
     - Simply close terminal that opened when the `start.bat` or `start.sh` was executed.
 
 
+---
 
 **How to use the app:**
-1. Choose input type
-    + If you want to input a file pick "Upload a file"
-    + If you want to input a youtube video pick "Enter a youtube URl"
-2. Input the file or url
-3. Submit the file or url
-4. Wait for a "success" response and it will show what is stored in vector store/DB
-5. Select or create a thread with [ + ] button.
+1. Choose Execution type
+    + Explain Simply - just using the knowledge of the model
+    + Explain with web search - scrapes the web to gain knowledge
+    + Explain with document - explain with the uploaded document
+        - Input Types:
+            + If you want to input a file pick "Upload a file"
+            + If you want to input a youtube video pick "Enter a youtube URl"
+    + Explain with Kiwix - searches for local data (.zim files)
+    + Create flash cards
+    + Create quiz
+    + NOTE: For creation of flash cards and quizzes
+        + All input types to create their content: Upload file, Entera Youtube URL, Model independent (Just using the knowledge of the model), upload Kiwix folder, and web search.
+2. Explain Simply and Explain with web search do not need upload. Just pick a thread and enter prompt. Explain with document needs a document uploaded, either a file or a Youtube video. Explain with kiwix needs the folder all the zim files are stored (Kiwix: https://kiwix.org/en/applications/ - You might want to download Kiwix app to download zim files. It will make it easier but you can also download it manually). Depending on the input type, the creation of flash cards and quizzes might need uploading.
+3. Wait for a "success" response and it will show what is stored in vector store/Kiwix folder if dealing with documents, zim files, Youtube url. If not proceed to step 4.
+4. Select or create a thread with [ + ] button.
     + You can also delete thread with thrash can button
-6. Ensure you have selected your thread
-7. You can toggle each execution type to see what was in each feature if there is content (Explanation, Flashcards, Quizzes)
-8. If you want enter a prompt, go ahead, make sure you selected the correct execution type, whether to explain that prompt, create flash cards about that prompt, or create quiz questions regarding that prompt (These will be based on the content you uploaded/submitted)
+5. Ensure you have selected your thread
+6. You can toggle each execution type to see what was in each feature if there is content (Explanations, Flashcards, Quizzes)
+7. If you want enter a prompt, go ahead, make sure you selected the correct execution type, whether to explain with document, create flash cards about that prompt, create quiz questions regarding that prompt, or others.
 + Each thread would have its own FlashCards, quizzes, and messages, so ensure you are naming the thread correctly.
 + You can also manually add flash cards and quizzes. You can delete messasges from the message history, quizzes, and flash cards. You can modify a message, flash card, and a quiz.
 + Messages History is used to provide conversational context for generating quizzes, responses, and flash cards.
++ You can click on message history and see all the conversation in past. You can automatically/manually modify a model response, delete a conversation, or delete all conersations.
++ When upload the folder for zim files, it might take a couple seconds for the Kiwix server to be up, so it might give you a error. Just wait for a moment and submit prompt again.
 
 
 - Note:

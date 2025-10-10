@@ -1,0 +1,54 @@
+* {
+    font-family: 'Roboto', sans-serif;
+}
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    /* background-color: #d8f8ff; Light background color for the entire page */
+    background: #e1f6fa;
+    background: linear-gradient(183deg, rgba(225, 246, 250, 1) 0%, rgba(168, 232, 255, 1) 100%);
+
+}
+
+.center{
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+#main {
+    width: 100%;
+    /* min-height: 100vh;  */
+    height: 100%;    
+    
+    background-image: url("../images/background.jpg");
+    /* transform: rotate(180deg); */
+     /* background-color: rgba(255, 255, 255, 0.5); */
+    background-size: 'cover';
+    background-position: 'center';
+    
+}
+
+#app {
+    width: 100%;
+    /* min-height: 100vh; */
+    height: 100%;
+    
+}
+div.program {
+    height: 100vh;
+}
+
+.blue1 {
+    color: #03045e;
+}
+
+.blue2 {
+    color: #0077b6; /* This is a darker blue for secondary elements */
+}
+
+.blue4 {
+    color: #90e0ef;
+}

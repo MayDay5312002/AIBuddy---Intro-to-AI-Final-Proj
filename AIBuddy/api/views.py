@@ -130,7 +130,9 @@ def chatWithFile(request):
     # finalResponse = ""
     def event_stream(results = results):
         global vectorStore
-        thinking = False
+        thinking = True
+        # thinkingText = "<think>"
+        # doneThinkingText = "</think>"
         # query = request.GET.get("query")
         # modelName = request.GET.get("model")
         # results = query_vectorstore(query)
@@ -143,13 +145,39 @@ def chatWithFile(request):
         stream = chat(model=modelName, 
             messages=messagesUser + [{"role": "user", "content": message}],
             stream=True)
+
+        thinkingProcessor = ""
         for chunk in stream:
             content = chunk["message"]["content"]
-            if content.lower() == "<think>":
-                thinking = True
-            elif content.lower() == "</think>":
-                thinking = False
-                continue
+            if finalResponse == "" and thinking:
+                thinkingProcessor += content
+                # print(thinkingProcessor)
+                # # print(f"Content:|{chunk}|")
+                # # if thinkingText[:len(content.strip())] == content.: ###############FIX HERE for thinking
+                # if len(thinkingProcessor.strip()) >= 7 and thinkingProcessor.strip()[:7].lower() == "<think>":
+                #     thinking = True
+                #     print(f"THINKING: {thinking}")  # print(thinking)
+                #     continue
+                if len(thinkingProcessor.strip()) >= 7 and thinkingProcessor.strip()[:7].lower() != "<think>":
+                    print(f"THINKING: {thinking}")
+                    thinking = False
+                    finalResponse += thinkingProcessor
+                    lines = thinkingProcessor.split("\n")
+                    for line in lines:
+                        yield f"data: {line}\n"
+                    yield "\n"  # end of event
+                    continue
+                if "</think>" in thinkingProcessor.lower():
+                    thinking = False
+                    print(f"THINKING: {thinking}")
+                    toSend = thinkingProcessor.lower().split("</think>")[-1]
+                    if len(toSend) > 0:
+                        finalResponse += toSend
+                        lines = toSend.split("\n")
+                        for line in lines:
+                            yield f"data: {line}\n"
+                        yield "\n"  # end of event
+                    continue
             if thinking == False:
                 finalResponse += content
                 lines = content.split("\n")
@@ -495,7 +523,7 @@ def ModifyMessageView(request):
 
     def event_stream():
         finalResponse = ""
-        thinking = False
+        thinking = True
         if(executionType != "Explain Simply"):
             message = f"Read the following prompt and content carefully. Provide a comprehensive, detailed, and well-structured response to the prompt, directly utilizing the supplied content for support and context. Clearly explain your reasoning and organize your answer with appropriate headings, bullet points, or lists as needed for readability. If any aspect is unclear, state your assumptions. Try not to reference prior conversations—focus only on the information provided. The provided content might be not directly related to the prompt.\n\nPrompt:{theQuery.content}\nContent:{results}"
         else:
@@ -503,14 +531,31 @@ def ModifyMessageView(request):
         stream = chat(model=modelName, 
             messages=messagesUser + [{"role": "user", "content": message}],
             stream=True)
-        
+        thinkingProcessor = ""
         for chunk in stream:
             content = chunk["message"]["content"]
-            if content.lower() == "<think>":
-                thinking = True
-            elif content.lower() == "</think>":
-                thinking = False
-                continue
+            if finalResponse == "" and thinking:
+                thinkingProcessor += content
+                if len(thinkingProcessor.strip()) >= 7 and thinkingProcessor.strip()[:7].lower() != "<think>":
+                    print(f"THINKING: {thinking}")
+                    thinking = False
+                    finalResponse += thinkingProcessor
+                    lines = thinkingProcessor.split("\n")
+                    for line in lines:
+                        yield f"data: {line}\n"
+                    yield "\n"  # end of event
+                    continue
+                if "</think>" in thinkingProcessor.lower():
+                    thinking = False
+                    print(f"THINKING: {thinking}")
+                    toSend = thinkingProcessor.lower().split("</think>")[-1]
+                    if len(toSend) > 0:
+                        finalResponse += toSend
+                        lines = toSend.split("\n")
+                        for line in lines:
+                            yield f"data: {line}\n"
+                        yield "\n"  # end of event
+                    continue
             if thinking == False:
                 finalResponse += content
                 lines = content.split("\n")
@@ -879,4 +924,25 @@ def get_web_documents(query):
     
     results = vectorstore.similarity_search(query=query, k=7)
     return results
+
+def thinkingTextCheck(thinkingText, content):
+    contentStripped = content.strip().lower()
+    i = 1
+    thinking = False
+    while i < len(thinkingText) and thinking == False:
+        if thinkingText[i] == contentStripped[i]:
+            thinking = True
+        i += 1
+    return thinking
+
+def notThinkingTextCheck(notThinkingText, content):
+    contentStripped = content.strip().lower()
+    contentNew = content.lower()
+    i = 1
+    notThinking = True
+    while i < len(notThinkingText) and notThinking == True:
+        if notThinkingText[i] != contentStripped[i]:
+            notThinking = False
+        i += 1
+    return notThinking
 
