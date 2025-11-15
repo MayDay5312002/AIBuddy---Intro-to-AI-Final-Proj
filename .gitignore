@@ -5,8 +5,8 @@ __pycache__/
 *.pyo
 db.sqlite3
 n_cookies.txt
-main.js
-main.js.*
+AIBuddy/frontend/static/frontend/main.js
+AIBuddy/frontend/static/frontend/main.js.LICENSE.txt
 .env
 node_modules/
 build/

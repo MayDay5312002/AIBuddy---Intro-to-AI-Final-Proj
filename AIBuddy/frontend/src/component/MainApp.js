@@ -19,6 +19,8 @@ import ModalChangeQuiz from "../sub-component/ModalChangeQuiz.js";
 import ModalAddFlashCard from "../sub-component/ModalAddFlashCard.js";
 import ModalAddQuiz from "../sub-component/ModalAddQuiz.js";
 import ModalModifyMessegeHistory from "../sub-component/ModalModifyMessegeHistory.js";
+import ModalPresentQuiz from "../sub-component/ModalPresentQuiz.js";
+import ModalPresentFlashcards from "../sub-component/ModalPresentFlashcards.js";
 
 import axios from "axios";
 
@@ -76,7 +78,7 @@ const MainApp = () => {
     const submitButtonRef = useRef(null);
 
     const handleChoiceClick = (choice, answer, index) => {
-      if(selectedAnswer === choice){
+      if(selectedAnswer === choice && indexQuizSelected === index){
         setSelectedAnswer('');
         setIsAnswerCorrect(null);
       }
@@ -84,6 +86,7 @@ const MainApp = () => {
         setSelectedAnswer(choice);
         setIsAnswerCorrect(choice === answer); // Check if selected answer is correct
         setIndexQuizSelected(index);
+        console.log("selectedAnswer:", selectedAnswer, "answer:", answer, "index:", indexQuizSelected);
       }
     };
 
@@ -230,7 +233,8 @@ const MainApp = () => {
       setFlashCards(response.data["cards"]);
       
     } catch (error) {
-      setErrorResponseMsg("Error: " + error.message);
+      // console.error("Error creating flashcards:", error);
+      setErrorResponseMsg("Error: " + error.response.data["error"]);
     }
     setLoading(false);
   }
@@ -266,7 +270,8 @@ const MainApp = () => {
         //   behavior: 'smooth'
         // });
       } catch (error) {
-        setErrorResponseMsg("Error: " + error.message);
+        // console.error("Error creating flashcards:", error);
+        setErrorResponseMsg("Error: " + error.response.data["error"]);
       }
       setLoading(false);
     };
@@ -333,7 +338,12 @@ const MainApp = () => {
       axios.get('http://127.0.0.1:4192/api/uploadFolder/')
       .then((response) => {
         setColorOfResponse("green");
-        setErrorResponse("Success");
+        if(response.data["message"] === "Already running"){
+          setErrorResponse("Already running");
+        } else {
+          setErrorResponse("Success");
+        }
+        
         // setFolder(response.data["folderPath"]);
         setFolderPath(response.data["folderPath"]);
         setReadyToQuery(true);
@@ -414,7 +424,7 @@ const MainApp = () => {
             setSelectedModel(response.data["models"][0])
         })
         .catch((error) => {
-            setErrorResponseMsg("Error: " + error.message);
+            setErrorResponseMsg("Error: " + error.response.data["message"]);
             // console.error("Error uploading file:", error);
         })
 
@@ -460,13 +470,13 @@ const MainApp = () => {
     
 
     useEffect(() => {
-      console.log("inputType", inputType);
+      // console.log("inputType", inputType);
       // setErrorResponse("");
       if(executionType === "Create flash cards" || executionType === "Create quiz"){
         // setReadyToQuery(false);
         if ((inputType === "model" || inputType === "web search")) {
           setErrorResponse("");
-          console.log("model or web search");
+          // console.log("model or web search");
           setReadyToQuery(true);
         } else if (inputType === "Kiwix" && folderPath !== "") {
           setReadyToQuery(true);
@@ -509,7 +519,7 @@ const MainApp = () => {
       setSelectedAnswer('');
       setIsAnswerCorrect(null);
       // setErrorResponse("");
-      console.log("executionType", executionType);
+      // console.log("executionType", executionType);
       if(executionType !== "Create flash cards" && executionType !== "Create quiz"){
         if (executionType === "Explain with Kiwix") {
           // Only set true if folderPath is valid
@@ -542,6 +552,22 @@ const MainApp = () => {
         setErrorResponse("Success");
       }
 
+      axios.get('http://127.0.0.1:4192/api/models/')
+      .then((response) => {
+          // console.log(response)
+          setModels(response.data["models"])
+          setSelectedModel(response.data["models"][0])
+      })
+      .catch((error) => {
+          setErrorResponseMsg("Error: " + error.response.data["message"]);
+          // console.error("Error uploading file:", error);
+      })
+
+      // executionType === "Explain with Document" ? setInputType("file") : null;
+      if (executionType === "Explain with document" && (inputType !== "file" && inputType !== "url")) {//////////////////////////////////////FIX THISS
+        setInputType("file");
+      }
+
       
     }, [executionType]);
 
@@ -568,7 +594,7 @@ const MainApp = () => {
 
 
     useEffect(() => {
-      console.log("readyToQuery", readyToQuery);
+      // console.log("readyToQuery", readyToQuery);
     }, [readyToQuery])
     
 
@@ -638,8 +664,10 @@ const MainApp = () => {
             // order:1
             flexGrow: 3,
             overflow: "auto",
-            minWidth: "20em",
-            minHeight: isPortrait ? "15em" : 0,
+            minWidth: isPortrait ? undefined : "25.5em",
+            minHeight: isPortrait ? "15em" : undefined,
+            height: isPortrait ? "15em" : undefined,
+            maxHeight: isPortrait ? "15em" : undefined,
 
 
           }}>
@@ -652,12 +680,20 @@ const MainApp = () => {
               </Typography> */}
               {executionType !== "Explain with web search"  && executionType !== "Explain Simply" && executionType !== "Explain with Kiwix" &&
               <>
-              <FormControl>
+              <FormControl sx={{width: "100%"}}>
                 <FormLabel>Choose Input Type</FormLabel>
                 <RadioGroup
-                  row
+                  // row
                   value={inputType}
                   onChange={handleRadioChange}
+                  id="inputType-radio-buttons-group"
+                  sx={{
+                    display: "flex",
+                    flexDirection: "row",
+                    flexWrap: "wrap",
+                    width: "21em",
+                    // gap: 1, // optional spacing between items
+                  }}
                 >
                   <FormControlLabel value="file" control={<Radio />} label="Upload a File" />
                   <FormControlLabel value="url" control={<Radio />} label="Enter a youtube URL" />
@@ -734,21 +770,17 @@ const MainApp = () => {
                 </> 
               }
               { (executionType !== "Explain with Kiwix" && inputType !== "Kiwix" && inputType !== "web search" && inputType !== "model") &&
-              <>
                 <Button variant="contained" component="span" onClick={handleSubmitFile} sx={{mt: "1em", fontSize: "0.85rem"}}>
                     Submit {(inputType === "file") ? "File" : "URL"}
                 </Button>
-              
-                
-              </>
               }
 
-              <Typography variant="caption" sx={{display: "block", color: colorOfResponse, height: "0.5em", my:"0.5em"}}>{errorResponse}</Typography> 
+              <Typography id="error-response-text" variant="caption" sx={{display: "block", color: colorOfResponse, minHeight: "2.3em", mt:"0.5em"}}>{errorResponse}</Typography> 
 
 
               { ((inputType !== "model" && inputType !== "web search") || executionType === "Explain with Kiwix") &&
-              <>
-                <Divider sx={{mt: "1em"}}/>
+              <Box>
+                <Divider/>
                 
 
                 <Typography variant="body2" sx={{ my: "1em"}}> {/*///////////////////////////////////////////////////////*/}
@@ -757,7 +789,7 @@ const MainApp = () => {
                 </Typography>
 
               <Divider sx={{mt: "1em"}}/> 
-              </>
+              </Box>
               }
 
               </>
@@ -832,7 +864,7 @@ const MainApp = () => {
                 onKeyDown={e => {
                   if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
-                    console.log("submit button disabled", submitButtonRef.current.disabled);
+                    // console.log("submit button disabled", submitButtonRef.current.disabled);     
                     if(submitButtonRef.current.disabled === false){
                       // (executionType === "Explain with document") ? handleQuery() : (executionType === "Create flash cards") ? handleCreateFlashCards() : handleCreateQuiz()
                       if (executionType === "Explain with document" || executionType === "Explain with Kiwix" || executionType === "Explain with web search" || executionType === "Explain Simply") {
@@ -874,14 +906,14 @@ const MainApp = () => {
                     : 
                     (executionType === "Create flash cards" ? handleCreateFlashCards : handleCreateQuiz)
                   } 
-                  disabled={readyToQuery === false || selectedThread === "" || query === "" || loading }>
+                  disabled={readyToQuery === false || selectedThread === "" || query === "" || loading || selectedModel === ""}>
                       Submit Prompt
                   </Button>
                   <IconButton>
                     {(loading) ? <CircularProgress size={24} /> : ""}
                   </IconButton>
-                  <Typography variant="caption" sx={{display: "block",  height: "0.5em", my:"0.2em", fontStyle: "italic"}}>Note: Please ensure Thread and File/URL are set to submit prompt.</Typography>
-                  <Typography variant="body2" sx={{display: "block", color: "red", height: "0.5em", my:"0.2em", fontSize:"0.8rem", my: "0.8em"}}>{errorResponseMsg}</Typography>
+                  <Typography variant="caption" sx={{display: "block", fontStyle: "italic"}}>Note: Please ensure Thread and File/URL are set to submit prompt.</Typography>
+                  <Typography variant="body2" sx={{display: "block", color: "red", minHeight: "1.5em", fontSize:"0.8rem", mb: "0.1em"}}>{errorResponseMsg}</Typography>
                   <Divider sx={{mb: "0.5em"}}/>
                 </Box>
                 }
@@ -952,9 +984,12 @@ const MainApp = () => {
                         {isFullscreen ? <FullscreenExitIcon /> : <FullscreenIcon />}
                       </IconButton>
                       <Typography variant="h5" sx={{fontWeight: "bold", color: "green", mt: "1em", textAlign: "center", color: "#0077b6"}}>Flash Cards</Typography>
-                      <ModalAddFlashCard setFlashCards={setFlashCards} thread_title={selectedThread} setNewFlashCards={setNewFlashCards}/>
+                      <Box sx={{display: 'flex', justifyContent: 'center', alignItems: "center", columnGap: "0.5em", my: "0.5em"}}>
+                        <ModalAddFlashCard setFlashCards={setFlashCards} thread_title={selectedThread} setNewFlashCards={setNewFlashCards}/>
+                        <ModalPresentFlashcards flashcards={flashCards} />
+                      </Box>
                       {flashCards.map((card, index) => (
-                        <Paper key={card.title} sx={{ p: 2, mb: 2, display: "inline-block", mx: 1, maxWidth: "30em"}}>
+                        <Paper key={card.id} sx={{ p: 2, mb: 2, display: "inline-block", mx: 1, maxWidth: "30em"}}>
                           <Typography variant="h6" sx={{ fontWeight: "500" }} component={"span"}>
                             {card["title"]}
                           </Typography>
@@ -1000,9 +1035,12 @@ const MainApp = () => {
                       </IconButton>
                       <Typography variant="h5" sx={{fontWeight: "bold", color: "green", mt: "1em", textAlign: "center", color:"#0077b6"}}>Quizzes</Typography>
                       {/* <Typography variant="h6" sx={{fontWeight: "500"}}>{response}</Typography> */}
-                      <ModalAddQuiz setQuizzes={setQuizzes} thread_title={selectedThread} setNewQuizzes={setNewQuizzes}/>
+                      <Box sx={{display: 'flex', justifyContent: 'center', my: "0.5em", alignItems: "center", columnGap: "0.5em"}}>
+                        <ModalAddQuiz setQuizzes={setQuizzes} thread_title={selectedThread} setNewQuizzes={setNewQuizzes}/>
+                        <ModalPresentQuiz quizzes={quizzes} />
+                      </Box>
                       {quizzes.map((quiz, indexQuiz) => (
-                        <Paper key={quiz.id_quiz} sx={{ p: 2, mb: 2, display: "inline-block", mx: 1}}>
+                        <Paper key={quiz.id} sx={{ p: 2, mb: 2, display: "inline-block", mx: 1}}>
                           <Typography variant="h6" sx={{ fontWeight: "500" }} component={"span"}>
                             {quiz["question"]}
                           </Typography>
@@ -1010,12 +1048,13 @@ const MainApp = () => {
                             <DeleteIcon />
                           </IconButton>
                           <ModalChangeQuiz oldAnswer={quiz.answer} oldQuestion={quiz.question} oldChoices={quiz.choices} 
-                          setQuizzes={setQuizzes} quizzes={quizzes} thread_title={selectedThread} id_quiz={quiz.id}/>
+                          setQuizzes={setQuizzes} quizzes={quizzes} thread_title={selectedThread} id_quiz={quiz.id}
+                          indexQuizSelected={indexQuizSelected} handleChoiceClick={handleChoiceClick} selectedAnswer={selectedAnswer} />
                           <Divider sx={{ my: 1 }} />
                           <List>
                             {quiz.choices.map((choice, index) => (
                               <ListItem
-                                key={choice}
+                                key={index}
                                 component={"button"}
                                 onClick={() => handleChoiceClick(choice, quiz.answer, indexQuiz)}  
                                 sx={{
@@ -1028,7 +1067,11 @@ const MainApp = () => {
                                       : 'transparent',
                                   borderRadius: 1,
                                   '&:hover': {
-                                    backgroundColor: 'lightgray',
+                                    backgroundColor: selectedAnswer === choice && indexQuizSelected === indexQuiz
+                                      ? isAnswerCorrect
+                                        ? '#2eb774'
+                                        : '#eb5353'
+                                      : 'lightgray',
                                   },
                                   cursor: 'pointer',
                                 }}

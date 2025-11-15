@@ -24,22 +24,24 @@ const style = {
 };
 
 
-export default function ModalChangeQuiz({oldAnswer,oldQuestion, oldChoices, setQuizzes, quizzes, thread_title, id_quiz}) {
+export default function ModalChangeQuiz({oldAnswer,oldQuestion, oldChoices, setQuizzes, quizzes, 
+  thread_title, id_quiz, indexQuizSelected, handleChoiceClick, selectedAnswer}) {
 
 
   const [open, setOpen] = useState(false);
+  const [ question , setQuestion] = useState(oldQuestion);
+  const [ choices, setChoices] = useState(oldChoices); 
+  const [ answer , setAnswer] = useState(oldAnswer);
+  let numberChanges = 0;
+
   const handleOpen = () => setOpen(true);
   const handleClose = () => {
     setQuestion(oldQuestion);
     setChoices(oldChoices);
     setAnswer(oldAnswer);
+    numberChanges = 0;
     setOpen(false);
   }
-
-  //use state for current variables
-  const [ question , setQuestion] = useState(oldQuestion);
-  const [ choices, setChoices] = useState(oldChoices); 
-  const [ answer , setAnswer] = useState(oldAnswer);
 
   useEffect(() => {
     setQuestion(oldQuestion);
@@ -47,14 +49,34 @@ export default function ModalChangeQuiz({oldAnswer,oldQuestion, oldChoices, setQ
     setAnswer(oldAnswer);
   }, [oldQuestion, oldChoices, oldAnswer]);
 
+  // useEffect(() => {
+  //   if (indexQuizSelected !== null && quizzes[indexQuizSelected] && numberChanges === 0) {
+  //     handleChoiceClick(selectedAnswer, quizzes[indexQuizSelected].answer, indexQuizSelected);
+  //     numberChanges = 1;
+  //     console.log("submitted quizChange");
+  //   }
+  //   // console.log("submitted quizChange");
+  //   handleClose();
+  // }, [quizzes])
+  
+
   const handleThread = async () => {
     axios.post("http://127.0.0.1:4192/api/modifyQuizCard/", {"question": question,  "choices": choices, "answer": answer, "thread": thread_title, "id": id_quiz})
     .then((response) => {
       // setQuizzes(quizzes.map(card => card.title === oldTitle ? {...card, title: title, content: content} : card));
       let index = quizzes.findIndex(card => card.id === id_quiz);
+      // if(index === indexQuizSelected){
+      //   console.log("handleChoiceClick");
+      //   handleChoiceClick(selectedAnswer, answer, indexQuizSelected);
+      // }
       if(index !== -1){
         let updatedquizzes = [...quizzes.slice(0, index), {"question": question, "answer": answer, "choices": choices, "id": id_quiz}, ...quizzes.slice(index + 1)];
         setQuizzes(updatedquizzes);
+      }
+      if(index === indexQuizSelected){
+        console.log("handleChoiceClick");
+        handleChoiceClick(selectedAnswer, answer, indexQuizSelected);
+
       }
     })
     .catch((error) => {

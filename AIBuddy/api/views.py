@@ -31,7 +31,7 @@ from pydantic import BaseModel
 from AIBuddy.models import *
 
 import ast, random, json, xmltodict
-import subprocess, time
+import subprocess
 
 # EMBED_MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
 embedding_model = HuggingFaceEmbeddings(model_name="./models/all-MiniLM-L6-v2")
@@ -126,6 +126,11 @@ def chatWithFile(request):
     elif(executionType == "Explain with web search"):
         print(executionType)
         docResults = get_web_documents(query)
+        if docResults == "404":
+            def error_stream():
+                yield "data: {\"error\": \"SearXNG container is not running\"}\n\n"
+                yield "data: [DONE]\n\n"
+            return StreamingHttpResponse(error_stream(), content_type="text/event-stream")
         results = [chunk.page_content for chunk in docResults]
     # finalResponse = ""
     def event_stream(results = results):
@@ -239,6 +244,8 @@ class CreateFlashCardsView(APIView):
             results = [chunk.page_content for chunk in results] #We dont have to include the metadata
         elif inputType == "web search":
             docResults = get_web_documents(query)
+            if docResults == "404":
+                return Response({"error": "SearXNG container is not running"}, status=404)
             results = [chunk.page_content for chunk in docResults]
         elif inputType == "Kiwix":
             docResults = get_kiwix_documents(query)
@@ -282,6 +289,8 @@ class CreateQuizView(APIView):
                 results = [chunk.page_content for chunk in results] #We dont have to include the metadata
             elif inputType == "web search":
                 docResults = get_web_documents(query)
+                if docResults == "404":
+                    return Response({"error": "SearXNG container is not running"}, status=404)
                 results = [chunk.page_content for chunk in docResults]
             elif inputType == "Kiwix":
                 docResults = get_kiwix_documents(query)
@@ -518,6 +527,11 @@ def ModifyMessageView(request):
     elif(executionType == "Web Search"):
         print(executionType)
         docResults = get_web_documents(message)
+        if docResults is "404":
+            def error_stream():
+                yield "data: {\"error\": \"SearXNG container is not running\"}\n\n"
+                yield "data: [DONE]\n\n"
+            return StreamingHttpResponse(error_stream(), content_type="text/event-stream")
         results = [chunk.page_content for chunk in docResults]
 
 
@@ -717,15 +731,21 @@ class UploadFolderView(APIView):
             print("Kiwix container list total:", len(kiwixContainerList))
 
             if len(kiwixContainerList) > 0:
-                kiwixContainer = kiwixContainerList[0]
-                if kiwixContainer.status == 'running':
-                    print("Kiwix container already running")
-                    volumeName = kiwixContainer.attrs['Mounts'][0]['Source']
-                    print(volumeName)
-                else:
-                    print("Kiwix container found but not running, removing it")
-                    kiwixContainer.remove()
-                    kiwixContainer = None
+                # kiwixContainer = kiwixContainerList[0]
+                for tempContainer in kiwixContainerList:
+                    
+                    if tempContainer.status == 'running':
+                        kiwixContainer = tempContainer
+                        print("Kiwix container alrtemprunning")
+                        volumeName = kiwixContainer.attrs['Mounts'][0]['Source']
+                        print(volumeName)
+                        while kiwix_search("Roman") is None:
+                            pass
+                        return Response({"folderPath": volumeName, "message": "Already running"}, status=200)
+                    else:
+                        print("Kiwix container found but not running, removing it")
+                        tempContainer.remove()
+                        tempContainer = None
             for container in kiwixContainerList:
                 if container.status == 'exited':
                     container.remove()
@@ -740,13 +760,15 @@ class UploadFolderView(APIView):
                         kiwixContainer.remove()
                         kiwixContainer = None   
                         volumeName = result.stdout.strip()
+                        # print(volumeName)
                         kiwixContainer = client.containers.run(
                             "ghcr.io/kiwix/kiwix-serve:3.7.0", "*.zim",
                             ports={'8080/tcp': 9222}, volumes={volumeName: {'bind': '/data', 'mode': 'rw'}},
                             detach=True
                         )
-                if kiwixContainer is None:
+                elif kiwixContainer is None:
                     volumeName = result.stdout.strip()
+                    # print(volumeName)
                     kiwixContainer = client.containers.run(
                         "ghcr.io/kiwix/kiwix-serve:3.7.0", "*.zim",
                         ports={'8080/tcp': 9222}, volumes={volumeName: {'bind': '/data', 'mode': 'rw'}},
@@ -765,6 +787,8 @@ class UploadFolderView(APIView):
                 # while response.status_code != 200:
                     # response = requests.get("http://localhost:9222/search", params={"pattern": "America", "format": "xml", "start": 0, "pageLength": 25})
                     # time.sleep(1)
+                while kiwix_search("America") is None:
+                    pass
                 return Response({"folderPath":  volumeName}, status=200)
             except:
                 # global kiwixContainer
@@ -777,10 +801,14 @@ class UploadFolderView(APIView):
             return Response({"error": result.stderr}, status=500)
 class GetAllModels(APIView):
     def get(self, request):
-        models = ollama.list()
-        # for model in models.models:
-        #     print(model.model)
-        return Response({"models": [model.model for model in models.models]}, status=200)
+        try:
+            models = ollama.list()
+            # for model in models.models:
+            #     print(model.model)
+            return Response({"models": [model.model for model in models.models]}, status=200)
+        except Exception as e:
+            print(e)
+            return Response({"message": str(e)}, status=500)
         
 class StopKiwixContainerView(APIView):
     def get(self, request):
@@ -832,18 +860,21 @@ def get_youtube_video_id(url):
     return None
 
 def kiwix_search(query, host="http://localhost:9222"):
-    r = requests.get(f"{host}/search", params={"pattern": query, "format": "xml", "start": 0, "pageLength": 25})
-    print(r.status_code)
-    resultsBefore = xmltodict.parse(r.text)
-    print(resultsBefore)
-    print("Number of results:", len(resultsBefore["rss"]["channel"]["item"]))
-    print(json.dumps(resultsBefore, indent=4))
-    results = [{"title": _["title"], "link": _["link"]} for _ in resultsBefore["rss"]["channel"]["item"]]
-    # print(results)
-    # return results
+    try:
+        r = requests.get(f"{host}/search", params={"pattern": query, "format": "xml", "start": 0, "pageLength": 25})
+        # print(r.status_code)
+        resultsBefore = xmltodict.parse(r.text)
+        # print(resultsBefore)
+        # print("Number of results:", len(resultsBefore["rss"]["channel"]["item"]))
+        # print(json.dumps(resultsBefore, indent=4))
+        results = [{"title": _["title"], "link": _["link"]} for _ in resultsBefore["rss"]["channel"]["item"]]
+        # print(results)
+        # return results
 
-    # r = requests.get(f"{host}/search", params={"pattern": query, "format": "xml"})
-    return results
+        # r = requests.get(f"{host}/search", params={"pattern": query, "format": "xml"})
+        return results
+    except:
+        return None
 
 
 def get_kiwix_documents(query):
@@ -883,8 +914,14 @@ def get_kiwix_documents(query):
     # results = [chunk.page_content for chunk in results]
     return results
 
-def get_web_documents(query):
-    results = requests.get("http://localhost:4141/search", params={"q": query, "format": "json"})
+def get_web_documents(query) -> list[Document] | str:
+    try:
+        results = requests.get("http://localhost:4141/search", params={"q": query, "format": "json"})
+    except requests.exceptions.ConnectionError as e:
+        print(e)
+        return "404"
+    # print("Status Code:", results.status_code)
+    
     results = results.json()["results"]
     store = []
     counter = 0
