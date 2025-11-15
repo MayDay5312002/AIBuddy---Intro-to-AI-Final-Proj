@@ -96,6 +96,7 @@
 + Messages History is used to provide conversational context for generating quizzes, responses, and flash cards.
 + You can click on message history and see all the conversation in past. You can automatically/manually modify a model response, delete a conversation, or delete all conersations.
 + When upload the folder for zim files, it might take a couple seconds for the Kiwix server to be up, so it might give you a error. Just wait for a moment and submit prompt again.
++ You can enter the present quiz when "create quiz" is selected, and present flashcards when "create flash cards" is selected.
 
 
 - Note:
@@ -105,6 +106,7 @@
     4. When choosing a model for this web app, ensure you are referring with your hardware. If your system is using integrated graphics, you might want to pull models with a smaller parameters, but if you have a dedicated graphics you can pull models depending on you VRAM. 
     5. Usually models with higher parameters have better performance.
     6. Youtube Transcript needs internet connection.
+
 
 
 
