@@ -84,7 +84,7 @@
     + Create quiz
     + NOTE: For creation of flash cards and quizzes
         + All input types to create their content: Upload file, Entera Youtube URL, Model independent (Just using the knowledge of the model), upload Kiwix folder, and web search.
-2. Explain Simply and Explain with web search do not need upload. Just pick a thread and enter prompt. Explain with document needs a document uploaded, either a file or a Youtube video. Explain with kiwix needs the folder all the zim files are stored (Kiwix: https://kiwix.org/en/applications/ - You might want to download Kiwix app to download zim files. It will make it easier but you can also download it manually). Depending on the input type, the creation of flash cards and quizzes might need uploading.
+2. Explain Simply and Explain with web search do not need to upload. Just pick a thread and enter a prompt. Explain with document needs a document uploaded, either a file or a Youtube video. Explain with kiwix needs the folder all the zim files are stored (Kiwix: https://kiwix.org/en/applications/ - You might want to download Kiwix app to download zim files. It will make it easier but you can also download it manually). Depending on the input type, the creation of flash cards and quizzes might need uploading.
 3. Wait for a "success" response and it will show what is stored in vector store/Kiwix folder if dealing with documents, zim files, Youtube url. If not proceed to step 4.
 4. Select or create a thread with [ + ] button.
     + You can also delete thread with thrash can button
@@ -94,18 +94,20 @@
 + Each thread would have its own FlashCards, quizzes, and messages, so ensure you are naming the thread correctly.
 + You can also manually add flash cards and quizzes. You can delete messasges from the message history, quizzes, and flash cards. You can modify a message, flash card, and a quiz.
 + Messages History is used to provide conversational context for generating quizzes, responses, and flash cards.
-+ You can click on message history and see all the conversation in past. You can automatically/manually modify a model response, delete a conversation, or delete all conersations.
-+ When upload the folder for zim files, it might take a couple seconds for the Kiwix server to be up, so it might give you a error. Just wait for a moment and submit prompt again.
++ You can click on message history and see all the conversation in past. You can automatically/manually modify a model response, delete a conversation, or delete all conversations.
++ When upload the folder for zim files, it might take a couple seconds for the Kiwix server to be up, so it might give you an error. Just wait for a moment and submit the prompt again.
 + You can enter the present quiz when "create quiz" is selected, and present flashcards when "create flash cards" is selected.
 
 
 - Note:
     1. Depending on the system you are using, you might want to execute `python ...` or `python3 ...`
-    2. The Django server needs to running locally to see the intereact with web app.
+    2. The Django server needs to be running locally to see the interaction with the web app.
     3. Ensure you compiled the frontend code by doing `npm run dev` or `npm run build`
-    4. When choosing a model for this web app, ensure you are referring with your hardware. If your system is using integrated graphics, you might want to pull models with a smaller parameters, but if you have a dedicated graphics you can pull models depending on you VRAM. 
-    5. Usually models with higher parameters have better performance.
-    6. Youtube Transcript needs internet connection.
+    4. When choosing a model for this web app, ensure you are referring to your hardware. If your system is using integrated graphics, you might want to pull models with smaller parameters, but if you have a dedicated graphics you can pull models depending on you VRAM. 
+    5. Usually, models with higher parameters have better performance.
+    6. YouTube Transcript needs an  internet connection.
+    7. OLLAMA PERFORMANCE MAY VARY FROM VERSION TO VERSION SO PICK THE ONE THAT WILL PROVIDE FAST RESPONSE
+
 
 
 
