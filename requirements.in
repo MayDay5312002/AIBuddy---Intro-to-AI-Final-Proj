@@ -1,0 +1,21 @@
+backports.tarfile==1.2.0
+bs4==0.0.2
+django-cors-headers==4.7.0
+djangorestframework-simplejwt==5.5.1
+docker==7.1.0
+faiss-cpu==1.12.0
+importlib-metadata==8.0.0
+inflect==7.3.1
+jaraco-functools==4.3.0
+jaraco.collections==5.1.0
+langchain-community==0.3.27
+langchain-huggingface==0.3.1
+ollama==0.5.3
+# pip-chill==1.0.3
+pip-tools==7.5.0
+platformdirs==4.2.2
+sentence-transformers
+tika==3.1.0
+tomli==2.0.1
+xmltodict==1.0.2
+youtube-transcript-api==1.2.2

@@ -4,7 +4,7 @@
 - git (https://git-scm.com/downloads)
 - ollama (https://ollama.com/); Ensure you have pulled a model
 - Node.js (https://nodejs.org/en)
-- Python (I used Python 3.13) (https://www.python.org/downloads/)
+- Python (I used Python 3.13. Python 3.13 and slightly older versions are recommended for compatability) (https://www.python.org/downloads/)
 - Java 11+ (https://www.oracle.com/java/technologies/downloads/)
 - Microsoft C++ Build Tools (https://visualstudio.microsoft.com/visual-cpp-build-tools/)
 - Docker (https://www.docker.com/)
@@ -22,21 +22,7 @@
 **To create installer**:
 1. Go to desktopBuild and then `npm install` to install the needed modules for electron.
 2. Go to `AIBuddy_Copy/models` then `git clone https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2` to get the embedding model.
-2. Click on the package.json and look for this:
-```
-      {
-        "from": "../venv_cpy",
-        "to": "python_env"
-      }
-```
-3. Create a clean python virtual environment at the root directory of this repo, and then change the `venv_cpy` to the name of your newly created python virtual environment. 
-    - To create a python venv: `python -m venv venvName`
-    ```
-            {
-                "from": "../venvName",
-                "to": "python_env"
-            }
-    ```
+3. Run `npm run dist` to create the installer.
 4. It will take some time to create the installer, but after it is done you should be able to get it in `desktopBuild/dist/`.
 5. Install or run it.
 

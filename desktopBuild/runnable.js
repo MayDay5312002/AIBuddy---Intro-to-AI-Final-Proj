@@ -73,8 +73,13 @@ if (!gotTheLock) {
   }
 
 
-  const pythonPath = path.join(process.resourcesPath, 'python_env', 'Scripts', 'python.exe'); // Adjust for OS
+  // const pythonPath = path.join(process.resourcesPath, 'python_env', 'Scripts', 'python.exe'); // Adjust for OS
+  // let pythonPath = null;
   const djangoDir = path.join(process.resourcesPath, 'django_project');
+
+  // Create the venv inside django_project
+  const venvDir = path.join(djangoDir, '.venv');
+  const pythonPath = path.join(venvDir, 'Scripts', 'python.exe');
 
 
   app.whenReady().then(() => {
@@ -84,7 +89,10 @@ if (!gotTheLock) {
         return;
       }
       if(String(data).trimEnd() === "False"){ // Output file content
-        installRequirements().then(() => {
+        // console.log(pythonPath);
+        createVenv()
+        .then(() => installRequirements())
+        .then(() => {
           fs.writeFileSync(djangoDir+"/status.txt", "True");
           let dockerProcess = spawn("docker", ["desktop", "start"]);
           let managePy = path.join(process.resourcesPath, 'django_project', 'manage.py');
@@ -133,8 +141,83 @@ if (!gotTheLock) {
 
   });
 
+  function ensureProgressWindow() {
+    if (progressWin !== null) return;
+
+    progressWin = new BrowserWindow({
+      width: 1000,
+      height: 500,
+      webPreferences: {
+        preload: path.join(process.resourcesPath, 'preload.js'),
+        contextIsolation: true,
+        nodeIntegration: false,
+      },
+    });
+
+    progressWin.loadURL(`file://${path.join(process.resourcesPath, 'progress.html')}`);
+    // progressWin.loadFile(path.join(process.resourcesPath, 'progress.html'));
+  }
+
+  function sendProgress(message) {
+    if (!progressWin) return;
+    if (progressWin.webContents.isLoading()) {
+      progressWin.webContents.once('did-finish-load', () => {
+        progressWin.webContents.send('message', message);
+      });
+    } else {
+      progressWin.webContents.send('message', message);
+    }
+  }
+
+
+
+  function createVenv() {
+    return new Promise((resolve, reject) => {
+      if (fs.existsSync(pythonPath)) {
+        resolve();
+        return;
+      }
+
+      ensureProgressWindow();
+      sendProgress('Creating Python virtual environment...\n');
+
+      const venvProcess = spawn('python',['-m', 'venv', venvDir], {
+        cwd: djangoDir,
+        env: {
+          ...process.env,
+          PYTHONIOENCODING: 'utf-8',
+        },
+      });
+
+
+
+      venvProcess.stdout.on('data', data => {
+        sendProgress(String(data));
+        console.log(`[createVenv] ${data}`);
+      });
+
+      venvProcess.stderr.on('data', data => {
+        console.error(`[createVenv Error] ${data}`);
+        sendProgress(String(data));
+      });
+
+      venvProcess.on('error', err => reject(err));
+
+      venvProcess.on('close', code => {
+        sendProgress('Python virtual environment created.\n');
+        if (code === 0 && fs.existsSync(pythonPath)) {
+          resolve();
+        } else {
+          reject(new Error(`createVenv exited with code ${code}`));
+        }
+      });
+    });
+  }
+
   function installRequirements() {
     return new Promise((resolve, reject) => {
+      ensureProgressWindow();
+      sendProgress('Installing requirements...\n');
       const requirementsTxt = path.join(process.resourcesPath, 'django_project', 'requirements.txt');
       const pythonProcess = spawn(pythonPath, ['-m', 'pip', 'install', '-r', requirementsTxt], {
         cwd: process.resourcesPath,
@@ -143,19 +226,33 @@ if (!gotTheLock) {
           PYTHONIOENCODING: 'utf-8',
         },
       });
+      
+      // if (progressWin === null){ 
+      //    progressWin = new BrowserWindow({
+      //      width: 1000,
+      //      height: 500,
+      //      webPreferences: {
+      //        preload: path.join(process.resourcesPath, 'preload.js'),
+      //        contextIsolation: true,
+      //        nodeIntegration: false, // keep this false for security
+      //      },
+      //    });
+       
+      //    if(progressWin !== null){ progressWin.loadURL(`file://${path.join(process.resourcesPath, 'progress.html')}`); }
+      // }
+      // progressWin = new BrowserWindow({
+      //   width: 1000,
+      //   height: 500,
+      //   webPreferences: {
+      //     preload: path.join(process.resourcesPath, 'preload.js'),
+      //     contextIsolation: true,
+      //     nodeIntegration: false, // keep this false for security
+      //   },
+      // });
 
-      progressWin = new BrowserWindow({
-        width: 1000,
-        height: 500,
-        webPreferences: {
-          preload: path.join(process.resourcesPath, 'preload.js'),
-          contextIsolation: true,
-          nodeIntegration: false, // keep this false for security
-        },
-      });
+      // if(progressWin !== null){ progressWin.loadURL(`file://${path.join(process.resourcesPath, 'progress.html')}`); }
 
-      if(progressWin !== null){ progressWin.loadURL(`file://${path.join(process.resourcesPath, 'progress.html')}`); }
-
+      // progressWin.webContents.send('message', String(pythonPath));
 
       pythonProcess.stdout.on('data', data => {
         progressWin.webContents.send('message', String(data));
