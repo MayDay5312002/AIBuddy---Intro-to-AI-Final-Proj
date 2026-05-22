@@ -784,8 +784,9 @@ const MainApp = () => {
                 
 
                 <Typography variant="body2" sx={{ my: "1em"}}> {/*///////////////////////////////////////////////////////*/}
-                  {executionType !== "Explain with Kiwix" && inputType !== "Kiwix"? "Vector Store Content" : "Kiwix Folder"}: {(vectorStoreContent.includes("youtu.be") || vectorStoreContent.includes("youtube.com")) ? 
-                  <a href={vectorStoreContent}>{vectorStoreContent}</a> : (executionType === "Explain with Kiwix" || inputType === "Kiwix" ? folderPath : vectorStoreContent)}
+                  {executionType !== "Explain with Kiwix" && inputType !== "Kiwix"? "Vector Store Content" : "Kiwix Folder"}: {(!(executionType === "Explain with Kiwix" || inputType === "Kiwix") && (vectorStoreContent.includes("youtu.be") || vectorStoreContent.includes("youtube.com"))
+                  ) ? 
+                  <a href={vectorStoreContent} target="_blank">{vectorStoreContent}</a> : (executionType === "Explain with Kiwix" || inputType === "Kiwix" ? folderPath : vectorStoreContent)}
                 </Typography>
 
               <Divider sx={{mt: "1em"}}/> 
