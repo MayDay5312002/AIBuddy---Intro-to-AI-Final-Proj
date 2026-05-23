@@ -1,11 +1,16 @@
 ***Final Project - Intro to AI (Luke Evarretta)***
 
-**Prerequisites**:
+**Prerequisites for development**:
 - git (https://git-scm.com/downloads)
 - ollama (https://ollama.com/); Ensure you have pulled a model
 - Node.js (https://nodejs.org/en)
 - Python (I used Python 3.13. Python 3.13 and slightly older versions are recommended for compatability) (https://www.python.org/downloads/)
-- Java 11+ (https://www.oracle.com/java/technologies/downloads/)
+- Microsoft C++ Build Tools (https://visualstudio.microsoft.com/visual-cpp-build-tools/)
+- Docker (https://www.docker.com/)
+
+**Prerequisites for app utilization**:
+- ollama (https://ollama.com/); Ensure you have pulled a model
+- Python (I used Python 3.13. Python 3.13 and slightly older versions are recommended for compatability) (https://www.python.org/downloads/)
 - Microsoft C++ Build Tools (https://visualstudio.microsoft.com/visual-cpp-build-tools/)
 - Docker (https://www.docker.com/)
 

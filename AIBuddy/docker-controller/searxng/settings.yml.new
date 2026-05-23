@@ -302,13 +302,19 @@ engines:
   - name: 360search
     engine: 360search
     shortcut: 360so
-    timeout: 10.0
+    timeout: 20.0
     disabled: true
 
   - name: 360search videos
     engine: 360search_videos
     shortcut: 360sov
     disabled: true
+
+  - name: 500px
+    engine: 500px
+    shortcut: "500"
+    disabled: true
+    timeout: 5
 
   - name: 9gag
     engine: 9gag
@@ -469,11 +475,6 @@ engines:
     engine: arxiv
     shortcut: arx
 
-  - name: ask
-    engine: ask
-    shortcut: ask
-    disabled: true
-
   - name: azure
     engine: azure
     shortcut: az
@@ -600,6 +601,11 @@ engines:
     shortcut: cos
     disabled: true
 
+  - name: cara
+    engine: cara
+    shortcut: ca
+    disabled: true
+
   - name: chefkoch
     engine: chefkoch
     shortcut: chef
@@ -688,22 +694,6 @@ engines:
     engine: yep
     shortcut: yep
     categories: general
-    search_type: web
-    timeout: 15
-    disabled: true
-
-  - name: yep images
-    engine: yep
-    shortcut: yepi
-    categories: images
-    search_type: images
-    disabled: true
-
-  - name: yep news
-    engine: yep
-    shortcut: yepn
-    categories: news
-    search_type: news
     disabled: true
 
   - name: currency
@@ -1219,6 +1209,7 @@ engines:
     categories: [general, web]
     search_type: web
     shortcut: ka
+    inactive: true
 
   - name: karmasearch images
     engine: karmasearch
@@ -1226,18 +1217,21 @@ engines:
     search_type: images
     shortcut: kai
     paging: false
+    inactive: true
 
   - name: karmasearch videos
     engine: karmasearch
-    categories: [general, web]
+    categories: [videos, web]
     search_type: videos
     shortcut: kav
+    inactive: true
 
   - name: karmasearch news
     engine: karmasearch
     categories: [news, web]
     search_type: news
     shortcut: kan
+    inactive: true
 
   - name: kickass
     engine: kickass
@@ -2165,6 +2159,7 @@ engines:
   - name: yahoo news
     engine: yahoo_news
     shortcut: yhn
+    inactive: true
 
   - name: youtube
     shortcut: yt

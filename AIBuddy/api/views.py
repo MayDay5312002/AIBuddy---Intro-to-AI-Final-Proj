@@ -847,7 +847,8 @@ def query_vectorstore2(query, topK=7):
 
     
 def fileExtractor(file_path):
-    parsed = parser.from_file(file_path)
+    server_url = "http://127.0.0.1:9998"
+    parsed = parser.from_file(file_path, server_url)
     # print(parsed['content'])
     return parsed['content'].strip()
 

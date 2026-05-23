@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
-import os
+import os, time, requests
 import signal
 import sys
 import subprocess
@@ -33,10 +33,24 @@ def checkIfDockerRun(dockerClient):
     except:
         print("Docker is not running")
         return None
+    
+def wait_for_tika(url="http://127.0.0.1:9998", timeout=30, interval=1):
+    start = time.time()
+    while time.time() - start < timeout:
+        try:
+            r = requests.get(url + "/tika", timeout=2)
+            if r.status_code == 200:
+                print("Tika is ready")
+                return True
+        except Exception:
+            pass
+        time.sleep(interval)
+    raise RuntimeError("Tika did not become ready in time")
 
 def signal_handler(signum, frame): #Force cleanup
     # Cleanup code here
-    stop_compose('searxng-docker\docker-compose.yaml')
+    stop_compose('docker-controller\docker-compose.yaml')
+    # stop_compose(r'docker-controller\tika.yaml')
     listOfContainers = settingsClient.containers.list(all=True, filters={'ancestor': 'ghcr.io/kiwix/kiwix-serve:3.7.0'})
     for container in listOfContainers:
         if container.status == 'running':
@@ -54,7 +68,9 @@ if(settingsClient is not None):
     signal.signal(signal.SIGINT, signal_handler)  
     signal.signal(signal.SIGTERM, signal_handler)  
 
-    start_compose('searxng-docker\docker-compose.yaml')
+    start_compose('docker-controller\docker-compose.yaml')
+    wait_for_tika()
+    # start_compose(r'docker-controller\tika.yaml')
     listOfContainers = settingsClient.containers.list(all=True, filters={'ancestor': 'ghcr.io/kiwix/kiwix-serve:3.7.0'})
     for container in listOfContainers:
         if container.status == 'exited':
@@ -66,13 +82,16 @@ if(settingsClient is not None):
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 # print(BASE_DIR)
+
+
+#TIKA Settings
 # os.environ["TIKA_SERVER_JAR"] = "file:///" + str(BASE_DIR).strip().replace("\\", "/") + "/tika/tika-server.jar"
-tika_path = BASE_DIR / "tika" / "tika-server.jar"
+# tika_path = BASE_DIR / "tika" / "tika-server.jar"
 
-# Convert path to proper file URI for the current OS (Windows/Linux/Mac)
-tika_uri = tika_path.as_uri()
+# # Convert path to proper file URI for the current OS (Windows/Linux/Mac)
+# tika_uri = tika_path.as_uri()
 
-os.environ["TIKA_SERVER_JAR"] = tika_uri
+# os.environ["TIKA_SERVER_JAR"] = tika_uri
 
 
 
