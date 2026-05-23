@@ -657,6 +657,7 @@ class GetTextView(APIView):
             url = request.data.get("url")
             file = request.FILES.get("file")
             global documentName
+            saved_path = None
             if file:
                 file_path = os.path.join("uploads", file.name)
                 saved_path = default_storage.save(file_path, ContentFile(file.read()))
@@ -705,7 +706,7 @@ class GetTextView(APIView):
             
             return Response({"msg": "This is a test"}, status=200)
         except Exception as e:
-            default_storage.delete(saved_path)
+            if saved_path: default_storage.delete(saved_path)
             print(e)
             return Response({"error": str(e)}, status=500)
 
@@ -846,7 +847,8 @@ def query_vectorstore2(query, topK=7):
 
     
 def fileExtractor(file_path):
-    parsed = parser.from_file(file_path)
+    server_url = "http://127.0.0.1:9998"
+    parsed = parser.from_file(file_path, server_url)
     # print(parsed['content'])
     return parsed['content'].strip()
 

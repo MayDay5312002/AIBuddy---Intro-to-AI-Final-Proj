@@ -50,6 +50,14 @@ services:
       options:
         max-size: "1m"
         max-file: "1"
+    
+  tika:
+    image: lexpredict/tika-server:latest
+    ports:
+      - "127.0.0.1:9998:9998"
+    container_name: tika
+    restart: unless-stopped
+    
 
 networks:
   searxng:
