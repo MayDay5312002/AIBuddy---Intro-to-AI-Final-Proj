@@ -11,11 +11,12 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
-import os, time, requests
+import time, requests
 import signal
 import sys
 import subprocess
 import docker
+
 
 
 def start_compose(compose_file):
@@ -50,7 +51,6 @@ def wait_for_tika(url="http://127.0.0.1:9998", timeout=30, interval=1):
 def signal_handler(signum, frame): #Force cleanup
     # Cleanup code here
     stop_compose('docker-controller\docker-compose.yaml')
-    # stop_compose(r'docker-controller\tika.yaml')
     listOfContainers = settingsClient.containers.list(all=True, filters={'ancestor': 'ghcr.io/kiwix/kiwix-serve:3.7.0'})
     for container in listOfContainers:
         if container.status == 'running':
@@ -66,8 +66,7 @@ settingsClient = checkIfDockerRun(None)
 
 if(settingsClient is not None):
     signal.signal(signal.SIGINT, signal_handler)  
-    signal.signal(signal.SIGTERM, signal_handler)  
-
+    signal.signal(signal.SIGTERM, signal_handler) 
     start_compose('docker-controller\docker-compose.yaml')
     wait_for_tika()
     # start_compose(r'docker-controller\tika.yaml')
@@ -75,6 +74,8 @@ if(settingsClient is not None):
     for container in listOfContainers:
         if container.status == 'exited':
             container.remove()
+
+
 
 
 

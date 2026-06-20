@@ -1,15 +1,23 @@
 import React from "react";
+import MarkdownRenderer from "../sub-component/sub-sub-component/MarkdownRenderer.js";
 import { useState, useEffect, useRef } from "react";
 import { Button, TextField, Typography, Select, MenuItem, FormControl, 
   InputLabel, Box, Radio, RadioGroup, FormControlLabel, FormLabel, Paper, Divider, IconButton, 
   CircularProgress, List,
   ListItem, ListItemText,
-  Modal} from "@mui/material";
+  Modal,
+  Icon} from "@mui/material";
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 
 import FullscreenIcon from '@mui/icons-material/Fullscreen';
 import FullscreenExitIcon from '@mui/icons-material/FullscreenExit';
+
+import PrintIcon from '@mui/icons-material/Print';
+import PrintDisabledIcon from '@mui/icons-material/PrintDisabled';
+import FileUploadIcon from '@mui/icons-material/FileUpload';
 
 
 import ModalAddThread from "../sub-component/ModalAddThread.js";
@@ -21,8 +29,12 @@ import ModalAddQuiz from "../sub-component/ModalAddQuiz.js";
 import ModalModifyMessegeHistory from "../sub-component/ModalModifyMessegeHistory.js";
 import ModalPresentQuiz from "../sub-component/ModalPresentQuiz.js";
 import ModalPresentFlashcards from "../sub-component/ModalPresentFlashcards.js";
+import ModalSettings from "../sub-component/ModalSettings.js";
+import BundledEditor from "../sub-component/TextEditor.js";
 
 import axios from "axios";
+import TiptapEditor from "../sub-component/TextEditor.js";
+import { useReactToPrint } from "react-to-print";
 
 const MainApp = () => {
     const [file, setFile] = useState(null);
@@ -75,8 +87,47 @@ const MainApp = () => {
 
     const [isPortrait, setIsPortrait] = useState(window.matchMedia("(orientation: portrait)").matches);
 
+
+    const [open, setOpen] = useState(false);
+
+    const [aiSpace, setAiSpace] = useState(null);
+    const [temperature, setTemperature] = useState(null);
+    const [topP, setTopP] = useState(null);
+    const [maxTokens, setMaxTokens] = useState(null);
+    const [api, setApi] = useState("");
+    const [modelName, setModelName] = useState(null);
+    const [baseUrl, setBaseUrl] = useState(null);
+    const [oldData, setOldData] = useState({
+      temperature: null,
+      topP: null,
+      maxTokens: null,
+      api: "",
+      modelName: null,
+      baseUrl: null,
+      aiSpace: null
+    });
+
+    const [leftSection, setLeftSection] = useState(true);
+    const [rightSection, setRightSection] = useState(true);
+
+    const [editorOn, setEditorOn] = useState(false);
+    const [showAnswerPrint, setShowAnswerPrint] = useState(false);
+    const [showAnswerPrintOption, setShowAnswerPrintOption] = useState(false);
+    const [clickTriggerPrint, setClickTriggerPrint] = useState(0);  // Counter to force effect
+    // const [clickedOptionPrint, setClickedOptionPrint] = useState(false);
+
+    const outputRef = useRef();
     const submitButtonRef = useRef(null);
 
+    const handlePrintOutput = useReactToPrint({
+      contentRef: outputRef,
+    });
+
+    const [exportContent, setExportContent] = useState(null);
+    
+//     useEffect(() => {
+//   console.log("outputRef.current:", outputRef.current);
+// }, [response]);
     const handleChoiceClick = (choice, answer, index) => {
       if(selectedAnswer === choice && indexQuizSelected === index){
         setSelectedAnswer('');
@@ -137,8 +188,27 @@ const MainApp = () => {
     }, [threads])
 
     useEffect(() => {
-      setIsPortrait(window.matchMedia("(orientation: portrait)").matches);
-    }, [window.innerHeight, window.innerWidth])
+      if (clickTriggerPrint === 0) return;  // Skip on initial mount
+      handlePrintOutput();
+      setShowAnswerPrintOption(false);
+    }, [clickTriggerPrint]);
+
+    // useEffect(() => {
+    //   setIsPortrait(window.matchMedia("(orientation: portrait)").matches);
+    // }, [window.innerHeight, window.innerWidth])
+
+  function updateLayout() {
+    setIsPortrait(window.matchMedia("(orientation: portrait)").matches);
+  }
+
+  let debounceTimer;
+
+  window.addEventListener('resize', () => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+      updateLayout(); // Runs 100ms after resize stops
+    }, 100);
+  });
     
 
 
@@ -177,7 +247,8 @@ const MainApp = () => {
       setErrorResponseMsg('');//clear old error
       setResponse(''); // clear old response
       setLoading(true);
-      const eventSource = new EventSource('http://localhost:4192/api/chatStream/' + '?query=' + query + '&model=' + selectedModel + '&thread=' + selectedThread + "&executionType=" + executionType);
+      const eventSource = new EventSource('http://localhost:4192/api/chatStream/' + '?query=' + query + '&model=' + selectedModel + '&thread=' + selectedThread + 
+        "&executionType=" + executionType);
       paperRefResponse.current.scrollTop = paperRefResponse.current.scrollHeight;
       eventSource.onmessage = function(event) {
         // console.log('chunk:', JSON.stringify(event.data));
@@ -224,7 +295,7 @@ const MainApp = () => {
         model: selectedModel,
         thread: selectedThread,
         number: numberEx,
-        inputType: inputType
+        inputType: inputType,
       });
       setErrorResponseMsg("");
       
@@ -250,7 +321,7 @@ const MainApp = () => {
             model: selectedModel,
             thread: selectedThread,
             number: numberEx,
-            inputType: inputType
+            inputType: inputType,
           }
         );
         // // Optional: update quizzes immediately from POST response
@@ -371,6 +442,30 @@ const MainApp = () => {
     };
 
 
+    const getSettings = async () => {
+      axios.get("http://127.0.0.1:4192/api/getSettings/")
+      .then((response) => {
+        // console.
+        setTemperature(response.data["message"]["temperature"]);
+        setTopP(response.data["message"]["topP"]);
+        setMaxTokens(response.data["message"]["maxTokens"]);
+        setApi(response.data["message"]["apiKey"]);
+        setAiSpace(response.data["message"]["aiSpace"]);
+        setBaseUrl(response.data["message"]["baseUrl"]);
+        setModelName(response.data["message"]["modelName"]);
+        setOldData({
+          temperature: response.data["message"]["temperature"],
+          topP: response.data["message"]["topP"],
+          maxTokens: response.data["message"]["maxTokens"],
+          api: response.data["message"]["apiKey"],
+          aiSpace: response.data["message"]["aiSpace"],
+          baseUrl: response.data["message"]["baseUrl"],
+          modelName: response.data["message"]["modelName"],
+        })
+      })
+    }
+
+
     useEffect(() => { //Get flashcards and quizzes for a selected thread
         setErrorResponseMsg('');//clear old error
         if(selectedThread !== ""){
@@ -390,6 +485,9 @@ const MainApp = () => {
               // console.error("Error uploading file:", error);
           })
         }
+        getSettings();
+        console.log(api);
+
 
     }, [selectedThread]);
 
@@ -556,7 +654,7 @@ const MainApp = () => {
       .then((response) => {
           // console.log(response)
           setModels(response.data["models"])
-          setSelectedModel(response.data["models"][0])
+          // setSelectedModel(response.data["models"][0])
       })
       .catch((error) => {
           setErrorResponseMsg("Error: " + error.response.data["message"]);
@@ -619,13 +717,33 @@ const MainApp = () => {
                     1px 1px 0 #ffffffff,
                     2px 2px 4px white
                   `,
+                  fontFamily: ['Brush Script MT', 'Comic Sans MS']
                 }}
               >
-                AI Study Companion
+                PonderUp
               </Typography>
 
             </Box>
           </Typography>
+          <ModalSettings 
+          aiSpace={aiSpace} 
+          setAiSpace={setAiSpace}
+          setApi={setApi}
+          api={api}
+          setTemperature={setTemperature}
+          temperature={temperature}
+          setTopP={setTopP}
+          topP={topP}
+          setMaxTokens={setMaxTokens}
+          maxTokens={maxTokens}
+          modelName={modelName}
+          setModelName={setModelName}
+          baseUrl={baseUrl}
+          setBaseUrl={setBaseUrl}
+          oldData={oldData}
+          setOldData={setOldData}
+
+          />
         </Box>
         {/* <Divider sx={{margin: "1em", mx: "5em", fontSize: "0.6rem"}}/> */}
         <hr 
@@ -652,25 +770,45 @@ const MainApp = () => {
           flex: "1"
           }}
         >
-        { isFullscreen == false &&  
+
+        {/* <TiptapEditor /> */}
+
+          {/******************This is the beginning of the left section******************* */}
+        { isFullscreen == false && editorOn == false  &&  
           <Paper 
           // elevation={3}
           sx={{
-            padding: 3,
+            padding: "1em",
             borderRadius: 4,
             ml: "1em",
             mr: isPortrait ? "1em" : 0,
             mb: isPortrait ? "1em" : 0,  
             // order:1
-            flexGrow: 3,
+            // flexGrow: 3,
+            flexGrow: leftSection ? 3 : 0,
             overflow: "auto",
-            minWidth: isPortrait ? undefined : "25.5em",
-            minHeight: isPortrait ? "15em" : undefined,
-            height: isPortrait ? "15em" : undefined,
+            // minWidth: isPortrait ? undefined : "25.5em",
+            minWidth: isPortrait ? undefined : leftSection ? "20em" : "2.5em",
+            minHeight: isPortrait ? (leftSection ? "15em" : "2.2em") : undefined,
+            height: isPortrait ? (leftSection ? "15em" : "2.2em") : undefined,
             maxHeight: isPortrait ? "15em" : undefined,
-
-
           }}>
+          {/* <div className="div-eye" style={{ height: "1.7em" }}> */}
+            <IconButton 
+            sx={{
+              "&:hover": {
+                backgroundColor: "transparent" /* Removes the hover background effect */
+              },
+              height: "1.7em",
+              marginLeft: "auto", 
+              display: "block"
+            }}
+            onClick={() => setLeftSection(!leftSection) }
+            >
+              {leftSection ? <VisibilityIcon /> : <VisibilityOffIcon />}
+            </IconButton>
+          {/* </div> */}
+
 
               {/* <Typography variant="h4" sx={{fontWeight: "bold", marginBottom: "1em", textAlign: "center"}}>
                 <Box sx={{cursor: "pointer"}} component={"span"} onClick={() => window.location.reload()}>
@@ -678,9 +816,12 @@ const MainApp = () => {
                   AI Study Companion
                 </Box>
               </Typography> */}
+              {leftSection && 
+              <div className="leftSectionDiv">
               {executionType !== "Explain with web search"  && executionType !== "Explain Simply" && executionType !== "Explain with Kiwix" &&
               <>
               <FormControl sx={{width: "100%"}}>
+                
                 <FormLabel>Choose Input Type</FormLabel>
                 <RadioGroup
                   // row
@@ -700,7 +841,7 @@ const MainApp = () => {
                   { (executionType === "Create flash cards" || executionType === "Create quiz") &&
                     <>
                     <FormControlLabel value="model" control={<Radio />} label="Model independent" />
-                    <FormControlLabel value="Kiwix" control={<Radio />} label="Upload Kiwix Folder" />
+                    <FormControlLabel value="Kiwix" control={<Radio />} label="Kiwix Files" />
                     <FormControlLabel value="web search" control={<Radio />} label="Web Search" />
                     </>
                   }
@@ -709,6 +850,7 @@ const MainApp = () => {
               <Divider />
               </>
               }
+              {aiSpace === "Ollama" &&
               <FormControl fullWidth style={{marginTop: "1em", marginBottom: "1em"}}>
                 <InputLabel id="dropdown-label">Select model</InputLabel>
                 <Select
@@ -724,6 +866,7 @@ const MainApp = () => {
                   ))}
                 </Select>
               </FormControl>
+              }
             {(executionType !== "Explain with web search" && executionType !== "Explain Simply")  &&
               <>
               <Divider sx={{mb:"1em"}}/>
@@ -818,109 +961,158 @@ const MainApp = () => {
                 
                 
               </Box>
+              </div>
+              }
               {/* <hr style={{width: "100%", border: "1px solid #e0e0e0", height: "0.1em"}}/> */}
               
           </Paper>
-        } 
+        }
+        {/*/////////////////////////This is the the end of left section/////////////////////////////////////////*/}
+
+          {/*/////////////////////////This is the  right section/////////////////////////////////////////*/}
+
           <Paper sx={{p:"1em", borderRadius: 4, top: 0, mx: "1em", flexGrow: 6, overflow: "auto", position: "relative", display: "flex", flexDirection: "column"}}>
-            {isFullscreen === false &&
-            <Box>
-              <FormControl sx={{mt: "0.2em"}}>
-                <FormLabel>Choose Execution Type</FormLabel>
-                <RadioGroup
-                  row
-                  value={executionType}
-                  onChange={handleExecuteQuery}
+            <Button 
+            variant="contained" 
+            sx={{
+              position: "absolute", 
+              top: "1em", 
+              left: "1.4em", 
+              fontSize: "0.85rem", 
+              visibility: isFullscreen === false ? "visible" : "hidden", 
+              zIndex: 1
+            }}
+            onClick={()=> {
+              if (editorOn === false){
+                setEditorOn(!editorOn);
+                setExportContent("");
+              }
+              else{
+                setEditorOn(!editorOn);
+                setIsFullscreen(false);
+                setExportContent(null);
+              }
+            }}
+            >
+              Editor
+            </Button>
+            {editorOn == false && isFullscreen === false &&
+              
+              <IconButton onClick={()=> setRightSection(!rightSection)} 
+                sx={{
+                  "&:hover": {
+                    backgroundColor: "transparent" /* Removes the hover background effect */
+                  },
+                  height: "1.7em",
+                  marginLeft: "auto", 
+                  // display: selectedThread !== "" ?  "span" : "hidden"
+                  visibility: selectedThread !== "" ?  "visible" : "hidden"
+                  // display: "block"
+                }}
                 >
-                  <FormControlLabel value="Explain Simply" control={<Radio />} label="Explain Simply" />
-                  <FormControlLabel value="Explain with web search" control={<Radio />} label="Explain with web search" />
-                  <FormControlLabel value="Explain with document" control={<Radio />} label="Explain with document" />
-                  <FormControlLabel value="Explain with Kiwix" control={<Radio />} label="Explain with Kiwix" />
-                  <FormControlLabel value="Create flash cards" control={<Radio />} label="Create flash cards" />
-                  <FormControlLabel value="Create quiz" control={<Radio />} label="Create quiz" />
-                  
-                </RadioGroup>
-              </FormControl>
-              <TextField //################input for query#################
-                label="Enter Prompt"
-                variant="outlined"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                sx={{ 
-                  my: "1em",
-                  '& .MuiInputBase-input': {
-                    resize: "vertical",
-                    maxHeight: 110 // enforce max height for 4 rows
-                  }
-                }}
-                fullWidth
-                required
-                multiline
-                // rows={1}
-                minRows={1}
-                maxRows={4}
-                inputProps={{
-                  style: { resize: "vertical", overflow: "auto" }
-                }}
-                onKeyDown={e => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    // console.log("submit button disabled", submitButtonRef.current.disabled);     
-                    if(submitButtonRef.current.disabled === false){
-                      // (executionType === "Explain with document") ? handleQuery() : (executionType === "Create flash cards") ? handleCreateFlashCards() : handleCreateQuiz()
-                      if (executionType === "Explain with document" || executionType === "Explain with Kiwix" || executionType === "Explain with web search" || executionType === "Explain Simply") {
-                        handleQuery()
-                      } else if (executionType === "Create flash cards") {
-                        handleCreateFlashCards()
-                      } else if (executionType === "Create quiz") {
-                        handleCreateQuiz()
+                  {rightSection ? <VisibilityIcon /> : <VisibilityOffIcon />}
+              </IconButton>
+            }
+            {isFullscreen === false && rightSection === true && editorOn === false &&
+            <div>
+              <Box>
+                <FormControl sx={{mt: "0.2em"}}>
+                  <FormLabel>Choose Execution Type</FormLabel>
+                  <RadioGroup
+                    row
+                    value={executionType}
+                    onChange={handleExecuteQuery}
+                  >
+                    <FormControlLabel value="Explain Simply" control={<Radio />} label="Explain Simply" />
+                    <FormControlLabel value="Explain with web search" control={<Radio />} label="Explain with web search" />
+                    <FormControlLabel value="Explain with document" control={<Radio />} label="Explain with document" />
+                    <FormControlLabel value="Explain with Kiwix" control={<Radio />} label="Explain with Kiwix" />
+                    <FormControlLabel value="Create flash cards" control={<Radio />} label="Create flash cards" />
+                    <FormControlLabel value="Create quiz" control={<Radio />} label="Create quiz" />
+
+                  </RadioGroup>
+                </FormControl>
+                <TextField //################input for query#################
+                  label="Enter Prompt"
+                  variant="outlined"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  sx={{ 
+                    my: "1em",
+                    '& .MuiInputBase-input': {
+                      resize: "vertical",
+                      maxHeight: 110 // enforce max height for 4 rows
+                    }
+                  }}
+                  fullWidth
+                  required
+                  multiline
+                  // rows={1}
+                  minRows={1}
+                  maxRows={4}
+                  inputProps={{
+                    style: { resize: "vertical", overflow: "auto" }
+                  }}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      // console.log("submit button disabled", submitButtonRef.current.disabled);     
+                      if(submitButtonRef.current.disabled === false){
+                        // (executionType === "Explain with document") ? handleQuery() : (executionType === "Create flash cards") ? handleCreateFlashCards() : handleCreateQuiz()
+                        if (executionType === "Explain with document" || executionType === "Explain with Kiwix" || executionType === "Explain with web search" || executionType === "Explain Simply") {
+                          handleQuery()
+                        } else if (executionType === "Create flash cards") {
+                          handleCreateFlashCards()
+                        } else if (executionType === "Create quiz") {
+                          handleCreateQuiz()
+                        }
                       }
                     }
-                  }
-                }}
-                />
-                  {(executionType !== "Explain with document" && executionType !== "Explain with Kiwix" && executionType !== "Explain with web search" && executionType !== "Explain Simply") &&
-                  <Box>
-                    <Typography variant="h7" sx={{fontWeight: 200, display: "block"}} >Number of {executionType === "Create flash cards" ? "flash cards" : "questions"} to generate:</Typography>
-                    <TextField
-                      type="number"
-                      label="Enter a number"
-                      value={numberEx}
-                      onChange={handleChangeExcutionType}
-                      inputProps={{
-                        min: 1,
-                        step: 1, // ensures stepping by whole numbers
-                      }}
-                      sx={{ width: 200, my: "1em" }}
-                    /> 
-                  </Box>
-                  }
-                  <Button 
-                  ref={submitButtonRef}
-                  sx={{fontSize: "0.85rem"}}
-                  variant="contained" 
-                  type="submit"
-                  onClick={
-                    (executionType === "Explain with document" || executionType === "Explain with Kiwix" || executionType === "Explain with web search" || executionType === "Explain Simply") 
-                    ? 
-                    handleQuery 
-                    : 
-                    (executionType === "Create flash cards" ? handleCreateFlashCards : handleCreateQuiz)
-                  } 
-                  disabled={readyToQuery === false || selectedThread === "" || query === "" || loading || selectedModel === ""}>
-                      Submit Prompt
-                  </Button>
-                  <IconButton>
-                    {(loading) ? <CircularProgress size={24} /> : ""}
-                  </IconButton>
-                  <Typography variant="caption" sx={{display: "block", fontStyle: "italic"}}>Note: Please ensure Thread and File/URL are set to submit prompt.</Typography>
-                  <Typography variant="body2" sx={{display: "block", color: "red", minHeight: "1.5em", fontSize:"0.8rem", mb: "0.1em"}}>{errorResponseMsg}</Typography>
-                  <Divider sx={{mb: "0.5em"}}/>
+                  }}
+                  />
+                    {(executionType !== "Explain with document" && executionType !== "Explain with Kiwix" && executionType !== "Explain with web search" && executionType !== "Explain Simply") &&
+                    <Box>
+                      <Typography variant="h7" sx={{fontWeight: 200, display: "block"}} >Number of {executionType === "Create flash cards" ? "flash cards" : "questions"} to generate:</Typography>
+                      <TextField
+                        type="number"
+                        label="Enter a number"
+                        value={numberEx}
+                        onChange={handleChangeExcutionType}
+                        inputProps={{
+                          min: 1,
+                          step: 1, // ensures stepping by whole numbers
+                        }}
+                        sx={{ width: 200, my: "1em" }}
+                      /> 
+                    </Box>
+                    }
+                    <Button 
+                    ref={submitButtonRef}
+                    sx={{fontSize: "0.85rem"}}
+                    variant="contained" 
+                    type="submit"
+                    onClick={
+                      (executionType === "Explain with document" || executionType === "Explain with Kiwix" || executionType === "Explain with web search" || executionType === "Explain Simply") 
+                      ? 
+                      handleQuery 
+                      : 
+                      (executionType === "Create flash cards" ? handleCreateFlashCards : handleCreateQuiz)
+                    } 
+                    disabled={readyToQuery === false || selectedThread === "" || query === "" || loading || selectedModel === ""}>
+                        Submit Prompt
+                    </Button>
+                    <IconButton>
+                      {(loading) ? <CircularProgress size={24} /> : ""}
+                    </IconButton>
+                    <Typography variant="caption" sx={{display: "block", fontStyle: "italic"}}>Note: Please ensure Thread and File/URL are set to submit prompt.</Typography>
+                    <Typography variant="body2" sx={{display: "block", color: "red", minHeight: "1.5em", fontSize:"0.8rem", mb: "0.1em"}}>{errorResponseMsg}</Typography>
+                    <Divider sx={{mb: "0.5em"}}/>
                 </Box>
+            </div>
                 }
-
+            {/*///////////////////////////////Output Part below Right Section///////////////////////////////////////////////////////*/}
                   {selectedThread !== "" && (executionType === "Explain with document" || executionType === "Explain with Kiwix" || 
-                    executionType === "Explain with web search" || executionType === "Explain Simply") &&
+                    executionType === "Explain with web search" || executionType === "Explain Simply") && editorOn === false &&
                     <Paper 
                     ref={paperRefResponse}
                     onScroll={handleScroll}
@@ -930,9 +1122,6 @@ const MainApp = () => {
                       backgroundColor: '#f9fafb',
                       borderRadius: "1em",
                       border: '1px solid #e0e0e0',
-                      // mt: isFullscreen ? 0 : "1em",
-                      // maxWidth: 
-                      // height: isFullscreen ? "98vh" : {xs: "12em", sm: "13em", md: "23em"},
                       overflow: "auto",
                       position: "relative",
                       flex: "1",
@@ -948,17 +1137,37 @@ const MainApp = () => {
                         {isFullscreen ? <FullscreenExitIcon/> : <FullscreenIcon />}
                       </IconButton>
                       <Typography variant="h5" sx={{fontWeight: "bold", color: "green", mt: "1em", textAlign: "center", color: "#0077b6"}}>Response</Typography>
-                      <ModalModifyMessegeHistory thread_title={selectedThread} refreshMessageHistory={refreshMessageHistory} 
-                      setRefreshMessageHistory={setRefreshMessageHistory} setResponse={setResponse}/>
-                      <Typography variant="h6" sx={{ fontWeight: "500", whiteSpace: "pre-line"}}>
-                        {response}
-                      </Typography>
+                      <Box sx={{display: 'flex', justifyContent: 'center', my: "0.5em"}}>
+                        <IconButton onClick={() => {
+                          if (response !== "")handlePrintOutput();
+                          }
+                        }
+                        >
+                          {response === "" ? <PrintDisabledIcon /> : <PrintIcon />}
+                          </IconButton>
+                        <ModalModifyMessegeHistory thread_title={selectedThread} refreshMessageHistory={refreshMessageHistory} 
+                          setRefreshMessageHistory={setRefreshMessageHistory} setResponse={setResponse} aiSpace={aiSpace}/>
+                        <IconButton onClick={() => 
+                          {
+                            setExportContent(response);
+                            setIsFullscreen(false);
+                            setEditorOn(true);
+                          }
+                        }>
+                          <FileUploadIcon />
+                        </IconButton>
+                      </Box>
+                      <div ref={outputRef}>
+                        <Typography variant="h6" sx={{ fontWeight: 500 }}>
+                          <MarkdownRenderer>{response}</MarkdownRenderer>
+                        </Typography>
+                      </div>
 
 
                     </Paper>
                 
                   }
-                  {selectedThread !== "" && executionType === "Create flash cards" && flashCards != [] &&
+                  {selectedThread !== "" && executionType === "Create flash cards" && flashCards != [] && editorOn === false &&
                     <Paper 
                     ref={paperRefFlashCards}
                     sx={{
@@ -988,7 +1197,12 @@ const MainApp = () => {
                       <Box sx={{display: 'flex', justifyContent: 'center', alignItems: "center", columnGap: "0.5em", my: "0.5em"}}>
                         <ModalAddFlashCard setFlashCards={setFlashCards} thread_title={selectedThread} setNewFlashCards={setNewFlashCards}/>
                         <ModalPresentFlashcards flashcards={flashCards} />
+                        <IconButton onClick={() => {if(flashCards.length !== 0)handlePrintOutput()}}
+                        >
+                          {flashCards.length === 0 ? <PrintDisabledIcon /> : <PrintIcon />}
+                        </IconButton>
                       </Box>
+                      <div ref={outputRef}>
                       {flashCards.map((card, index) => (
                         <Paper key={card.id} sx={{ p: 2, mb: 2, display: "inline-block", mx: 1, maxWidth: "30em"}}>
                           <Typography variant="h6" sx={{ fontWeight: "500" }} component={"span"}>
@@ -1006,9 +1220,10 @@ const MainApp = () => {
                       
                         </Paper>
                       ))}
+                      </div>
                     </Paper>
                   }
-                  {selectedThread !== "" && executionType === "Create quiz" && quizzes != [] &&
+                  {selectedThread !== "" && executionType === "Create quiz" && quizzes != [] && editorOn === false &&
                     <Paper 
                     ref={paperRefQuizzes}
                     sx={{
@@ -1039,7 +1254,69 @@ const MainApp = () => {
                       <Box sx={{display: 'flex', justifyContent: 'center', my: "0.5em", alignItems: "center", columnGap: "0.5em"}}>
                         <ModalAddQuiz setQuizzes={setQuizzes} thread_title={selectedThread} setNewQuizzes={setNewQuizzes}/>
                         <ModalPresentQuiz quizzes={quizzes} />
+                        <span>
+                        <IconButton onClick={() =>{
+                            // handlePrintOutput();
+                            if(quizzes.length !== 0)setShowAnswerPrintOption(!showAnswerPrintOption);
+                          }
+                        }
+                        >
+                          {quizzes.length === 0 ? <PrintDisabledIcon /> : <PrintIcon />}
+                        </IconButton>
+                        </span>
                       </Box>
+                      {showAnswerPrintOption ? 
+                        <Box sx={{display: 'flex', justifyContent: 'center', my: "0.5em"}}>
+                          Show Answers?&nbsp;
+                          <Box 
+                            component="span" 
+                            sx={{ 
+                              cursor: "pointer",
+                              ':hover': { backgroundColor: 'lightblue' },
+                              // padding: "0.1em",
+                              borderRadius: "0.5em"
+                            }}
+                            onClick={() => {
+                              // setClickedOptionPrint(true);
+                              setShowAnswerPrint(true);
+                              setClickTriggerPrint(prev => prev + 1);
+                              // handlePrintOutput();
+                              // setShowAnswerPrint(false);
+                              // setShowAnswerPrintOption(!showAnswerPrintOption);
+                              // setClickedOptionPrint(false);
+                              }
+                            }
+                          >
+                          Yes
+                          </Box>
+                          &nbsp;
+                          /
+                          &nbsp;
+                          <Box 
+                            component="span" 
+                            sx={{ 
+                              cursor: "pointer",
+                              ':hover': { backgroundColor: 'lightblue' } ,
+                              // padding: "0.1em",
+                              borderRadius: "0.5em"
+                            }}
+                            onClick={() => {
+                              // setClickedOptionPrint(true);
+                              setShowAnswerPrint(false);
+                              setClickTriggerPrint(prev => prev + 1);
+                              // handlePrintOutput();
+                              // setShowAnswerPrintOption(!showAnswerPrintOption);
+                              // setClickedOptionPrint(false);
+                              }
+                            }
+                          >
+                          No
+                          </Box>
+                        </Box>
+                        : 
+                        ""
+                      }
+                      <div ref={outputRef}>
                       {quizzes.map((quiz, indexQuiz) => (
                         <Paper key={quiz.id} sx={{ p: 2, mb: 2, display: "inline-block", mx: 1}}>
                           <Typography variant="h6" sx={{ fontWeight: "500" }} component={"span"}>
@@ -1076,6 +1353,7 @@ const MainApp = () => {
                                   },
                                   cursor: 'pointer',
                                 }}
+                                className={choice === quiz.answer && showAnswerPrint ? "right-choice" : "wrong-choice"}
                               >
                                 <ListItemText primary={choice} />
                               </ListItem>
@@ -1083,7 +1361,11 @@ const MainApp = () => {
                           </List>
                         </Paper>
                       ))}
+                      </div>
                     </Paper>
+                  }
+                  {editorOn && exportContent !== null &&
+                    <TiptapEditor newContent={exportContent}/>
                   }
 
           </Paper>

@@ -15,23 +15,21 @@ from urllib.parse import urlparse, parse_qs
 
 
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-# from langchain.vectorstores import FAISS
-# from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
-# from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_huggingface import HuggingFaceEmbeddings
-# from sentence_transformers import SentenceTransformer
 
 from langchain.docstore.document import Document
 
 from ollama import chat
 import ollama, docker, requests
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
+
 
 from AIBuddy.models import *
 
 import ast, random, json, xmltodict
 import subprocess
+from openai import OpenAI
 
 # EMBED_MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
 embedding_model = HuggingFaceEmbeddings(model_name="./models/all-MiniLM-L6-v2")
@@ -98,6 +96,21 @@ def chatWithFile(request):
     modelName = request.GET.get("model")
     thread = request.GET.get("thread")
     executionType = request.GET.get("executionType")#########################################################
+    setting = AISpace.objects.get(id=1)
+    temperature = setting.temperature
+    topP = setting.top_p
+    maxTokens = setting.max_tokens
+    apiKey = setting.api_key
+    aiSpace = setting.ai_space
+    modelNameOnline = setting.model_name
+    baseUrl = setting.base_url
+    # print("temperature: ", temperature)
+    # print("topP: ", topP)
+    # print("maxTokens: ", maxTokens)
+    # print("apiKey: ", apiKey)
+    # print("aiSpace: ", aiSpace)
+    # print("modelNameOnline: ", modelNameOnline)
+    # print("baseUrl: ", baseUrl)
 
     if executionType == "Explain with web search" or executionType == "Explain with Kiwix": #Check if docker is running for these execution types. If not started return proper error
         try:
@@ -147,13 +160,51 @@ def chatWithFile(request):
         else:
             message = f"Read the following prompt carefully. Provide a comprehensive, detailed and well-structured response to the prompt using your knowledge.\n\n Prompt:{query}"
         print(message)
-        stream = chat(model=modelName, 
-            messages=messagesUser + [{"role": "user", "content": message}],
-            stream=True)
+
+        if aiSpace == "Ollama":
+            optionToSend = {}
+            if temperature :
+                optionToSend["temperature"] = temperature
+            if topP:
+                optionToSend["top_p"] = topP
+            if maxTokens:
+                optionToSend["num_predict"] = maxTokens
+
+            print(optionToSend)
+            stream = chat(model=modelName, 
+                messages=messagesUser + [{"role": "user", "content": message}],
+                options=optionToSend,
+                stream=True)
+        else:
+            client = OpenAI(
+              base_url = baseUrl,
+              api_key = apiKey
+            )
+            if not isNewModel(client, modelNameOnline):
+                stream = client.chat.completions.create(model=modelNameOnline, 
+                    messages=messagesUser + [{"role": "user", "content": message}],
+                    temperature=float(temperature) if temperature else 0.7,
+                    top_p=float(topP) if topP else 1.0,
+                    max_tokens=int(maxTokens) if maxTokens else 4096,
+                    stream=True)
+
+            else:
+                stream = client.chat.completions.create(model=modelNameOnline, 
+                    messages=messagesUser + [{"role": "user", "content": message}],
+                    temperature=float(temperature) if temperature else 0.7,
+                    top_p=float(topP) if topP else 1.0,
+                    max_completion_tokens=int(maxTokens) if maxTokens else 4096,
+                    stream=True)
+        
+
 
         thinkingProcessor = ""
         for chunk in stream:
-            content = chunk["message"]["content"]
+            if aiSpace == "Ollama":
+                content = chunk["message"]["content"]
+            else:
+                if chunk.choices and chunk.choices[0].delta.content is not None:
+                    content = chunk.choices[0].delta.content
             if finalResponse == "" and thinking:
                 thinkingProcessor += content
                 # print(thinkingProcessor)
@@ -235,6 +286,7 @@ class CreateFlashCardsView(APIView):
         thread = request.data.get("thread")
         number = int(request.data.get("number"))
         inputType = request.data.get("inputType")
+        aiSpace = AISpace.objects.get(id=1).ai_space
         # print("Thead: ", thread)
         thread = Thread.objects.get(title=thread)
         messagesUser = Message.objects.filter(thread=thread).order_by("created_at")
@@ -257,10 +309,46 @@ class CreateFlashCardsView(APIView):
         else:
             message = f"Create {number} flash card(s) with attributes title and content for the following prompt(Ensure you follow the number of cards that should be created).\n"
             message += f"Make it as concise as possible.\n\nprompt: {query}"
-        response = chat(model=modelName, 
-            messages=messagesUser + [{"role": "user", "content": message}],
-            format=FlashCardsList.model_json_schema()) #gives the schema of the response in JSON format.
-        #type(response["message"]["content"]) == str
+
+        jsonNotCorrect =True
+        tries = 1
+        while jsonNotCorrect:
+            if tries > 5:
+                return Response({"error": "Could not generate flashcard(s)"}, status=500)
+            if aiSpace == "Ollama":
+                response = chat(model=modelName, 
+                    messages=messagesUser + [{"role": "user", "content": message}],
+                    format=FlashCardsList.model_json_schema()) #gives the schema of the response in JSON format.
+            else:
+                print("AI Space: ", aiSpace)
+                print("API Key: ", AISpace.objects.get(id=1).api_key)
+                client = OpenAI(
+                  base_url = AISpace.objects.get(id=1).base_url,
+                  api_key = AISpace.objects.get(id=1).api_key
+                )
+                response = client.chat.completions.create(
+                  model=AISpace.objects.get(id=1).model_name,
+                  messages=[{"role":"system","content":f"You are an AI assistant that creates flashcard(s) and respond only in VALID JSON. \
+                            Here is the format of the JSON: {FlashCardsList.model_json_schema()}"}] +  messagesUser[1:][-5 if len(messagesUser) > 5 else 0:] +
+                            [{"role": "user", "content": message}],
+                #   temperature=0.6,
+                #   top_p=0.7,
+                #   max_tokens=4096,
+                #   stream=True
+                )
+
+                response = response.choices[0].message.content.replace("```json", "").replace("```", "").strip()
+                response = {"message": {"content": response}}
+
+            tries += 1
+            jsonNotCorrect = not is_json_valid(FlashCardsList, response["message"]["content"])
+            print("JSON not correct: ", jsonNotCorrect)
+        
+        
+
+            
+        type(response["message"]["content"]) == str
+        # print(response["message"]["content"])
         Cards = FlashCardsList.model_validate_json(response["message"]["content"])# Validates if the string follows the model schema then returns a FlashCardsList model, if not raises an exception
         result = []
         i = 0
@@ -284,6 +372,8 @@ class CreateQuizView(APIView):
             modelName = request.data.get("model")
             query = request.data.get("query")
             inputType = request.data.get("inputType")
+            aiSpace = AISpace.objects.get(id=1).ai_space
+            
             if inputType == "file" or inputType == "url": #If the input type is file or url, then we need to query the vector store first
                 results = query_vectorstore(query)
                 results = [chunk.page_content for chunk in results] #We dont have to include the metadata
@@ -304,9 +394,36 @@ class CreateQuizView(APIView):
                 message = f"""Create a multiple choice questions with {number} quesition(s) and 4 choices for each question based on the following prompt, where 1 choice is the correct answer.\n
                             Format: List choices in alphabetical list.\n\n 
                             prompt: {query}"""
-            response = chat(model=modelName,
-                messages=messagesUser + [{"role": "user", "content": message}],
-                format=QuizCards.model_json_schema()) # gives the schema of the response in JSON format.
+                
+            jsonNotCorrect =True
+            tries = 1
+            while jsonNotCorrect:
+                if tries == 6:
+                    return Response({"error": "Failed to generate questions"}, status=500)
+                if aiSpace == "Ollama":
+                    response = chat(model=modelName,
+                        messages=messagesUser + [{"role": "user", "content": message}],
+                        format=QuizCards.model_json_schema()) # gives the schema of the response in JSON format.
+                else:
+                    client = OpenAI(
+                      base_url = AISpace.objects.get(id=1).base_url,
+                      api_key = AISpace.objects.get(id=1).api_key
+                    )
+                    response = client.chat.completions.create(
+                      model=AISpace.objects.get(id=1).model_name,
+                      messages=[{"role":"system","content":f"You are an AI assistant that creates question(s) and respond only in VALID JSON. \
+                                Here is the format of the JSON: {QuizCards.model_json_schema()}"}] + messagesUser[1:][-5 if len(messagesUser) > 5 else 0:] +
+                                [{"role": "user", "content": message}],
+                    #   temperature=0.6,
+                    #   top_p=0.7,
+                    #   max_tokens=4096,
+                    #   stream=True
+                    )
+
+                    response = response.choices[0].message.content.replace("```json", "").replace("```", "").strip()
+                    response = {"message": {"content": response}}
+                tries += 1
+                jsonNotCorrect = not is_json_valid(QuizCards, response["message"]["content"])
             #type(response["message"]["content"]) == str
             QuizCardsInstance = QuizCards.model_validate_json(response["message"]["content"]) # Validates if the string follows the model schema then returns a QuizCards model, if not raises an exception
             result = []
@@ -477,6 +594,8 @@ class DeleteAllMessagesView(APIView):
             message.delete()
         return Response({"message": "All messages deleted"}, status=200)
     
+
+    
 def ModifyMessageView(request):
     thread = Thread.objects.get(title=request.GET.get("thread"))
     time = request.GET.get("t")
@@ -488,6 +607,18 @@ def ModifyMessageView(request):
     oldDocument = request.GET.get("oldDocument")
     message = request.GET.get("query")
     messages = messages[1:]
+    setting = AISpace.objects.get(id=1)
+
+    topP = setting.top_p
+    temperature = setting.temperature
+    maxTokens = setting.max_tokens
+    baseUrl = setting.base_url
+    modelNameOnline = setting.model_name
+    apiKey = setting.api_key
+
+    aiSpace = setting.ai_space
+
+
 
 
     if executionType == "Web Search" or executionType == "Kiwix": #Check if docker is running for these execution types. If not started return proper error
@@ -527,7 +658,7 @@ def ModifyMessageView(request):
     elif(executionType == "Web Search"):
         print(executionType)
         docResults = get_web_documents(message)
-        if docResults is "404":
+        if docResults == "404":
             def error_stream():
                 yield "data: {\"error\": \"SearXNG container is not running\"}\n\n"
                 yield "data: [DONE]\n\n"
@@ -539,15 +670,53 @@ def ModifyMessageView(request):
         finalResponse = ""
         thinking = True
         if(executionType != "Explain Simply"):
-            message = f"Read the following prompt and content carefully. Provide a comprehensive, detailed, and well-structured response to the prompt, directly utilizing the supplied content for support and context. Clearly explain your reasoning and organize your answer with appropriate headings, bullet points, or lists as needed for readability. If any aspect is unclear, state your assumptions. Try not to reference prior conversations—focus only on the information provided. The provided content might be not directly related to the prompt.\n\nPrompt:{theQuery.content}\nContent:{results}"
+            message = f"Read the following prompt and content carefully. Provide a comprehensive, detailed, and well-structured response to the prompt, directly utilizing the supplied content for support and context. Clearly explain your reasoning and organize your answer with appropriate headings, bullet points, or lists as needed for readability. If any aspect is unclear, state your assumptions. Try not to reference prior conversations—focus only on the information provided. The provided content might be not directly related to the prompt.\n\nPrompt:{request.GET.get("query")}\nContent:{results}"
         else:
-            message = f"Read the following prompt carefully. Provide a comprehensive, detailed and well-structured response to the prompt using your knowledge.\n\n Prompt:{theQuery.content}"
-        stream = chat(model=modelName, 
-            messages=messagesUser + [{"role": "user", "content": message}],
-            stream=True)
+            message = f"Read the following prompt carefully. Provide a comprehensive, detailed and well-structured response to the prompt using your knowledge.\n\n Prompt:{request.GET.get("query")}"
+        print(f"new message: {theQuery.content}")
+        if aiSpace == "Ollama":
+            optionToSend = {}
+            if not temperature:
+                optionToSend["temperature"] = temperature
+            if not topP:
+                optionToSend["top_p"] = topP
+            if not maxTokens:
+                optionToSend["max_tokens"] = maxTokens
+
+            stream = chat(model=modelName, 
+                messages=messagesUser + [{"role": "user", "content": message}],
+                options=optionToSend,
+                stream=True)
+        else:
+            client = OpenAI(
+              base_url = baseUrl,
+              api_key = apiKey
+            )
+            if not isNewModel(client, modelNameOnline):
+                stream = client.chat.completions.create(model=modelNameOnline, 
+                    messages=messagesUser + [{"role": "user", "content": message}],
+                    temperature=float(temperature) if temperature else 0.7,
+                    top_p=float(topP) if topP  else 1.0,
+                    max_tokens=int(maxTokens) if maxTokens else 4096,
+                    stream=True)
+            else:
+                stream = client.chat.completions.create(model=modelNameOnline, 
+                    messages=messagesUser + [{"role": "user", "content": message}],
+                    temperature=float(temperature) if temperature else 0.7,
+                    top_p=float(topP) if topP  else 1.0,
+                    max_completion_tokens=int(maxTokens) if maxTokens else 4096,
+                    stream=True)
+
+            
+        
+            
         thinkingProcessor = ""
         for chunk in stream:
-            content = chunk["message"]["content"]
+            if aiSpace == "Ollama":
+                content = chunk["message"]["content"]
+            else:
+                if chunk.choices and chunk.choices[0].delta.content is not None:
+                    content = chunk.choices[0].delta.content
             if finalResponse == "" and thinking:
                 thinkingProcessor += content
                 if len(thinkingProcessor.strip()) >= 7 and thinkingProcessor.strip()[:7].lower() != "<think>":
@@ -624,11 +793,57 @@ class ModifyMessageManualView(APIView):
                         query.content = request.data.get("query")
                         query.document = request.data.get("newDocument")
                         query.instructions = request.data.get("query")
+                        print(request.data.get("newDocument"))
                         query.save()
                         response.content = request.data.get("newResponse")
                         response.save()
                         break
         return Response({"message": "Message modified"}, status=200)    
+    
+
+class ModifyAISpaceView(APIView):
+    def post(self, request):
+        try:
+            print(request.data)
+            aiSetting = AISpace.objects.first()
+            print(AISpace)
+            apiKey = request.data.get("apiKey")
+            topP = request.data.get("topP")
+            temperature = request.data.get("temperature")
+            maxTokens = request.data.get("maxTokens")
+            modelName = request.data.get("modelName")
+            base_url = request.data.get("baseUrl")
+
+            aiSpace = request.data.get("aiSpace")
+            aiSetting.api_key = apiKey
+            aiSetting.top_p = topP
+            aiSetting.temperature = temperature
+            aiSetting.max_tokens = maxTokens
+            aiSetting.ai_space = aiSpace
+            aiSetting.model_name = modelName
+            aiSetting.base_url = base_url
+            aiSetting.save()
+            toReturn = {"apiKey": apiKey, "topP": topP, "temperature": temperature, "maxTokens": maxTokens, "aiSpace": aiSpace, "modelName": modelName, "baseUrl": base_url}
+            
+            return Response({"message": toReturn}, status=200)
+        except Exception as e:
+            return Response({"error": str(e)}, status=400)
+        
+class GetAISpaceView(APIView):
+    def get(self, request):
+        try:
+            aiSetting = AISpace.objects.first()
+            # print(aiSetting.api_key, aiSetting.top_p, aiSetting.temperature, aiSetting.max_tokens, aiSetting.aiSpace)
+            # print("apiKey: ", aiSetting.api_key)
+            # print("topP: ", aiSetting.top_p)
+            # print("temperature: ", aiSetting.temperature)
+            # print("maxTokens: ", aiSetting.max_tokens)
+            # print("aiSpace: ", aiSetting.aiSpace)
+            toReturn = {"apiKey": aiSetting.api_key, "topP": aiSetting.top_p, "temperature": aiSetting.temperature, "maxTokens": aiSetting.max_tokens,
+                        "aiSpace": aiSetting.ai_space, "modelName": aiSetting.model_name, "baseUrl": aiSetting.base_url}
+            return Response({"message": toReturn}, status=200)
+        except Exception as e:
+            return Response({"error": str(e)}, status=400)
     
 ########################Other views
 class GetTextView(APIView):
@@ -984,4 +1199,27 @@ def notThinkingTextCheck(notThinkingText, content):
             notThinking = False
         i += 1
     return notThinking
+
+
+def is_json_valid(modelToBeUsed,json_str: str) -> bool:
+    try:
+        # Attempts to parse and validate the JSON string
+        modelToBeUsed.model_validate_json(json_str)
+        return True
+    except (ValidationError, ValueError):
+        # Returns False if schema is wrong or JSON is malformed
+        return False
+    
+def isNewModel(client, modelNameOnline):
+    try:
+        testChat = client.chat.completions.create(model=modelNameOnline, 
+                messages=[{"role": "user", "content": "Say one word"}],
+                temperature=0.7,
+                top_p=1.0,
+                max_tokens=4096)
+                # stream=True)
+        
+        return False
+    except:
+        return True
 

@@ -22,7 +22,7 @@ const style = {
 };
 
 
-export default function ModalModifyMessegeHistory({setResponse,thread_title, refreshMessageHistory, setRefreshMessageHistory, handleSubmitFolder}) {
+export default function ModalModifyMessegeHistory({setResponse,thread_title, refreshMessageHistory, setRefreshMessageHistory, handleSubmitFolder, aiSpace}) {
 
 
   const [open, setOpen] = useState(false);
@@ -79,9 +79,9 @@ export default function ModalModifyMessegeHistory({setResponse,thread_title, ref
 
   return (
     <Box component={"span"}>
-      <Box sx={{display: 'flex', justifyContent: 'center', my: "0.5em"}}>
+      {/* <Box sx={{display: 'flex', justifyContent: 'center', my: "0.5em"}}> */}
         <IconButton onClick={handleOpen} sx={{}}><HistoryIcon /></IconButton>
-      </Box>
+      {/* </Box> */}
       <Modal
         open={open}
         onClose={handleClose}
@@ -118,14 +118,14 @@ export default function ModalModifyMessegeHistory({setResponse,thread_title, ref
                       sx={{ margin: "0.2em", cursor: "pointer", "&:hover": { backgroundColor: "#c9c9c9ff" } }}
                       onClick={() => deleteAllMessage()}
                     >
-                      <Typography variant="body1" component="p" sx={{ fontSize: "0.85em"}}>Yes</Typography>
+                      <Typography variant="body1" component="p" sx={{ fontSize: "0.7em"}}>Yes</Typography>
                     </IconButton>
                     /
                     <IconButton 
                       sx={{ cursor: "pointer", marginLeft: "0.2em", "&:hover": { backgroundColor: "#c9c9c9ff" } }}
                       onClick={() => setDeleteAll(false)}
                     >
-                      <Typography variant="body1" component="p" sx={{ fontSize: "0.85em"}}>No</Typography>
+                      <Typography variant="body1" component="p" sx={{ fontSize: "0.7em"}}>No</Typography>
                     </IconButton>
                   </>
                 )
@@ -157,7 +157,7 @@ export default function ModalModifyMessegeHistory({setResponse,thread_title, ref
                         </IconButton>
                         <ModalModifyMsg thread_title={thread_title} refreshMessageHistory={refreshMessageHistory} 
                         setRefreshMessageHistory={setRefreshMessageHistory} oldQuestion={message.content} 
-                        oldResponse={messages[index+1].content} document={message.document} setResponse={setResponse} id={message.id}/>
+                        oldResponse={messages[index+1].content} document={message.document} setResponse={setResponse} id={message.id} aiSpace={aiSpace}/>
                       </Box>
                       :
                       <Typography variant="body1" component="p" sx={{whiteSpace: "pre-line"}}>{message.content}</Typography>

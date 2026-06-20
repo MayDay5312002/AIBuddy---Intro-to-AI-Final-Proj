@@ -14,7 +14,7 @@ def stop_compose(compose_file):
 
 # Independent Python logic here...
 
-stop_compose('searxng-docker/docker-compose.yaml')
+stop_compose('docker-controller/docker-compose.yaml')
 # stop_compose('kiwix-serve/docker-compose.yml')
 
 try:

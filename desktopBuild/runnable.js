@@ -1,5 +1,4 @@
-// electron/main.js
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, dialog, shell } = require('electron');
 const path = require('path');
 const { spawn } = require('child_process');
 const http = require('http');
@@ -12,6 +11,7 @@ let progressWin = null;
 
 let djangoProcess;
 let cleanupDone = false;
+let mainAppRunning = false;
 
 if (!gotTheLock) {
   // If the lock was not acquired, quit the app
@@ -52,6 +52,7 @@ if (!gotTheLock) {
     if (progressWin !== null){ progressWin.close(); }
 
     win.loadURL('http://127.0.0.1:4192');
+    checkAndInstallOllama();
 
      win.on('close', (e) => {
       if (!win.isDestroyed() && !cleanupDone) {
@@ -70,6 +71,32 @@ if (!gotTheLock) {
       }
     });
 
+  }
+
+  function checkAndInstallOllama() {
+    // Check if Ollama is installed (port 11434)
+    fetch('http://localhost:11434/api/version')
+      .then(() => {
+        console.log('Ollama already installed');
+      })
+      .catch(() => {
+        // Not installed - prompt user to install
+        const { dialog } = require('electron');
+        dialog.showMessageBox({
+          type: 'info',
+          title: 'Ollama Required',
+          message: 'Ollama is not running. Would you like to download it?',
+          buttons: ['Download', 'Continue without Ollama'],
+        }).then(result => {
+          if (result.response === 0) {
+            // Open Ollama download page
+            shell.openExternal('https://ollama.com/download');
+          } 
+          // else {
+          //   app.exit();
+          // }
+        });
+      });
   }
 
 
@@ -93,6 +120,7 @@ if (!gotTheLock) {
         createVenv()
         .then(() => installRequirements())
         .then(() => {
+          mainAppRunning = true;
           fs.writeFileSync(djangoDir+"/status.txt", "True");
           let dockerProcess = spawn("docker", ["desktop", "start"]);
           let managePy = path.join(process.resourcesPath, 'django_project', 'manage.py');
@@ -143,7 +171,7 @@ if (!gotTheLock) {
 
   function ensureProgressWindow() {
     if (progressWin !== null) return;
-
+    checkAndInstallOllama();
     progressWin = new BrowserWindow({
       width: 1000,
       height: 500,
@@ -155,6 +183,19 @@ if (!gotTheLock) {
     });
 
     progressWin.loadURL(`file://${path.join(process.resourcesPath, 'progress.html')}`);
+
+    progressWin.on('close', (e) => {
+      if (!progressWin.isDestroyed() && !mainAppRunning) {
+        e.preventDefault();
+        progressWin.loadURL('http://127.0.0.1:4192/loading');
+
+
+        progressWin.removeAllListeners('close');
+        progressWin.close();
+        
+      
+      }
+    });
     // progressWin.loadFile(path.join(process.resourcesPath, 'progress.html'));
   }
 
@@ -347,6 +388,4 @@ if (!gotTheLock) {
   });
 
 
-  // ...rest of your main process app code (window creation etc.)
 }
-

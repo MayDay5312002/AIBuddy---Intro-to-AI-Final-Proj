@@ -83,6 +83,7 @@ export default function BasicModalAdd({threads, setThreads}) {
           <div>
             <Typography variant="h6" component="h2" >Thread Name</Typography>
             <TextField id="Thread Name" label="Thread Name" value={name} onChange={(e) => setName(e.target.value)} variant="filled" required
+              sx={{width: "100%"}}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   handleThread();

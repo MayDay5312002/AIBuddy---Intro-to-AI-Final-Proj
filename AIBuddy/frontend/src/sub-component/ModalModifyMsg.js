@@ -24,7 +24,7 @@ const style = {
 
 
 export default function ModalModifyMsg({setResponse,thread_title, refreshMessageHistory, 
-  setRefreshMessageHistory, oldResponse, oldQuestion, document, id
+  setRefreshMessageHistory, oldResponse, oldQuestion, document, id, aiSpace
 }) {
 
 
@@ -54,6 +54,7 @@ export default function ModalModifyMsg({setResponse,thread_title, refreshMessage
 
   const handleOpen = () => {
     setOpen(true);
+    // console.log(aiSpace);
   }
   const handleClose = () => {
     setContent(oldResponse);
@@ -99,6 +100,7 @@ export default function ModalModifyMsg({setResponse,thread_title, refreshMessage
     if(inputType === "file"){
       if(file===null){
         console.log("Please select a file");
+        setErrorResponse("Error please select a file");
         return
       }
       formData.append("file", file);
@@ -106,10 +108,13 @@ export default function ModalModifyMsg({setResponse,thread_title, refreshMessage
     else if(inputType === "url"){
       if(url===""){
         console.log("Please enter a url");
+        setErrorResponse("Error please enter a Youtube url");
         return
       }  
+      // setErrorResponse("Please enter a url");
       formData.append("url", url);
     }
+    // else if(inputType === "text"){}
     // formData.append("url", url);
     formData.append("modifyMsg", "true");
     axios.post("http://127.0.0.1:4192/api/fileUpload/", formData, {
@@ -204,7 +209,7 @@ export default function ModalModifyMsg({setResponse,thread_title, refreshMessage
     axios.post("http://localhost:4192/api/modifyMessageManual/", 
       {"thread":thread_title, "oldQuestion": oldQuestion, "oldResponse": oldResponse, "query": question, 
         "newResponse": content, "oldDocument": document, "id": id,
-        "newDocument": (vectorStoreContent === "") ? document : (inputType === "file" ? file.name : url)}
+        "newDocument": (vectorStoreContent === "" && inputType !== "text") ? document : (inputType === "file" ? file.name : url)}
     )
     .then((response) => {
       // Handle the response from the server
@@ -255,6 +260,20 @@ export default function ModalModifyMsg({setResponse,thread_title, refreshMessage
       // });
     }
   }, [content, autoScrollComp]);
+
+  const notReadyToSubmit = () => {
+    // if (modifyOption === "Auto" && inputType === "file" && file === null) return true;
+    // if (modifyOption === "Auto" && inputType === "url" && url === "") return true;
+    // if (modifyOption === "Manual" && inputType === "file" && file === null) return true;
+    // if (modifyOption === "Manual" && inputType === "url" && url === "") return true;
+    // return true;
+    let toReturn = modifyOption === "Auto"
+                ? 
+                ((executionType === "Kiwix" ? (folderPath === "" || folderPath === "[Error]") : (executionType !== "Explain Simply" && executionType !== "Web Search" ? (vectorStoreContent === "" || vectorStoreContent === "[Error]") : false)) || loading)
+                : 
+                inputType === "text" ? false : (question === oldQuestion && content === oldResponse && vectorStoreContent === "" || loading);
+    return toReturn
+  }
 
 
   
@@ -320,10 +339,10 @@ export default function ModalModifyMsg({setResponse,thread_title, refreshMessage
 
               <Typography variant="h6" component="h2" sx={{mb: "0.5em", display: "block", }}>
                 {executionType === "document" ? 
-                "Upload a Document" 
+                "Explain with document" 
                 : 
                   (executionType === "Kiwix" ?
-                    "Upload Kiwix folder"
+                    "Explain with Kiwix"
                     :
                     (executionType === "Web Search" ?
                       "Web Search"
@@ -342,11 +361,11 @@ export default function ModalModifyMsg({setResponse,thread_title, refreshMessage
                   >
                     {/* <FormControlLabel value="file" control={<Radio />} label="Upload a File" />
                     <FormControlLabel value="url" control={<Radio />} label="Enter a youtube URL" /> */}
-                    <FormControlLabel value="document" control={<Radio />} label="Upload a Document" />
+                    <FormControlLabel value="document" control={<Radio />} label="Explain with document" />
                     {modifyOption === "Auto" &&
                     <>
                       <Divider sx={{my: "0.8em"}}/>
-                      <FormControlLabel value="Kiwix" control={<Radio />} label="Upload Kiwix folder" />
+                      <FormControlLabel value="Kiwix" control={<Radio />} label="Explain with Kiwix" />
                       <FormControlLabel value="Web Search" control={<Radio />} label="Web Search" />
                       <FormControlLabel value="Explain Simply" control={<Radio />} label="Explain Simply" />
                     </>
@@ -374,7 +393,7 @@ export default function ModalModifyMsg({setResponse,thread_title, refreshMessage
               
               
               <Box>
-                {modifyOption === "Auto" &&
+                {modifyOption === "Auto" && aiSpace === "Ollama" &&
                 <FormControl fullWidth style={{marginTop: "1em", marginBottom: "1em"}}>
                   <InputLabel id="dropdown-label-msg">Select model</InputLabel>
                   <Select
@@ -460,6 +479,12 @@ export default function ModalModifyMsg({setResponse,thread_title, refreshMessage
               <Typography variant="body2" sx={{mb: "0.5em", overflow: "auto"}}><u>Old reference</u>: {document}</Typography>
               <Button variant="contained" component="span" 
                 onClick={handleSubmitFile} 
+                // disabled={ ()=>{
+                //   if (inputType === "file" && file === null) return true;
+                //   if (inputType === "url" && url === "") return true;
+                //   if (inputType === "text" && url === "") return true;
+                //   return false;
+                // }}
                 sx={{display: "span", fontSize: "0.85em"}}>
               Submit {(inputType === "file") ? "File" : (inputType === "url" ? "Youtube URL" : "Text" )}
               </Button>
@@ -510,11 +535,12 @@ export default function ModalModifyMsg({setResponse,thread_title, refreshMessage
         <div>
             <Button 
             disabled={
-              modifyOption === "Auto"
-                ? 
-                ((executionType === "Kiwix" ? (folderPath === "" || folderPath === "[Error]") : (executionType !== "Explain Simply" && executionType !== "Web Search" ? (vectorStoreContent === "" || vectorStoreContent === "[Error]") : false)) || loading)
-                : 
-                (question === oldQuestion && content === oldResponse && vectorStoreContent === "" || loading)
+              // modifyOption === "Auto"
+              //   ? 
+              //   ((executionType === "Kiwix" ? (folderPath === "" || folderPath === "[Error]") : (executionType !== "Explain Simply" && executionType !== "Web Search" ? (vectorStoreContent === "" || vectorStoreContent === "[Error]") : false)) || loading)
+              //   : 
+              //   (question === oldQuestion && content === oldResponse && vectorStoreContent === "" || loading)
+              notReadyToSubmit()
             }
 
             onClick={modifyOption === "Auto" ? handleQueryAuto : handleQueryManual }
