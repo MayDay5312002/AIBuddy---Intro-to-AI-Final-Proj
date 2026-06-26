@@ -48,6 +48,7 @@ if (!gotTheLock) {
       webPreferences: {
         contextIsolation: true,
       },
+      menu: false
     });
     if (progressWin !== null){ progressWin.close(); }
 
@@ -180,6 +181,7 @@ if (!gotTheLock) {
         contextIsolation: true,
         nodeIntegration: false,
       },
+      menu: false
     });
 
     progressWin.loadURL(`file://${path.join(process.resourcesPath, 'progress.html')}`);

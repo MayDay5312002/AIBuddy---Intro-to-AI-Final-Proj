@@ -700,15 +700,15 @@ const MainApp = () => {
       <div style={{display: "flex", flexDirection: "column", height: "100%"}}>
         {/* <Box sx={{display: "flex", justifyContent: "center", alignItems: "center"}}> */}
         <Box >
-          <Typography variant="h4" sx={{fontWeight: "bold", textAlign: "center", fontSize: "2em", color: "#383838ff"}}>
+          <Typography variant="h4" sx={{fontWeight: "bold", textAlign: "center", color: "#383838ff"}}>
             <Box sx={{cursor: "pointer" }} component={"span"} onClick={() => window.location.reload()}>
-              <img src="http://127.0.0.1:4192/static/images/Logo.png"  style={{position: "relative", top: "0.2rem", height: "2.3em"}}/>
+              <img src="http://127.0.0.1:4192/static/images/Logo.png"  style={{position: "relative", top: "0.2rem", height: "7vh"}}/>
               <Typography
                 variant="h4"
                 sx={{
                   display: "inline",
                   fontWeight: "600",
-                  fontSize: "4.1vh",
+                  fontSize: "4vh",
                   color: "#3a3838ff",
                   textShadow: `
                     -1px -1px 0 #ffffffff,  
@@ -790,8 +790,9 @@ const MainApp = () => {
             // minWidth: isPortrait ? undefined : "25.5em",
             minWidth: isPortrait ? undefined : leftSection ? "20em" : "2.5em",
             minHeight: isPortrait ? (leftSection ? "15em" : "2.2em") : undefined,
-            height: isPortrait ? (leftSection ? "15em" : "2.2em") : undefined,
-            maxHeight: isPortrait ? "15em" : undefined,
+            // height: isPortrait ? (leftSection ? "15em" : "2.2em") : undefined,
+            // maxHeight: isPortrait ? "15em" : undefined,
+            flexBasis: 0
           }}>
           {/* <div className="div-eye" style={{ height: "1.7em" }}> */}
             <IconButton 
@@ -816,151 +817,169 @@ const MainApp = () => {
                   AI Study Companion
                 </Box>
               </Typography> */}
+              
               {leftSection && 
               <div className="leftSectionDiv">
-              {executionType !== "Explain with web search"  && executionType !== "Explain Simply" && executionType !== "Explain with Kiwix" &&
-              <>
-              <FormControl sx={{width: "100%"}}>
+                <Box display="flex" flexDirection="column" gap={1} width={300}>
+                  <Box>
+                    <ModalAddThread  threads={threads} setThreads={setThreads} />
+                    <ModalDeleteThread  threads={threads} setThreads={setThreads} />
+                  </Box>
+                  {/* Dropdown to select thread */}
+                  <TextField
+                    select
+                    label="Select a Thread"
+                    value={selectedThread}
+                    onChange={handleSelectChange}
+                    fullWidth
+                    sx={{mt: "0.5em"}}
+                  >
+                    {threads.map((thread, index) => (
+                      <MenuItem key={index} value={thread}>
+                        {thread}
+                      </MenuItem>
+                    ))}
+                  </TextField>
                 
-                <FormLabel>Choose Input Type</FormLabel>
-                <RadioGroup
-                  // row
-                  value={inputType}
-                  onChange={handleRadioChange}
-                  id="inputType-radio-buttons-group"
-                  sx={{
-                    display: "flex",
-                    flexDirection: "row",
-                    flexWrap: "wrap",
-                    width: "21em",
-                    // gap: 1, // optional spacing between items
-                  }}
-                >
-                  <FormControlLabel value="file" control={<Radio />} label="Upload a File" />
-                  <FormControlLabel value="url" control={<Radio />} label="Enter a youtube URL" />
-                  { (executionType === "Create flash cards" || executionType === "Create quiz") &&
-                    <>
-                    <FormControlLabel value="model" control={<Radio />} label="Model independent" />
-                    <FormControlLabel value="Kiwix" control={<Radio />} label="Kiwix Files" />
-                    <FormControlLabel value="web search" control={<Radio />} label="Web Search" />
-                    </>
-                  }
-                </RadioGroup>
-              </FormControl>
-              <Divider />
-              </>
-              }
-              {aiSpace === "Ollama" &&
-              <FormControl fullWidth style={{marginTop: "1em", marginBottom: "1em"}}>
-                <InputLabel id="dropdown-label">Select model</InputLabel>
-                <Select
-                  labelId="dropdown-label"
-                  value={selectedModel}
-                  label="Select Model"
-                  onChange={handleSelectedChange}
-                >
-                  {models.map((model, index) => (
-                    <MenuItem key={index} value={model}>
-                      {model}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              }
-            {(executionType !== "Explain with web search" && executionType !== "Explain Simply")  &&
-              <>
-              <Divider sx={{mb:"1em"}}/>
-              {inputType === "file" && (executionType !== "Explain with Kiwix" && inputType !== "Kiwix") &&
-              <Box>
-                <Typography variant="h7" sx={{mb: "0.5em", display: "block", }}>Upload file</Typography>
-                <input
-                  accept="*"
-                  type="file"
-                  id="file-upload"
-                  style={{ display: "none" }}
-                  onChange={handleFileChange}
-                  component="span"
-                  required
-                />
-                <label htmlFor="file-upload">
-                  <Button variant="contained" component="span" sx={{fontSize: "0.85rem"}}>
-                    Select File
-                  </Button>
-                </label>
-                <Typography variant="body2" sx={{mt: "0.5em", overflow: "auto"}}><span style={{textDecoration: "underline"}}>Selected file</span>: {file ? file.name : "No file selected" }</Typography>
-              </Box>
-              }
-              {(inputType === "url" && (executionType !== "Explain with Kiwix" && inputType !== "Kiwix")) &&
-              <>
-                <Typography variant="h7" sx={{mb: "0.5em", display: "block"}}>Enter Youtube URL</Typography>
-                <TextField
-                  label="Enter Youtube URL"
-                  variant="outlined"
-                  value={url}
-                  onChange={(e) => setUrl(e.target.value)}
-                  fullWidth
-                  required
-                />
-              </>
-              }
-              {(executionType === "Explain with Kiwix" || (inputType === "Kiwix")) &&
-                <>
-                  <Typography variant="h7" sx={{mb: "0.5em", display: "block"}}>Upload Folder Path</Typography>
-                  <Button variant="contained" component="span" sx={{fontSize: "0.85rem"}} onClick={handleSubmitFolder}>
-                    Select Folder
-                  </Button>
-                {/* <Typography variant="body2" sx={{mt: "0.5em", overflow: "auto"}}><span style={{textDecoration: "underline"}}>Selected Folder</span>: {folder !== "" ? folder : "No folder selected" }</Typography> */}
-                </> 
-              }
-              { (executionType !== "Explain with Kiwix" && inputType !== "Kiwix" && inputType !== "web search" && inputType !== "model") &&
-                <Button variant="contained" component="span" onClick={handleSubmitFile} sx={{mt: "1em", fontSize: "0.85rem"}}>
-                    Submit {(inputType === "file") ? "File" : "URL"}
-                </Button>
-              }
-
-              <Typography id="error-response-text" variant="caption" sx={{display: "block", color: colorOfResponse, minHeight: "2.3em", mt:"0.5em"}}>{errorResponse}</Typography> 
-
-
-              { ((inputType !== "model" && inputType !== "web search") || executionType === "Explain with Kiwix") &&
-              <Box>
-                <Divider/>
                 
-
-                <Typography variant="body2" sx={{ my: "1em"}}> {/*///////////////////////////////////////////////////////*/}
-                  {executionType !== "Explain with Kiwix" && inputType !== "Kiwix"? "Vector Store Content" : "Kiwix Folder"}: {(!(executionType === "Explain with Kiwix" || inputType === "Kiwix") && (vectorStoreContent.includes("youtu.be") || vectorStoreContent.includes("youtube.com"))
-                  ) ? 
-                  <a href={vectorStoreContent} target="_blank">{vectorStoreContent}</a> : (executionType === "Explain with Kiwix" || inputType === "Kiwix" ? folderPath : vectorStoreContent)}
-                </Typography>
-
-              <Divider sx={{mt: "1em"}}/> 
-              </Box>
-              }
-
-              </>
-            }
-              <Box display="flex" flexDirection="column" gap={1} width={300}>
-                <Box>
-                  <ModalAddThread  threads={threads} setThreads={setThreads} />
-                  <ModalDeleteThread  threads={threads} setThreads={setThreads} />
                 </Box>
-                {/* Dropdown to select thread */}
-                <TextField
-                  select
-                  label="Select a Thread"
-                  value={selectedThread}
-                  onChange={handleSelectChange}
-                  fullWidth
-                  sx={{mt: "0.5em"}}
-                >
-                  {threads.map((thread, index) => (
-                    <MenuItem key={index} value={thread}>
-                      {thread}
-                    </MenuItem>
-                  ))}
-                </TextField>
+                <FormControl sx={{mt: "0.2em"}}>
+                  <FormLabel>Choose Execution Type</FormLabel>
+                  <RadioGroup
+                    row
+                    value={executionType}
+                    onChange={handleExecuteQuery}
+                  >
+                    <FormControlLabel value="Explain Simply" control={<Radio />} label="Explain Simply" />
+                    <FormControlLabel value="Explain with web search" control={<Radio />} label="Explain with web search" />
+                    <FormControlLabel value="Explain with document" control={<Radio />} label="Explain with document" />
+                    <FormControlLabel value="Explain with Kiwix" control={<Radio />} label="Explain with Kiwix" />
+                    <FormControlLabel value="Create flash cards" control={<Radio />} label="Create flash cards" />
+                    <FormControlLabel value="Create quiz" control={<Radio />} label="Create quiz" />
+                  </RadioGroup>
+                 </FormControl>
+                <Divider sx={{mb:"1em"}}/>
+                {executionType !== "Explain with web search"  && executionType !== "Explain Simply" && executionType !== "Explain with Kiwix" &&
+                <>
+                <FormControl sx={{width: "100%"}}>
+
+                  <FormLabel>Choose Input Type</FormLabel>
+                  <RadioGroup
+                    // row
+                    value={inputType}
+                    onChange={handleRadioChange}
+                    id="inputType-radio-buttons-group"
+                    sx={{
+                      display: "flex",
+                      flexDirection: "row",
+                      flexWrap: "wrap",
+                      // width: "21em",
+                      // gap: 1, // optional spacing between items
+                    }}
+                  >
+                    <FormControlLabel value="file" control={<Radio />} label="Upload a File" />
+                    <FormControlLabel value="url" control={<Radio />} label="Enter a youtube URL" />
+                    { (executionType === "Create flash cards" || executionType === "Create quiz") &&
+                      <>
+                      <FormControlLabel value="model" control={<Radio />} label="Model independent" />
+                      <FormControlLabel value="Kiwix" control={<Radio />} label="Kiwix Files" />
+                      <FormControlLabel value="web search" control={<Radio />} label="Web Search" />
+                      </>
+                    }
+                  </RadioGroup>
+                </FormControl>
+                <Divider />
+                </>
+                }
+                {aiSpace === "Ollama" &&
+                <FormControl fullWidth style={{marginTop: "1em", marginBottom: "1em"}}>
+                  <InputLabel id="dropdown-label">Select model</InputLabel>
+                  <Select
+                    labelId="dropdown-label"
+                    value={selectedModel}
+                    label="Select Model"
+                    onChange={handleSelectedChange}
+                  >
+                    {models.map((model, index) => (
+                      <MenuItem key={index} value={model}>
+                        {model}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                }
+                {(executionType !== "Explain with web search" && executionType !== "Explain Simply")  &&
+                  <>
+                  <Divider sx={{mb:"1em"}}/>
+                  {inputType === "file" && (executionType !== "Explain with Kiwix" && inputType !== "Kiwix") &&
+                  <Box>
+                    <Typography variant="h7" sx={{mb: "0.5em", display: "block", }}>Upload file</Typography>
+                    <input
+                      accept="*"
+                      type="file"
+                      id="file-upload"
+                      style={{ display: "none" }}
+                      onChange={handleFileChange}
+                      component="span"
+                      required
+                    />
+                    <label htmlFor="file-upload">
+                      <Button variant="contained" component="span" sx={{fontSize: "0.85rem"}}>
+                        Select File
+                      </Button>
+                    </label>
+                    <Typography variant="body2" sx={{mt: "0.5em", overflow: "auto"}}><span style={{textDecoration: "underline"}}>Selected file</span>: {file ? file.name : "No file selected" }</Typography>
+                  </Box>
+                  }
+                  {(inputType === "url" && (executionType !== "Explain with Kiwix" && inputType !== "Kiwix")) &&
+                  <>
+                    <Typography variant="h7" sx={{mb: "0.5em", display: "block"}}>Enter Youtube URL</Typography>
+                    <TextField
+                      label="Enter Youtube URL"
+                      variant="outlined"
+                      value={url}
+                      onChange={(e) => setUrl(e.target.value)}
+                      fullWidth
+                      required
+                    />
+                  </>
+                  }
+                  {(executionType === "Explain with Kiwix" || (inputType === "Kiwix")) &&
+                    <>
+                      <Typography variant="h7" sx={{mb: "0.5em", display: "block"}}>Upload Folder Path</Typography>
+                      <Button variant="contained" component="span" sx={{fontSize: "0.85rem"}} onClick={handleSubmitFolder}>
+                        Select Folder
+                      </Button>
+                    {/* <Typography variant="body2" sx={{mt: "0.5em", overflow: "auto"}}><span style={{textDecoration: "underline"}}>Selected Folder</span>: {folder !== "" ? folder : "No folder selected" }</Typography> */}
+                    </> 
+                  }
+                  { (executionType !== "Explain with Kiwix" && inputType !== "Kiwix" && inputType !== "web search" && inputType !== "model") &&
+                    <Button variant="contained" component="span" onClick={handleSubmitFile} sx={{mt: "1em", fontSize: "0.85rem"}}>
+                        Submit {(inputType === "file") ? "File" : "URL"}
+                    </Button>
+                  }
+    
+                  <Typography id="error-response-text" variant="caption" sx={{display: "block", color: colorOfResponse, minHeight: "2.3em", mt:"0.5em"}}>{errorResponse}</Typography> 
                 
                 
-              </Box>
+                  { ((inputType !== "model" && inputType !== "web search") || executionType === "Explain with Kiwix") &&
+                  <Box>
+                    <Divider/>
+                    
+                  
+                    <Typography variant="body2" sx={{ my: "1em"}}> {/*///////////////////////////////////////////////////////*/}
+                      {executionType !== "Explain with Kiwix" && inputType !== "Kiwix"? "Vector Store Content" : "Kiwix Folder"}: {(!(executionType === "Explain with Kiwix" || inputType === "Kiwix") && (vectorStoreContent.includes("youtu.be") || vectorStoreContent.includes("youtube.com"))
+                      ) ? 
+                      <a href={vectorStoreContent} target="_blank">{vectorStoreContent}</a> : (executionType === "Explain with Kiwix" || inputType === "Kiwix" ? folderPath : vectorStoreContent)}
+                    </Typography>
+                    
+                  <Divider sx={{mt: "1em"}}/> 
+                  </Box>
+                  }
+    
+                  </>
+                }
+              
               </div>
               }
               {/* <hr style={{width: "100%", border: "1px solid #e0e0e0", height: "0.1em"}}/> */}
@@ -971,7 +990,19 @@ const MainApp = () => {
 
           {/*/////////////////////////This is the  right section/////////////////////////////////////////*/}
 
-          <Paper sx={{p:"1em", borderRadius: 4, top: 0, mx: "1em", flexGrow: 6, overflow: "auto", position: "relative", display: "flex", flexDirection: "column"}}>
+          <Paper 
+          sx=
+          {{p:"1em", 
+          borderRadius: 4, 
+          top: 0, 
+          mx: "1em", 
+          flexGrow: 7, 
+          overflow: "auto", 
+          position: "relative", 
+          display: "flex", 
+          flexDirection: "column",
+          flexBasis: 0
+          }}>
             <Button 
             variant="contained" 
             sx={{
@@ -1016,7 +1047,7 @@ const MainApp = () => {
             {isFullscreen === false && rightSection === true && editorOn === false &&
             <div>
               <Box>
-                <FormControl sx={{mt: "0.2em"}}>
+                {/* <FormControl sx={{mt: "0.2em"}}>
                   <FormLabel>Choose Execution Type</FormLabel>
                   <RadioGroup
                     row
@@ -1031,14 +1062,14 @@ const MainApp = () => {
                     <FormControlLabel value="Create quiz" control={<Radio />} label="Create quiz" />
 
                   </RadioGroup>
-                </FormControl>
+                </FormControl> */}
                 <TextField //################input for query#################
                   label="Enter Prompt"
                   variant="outlined"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   sx={{ 
-                    my: "1em",
+                    my: "0.5em",
                     '& .MuiInputBase-input': {
                       resize: "vertical",
                       maxHeight: 110 // enforce max height for 4 rows
