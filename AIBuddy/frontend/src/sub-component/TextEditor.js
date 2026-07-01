@@ -14,10 +14,14 @@ import StarterKit from '@tiptap/starter-kit';
 import { marked } from 'marked';
 
 import React from 'react';
+import {useState, useEffect, useRef} from 'react';
+
+import { useReactToPrint } from "react-to-print";
+
 // import { useCallback } from 'react'
 
 
-const MenuBar = ({ editor }) => {
+const MenuBar = ({ editor, handlePrint}) => {
   if (!editor) {
     return null
   }
@@ -162,38 +166,38 @@ const MenuBar = ({ editor }) => {
         <button onClick={() => editor.chain().focus().undo().run()}>Undo</button>
         <button onClick={() => editor.chain().focus().redo().run()}>Redo</button>
         <button onClick={addImage}>Add image from URL</button>
+        <button onClick={()=> handlePrint()}>Print</button>
         <button>Save</button>
       </div>
     </div>
   )
 }
 
-export default function TiptapEditor({newContent}) {
-  const htmlContent = typeof newContent === 'string' ? marked(newContent) : newContent;
+export default function TiptapEditor({newContent, isTipTapOpen}) {
+  const [content, setContent] = useState('');
+  const [htmlContent, setHtmlContent] = useState('');
+
+  const editorRef = useRef();
+
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit,                // ← has Paragraph, Text, Dropcursor, Code, History, etc.
       TextAlign.configure({
         types: ['heading', 'paragraph'],
       }),
-      Highlight, 
-      Paragraph, 
-      Text, 
+      Highlight,
+      // Paragraph,
+      // Text,
+      // Dropcursor,
       Image.configure({
-        resize: {
+        resize:{
           enabled: true,
           alwaysPreserveAspectRatio: true,
-          
         },
         inline: true,
       }),
-      Dropcursor
-      // Typography,
-      // Markdown
-      
-      
     ],
-    content: htmlContent,
+    content: content,
     editorProps: {
       attributes: {
         spellcheck: 'false',
@@ -201,24 +205,63 @@ export default function TiptapEditor({newContent}) {
     },
   })
 
+  useEffect(() => {
+    if (newContent === null) {
+      setHtmlContent('');
+    } else if (typeof newContent === 'string') {
+      Promise.resolve(marked.parse(newContent)).then(setHtmlContent);
+    } else {
+      setHtmlContent(newContent);
+    }
+  }, [newContent]);
+
+  useEffect(() => {
+    if (isTipTapOpen && htmlContent) {
+      setContent(prev => prev + htmlContent);
+    }
+  }, [htmlContent, isTipTapOpen]);
+
+  useEffect(() => {
+    if (editor && content) {
+      editor.commands.setContent(content);
+    }
+  }, [content, editor]);
+
+  const handlePrint = useReactToPrint({
+    contentRef: editorRef,
+  });
+
+
   return (
-    <>
-    <div style={{paddingTop: "2.5em"}}>
-      <MenuBar editor={editor} style={{padding: "2.5em"}}/>
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", minHeight: 0 , width: "100%"}} id="outerDivTipTap">
+      <div style={{ paddingTop: "2.5em" }}>
+        <MenuBar editor={editor} handlePrint={handlePrint} />
+      </div>
+      <Box
+        sx={{
+          backgroundColor: '#f9fafb',
+          borderRadius: "1em",
+          border: '1px solid #e0e0e0',
+          overflow: "auto",
+          flex: 1, // is height: 100%,
+          width: "100%",
+          minHeight: 0,
+          '& .ProseMirror': {
+            padding: '1em',
+            outline: 'none',
+            // boxShadow: '0',
+            // height: '100%',
+            minHeight: '100%',     // ← fill the available space
+            // height: '1px',         // ← forces it to respect the parent's height constraint
+            
+          }
+        }}
+        
+      >
+        <div ref={editorRef} style={{ height: "100%", display: "flex", flexDirection: "column" }}>
+          <EditorContent editor={editor} style={{ flex: 1 }} />
+        </div>
+      </Box>
     </div>
-    <Box
-    sx={{
-      backgroundColor: '#f9fafb',
-      borderRadius: "1em",
-      border: '1px solid #e0e0e0',
-      overflow: "auto",
-      position: "relative",
-      flex: "1",
-      minHeight: {xs: "20em", sm: "18em", md: "16em"},
-    }}
-    >
-        <EditorContent editor={editor} style={{padding: "1em"}}/>
-    </Box>
-    </>
-  )
+  );
 }

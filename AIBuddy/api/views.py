@@ -26,13 +26,18 @@ from pydantic import BaseModel, ValidationError
 
 
 from AIBuddy.models import *
+from django.shortcuts import get_object_or_404
 
 import ast, random, json, xmltodict
 import subprocess
 from openai import OpenAI
+import openai
+
+from AIBuddy.serializers import *
 
 # EMBED_MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
-embedding_model = HuggingFaceEmbeddings(model_name="./models/all-MiniLM-L6-v2")
+# embedding_model = HuggingFaceEmbeddings(model_name="./models/all-MiniLM-L6-v2")
+embedding_model = HuggingFaceEmbeddings(model_name="BAAI/bge-small-en-v1.5")
 
 
 import os
@@ -180,26 +185,44 @@ def chatWithFile(request):
               base_url = baseUrl,
               api_key = apiKey
             )
-            if not isNewModel(client, modelNameOnline):
-                stream = client.chat.completions.create(model=modelNameOnline, 
-                    messages=messagesUser + [{"role": "user", "content": message}],
-                    temperature=float(temperature) if temperature else 0.7,
-                    top_p=float(topP) if topP else 1.0,
-                    max_tokens=int(maxTokens) if maxTokens else 4096,
-                    stream=True)
+            try:
+                if not isNewModel(client, modelNameOnline):
+                    stream = client.chat.completions.create(model=modelNameOnline, 
+                        messages=messagesUser + [{"role": "user", "content": message}],
+                        temperature=float(temperature) if temperature else 0.7,
+                        top_p=float(topP) if topP else 1.0,
+                        max_tokens=int(maxTokens) if maxTokens else 4096,
+                        stream=True)
 
-            else:
-                stream = client.chat.completions.create(model=modelNameOnline, 
-                    messages=messagesUser + [{"role": "user", "content": message}],
-                    temperature=float(temperature) if temperature else 0.7,
-                    top_p=float(topP) if topP else 1.0,
-                    max_completion_tokens=int(maxTokens) if maxTokens else 4096,
-                    stream=True)
+                else:
+                    stream = client.chat.completions.create(model=modelNameOnline, 
+                        messages=messagesUser + [{"role": "user", "content": message}],
+                        temperature=float(temperature) if temperature else 0.7,
+                        top_p=float(topP) if topP else 1.0,
+                        max_completion_tokens=int(maxTokens) if maxTokens else 4096,
+                        stream=True)
+            except openai.APIError as e:
+                yield f"data: {{\"error\": \"{e.message}\"}}\n\n"
+                yield "data: [DONE]\n\n"
+                return
+            except openai.APIConnectionError as e:
+                yield f"data: {{\"error\": \"Connection failed: {e.message}\"}}\n\n"
+                yield "data: [DONE]\n\n"
+                return
+            except openai.OpenAIError as e:
+                yield f"data: {{\"error\": \"{e.message}\"}}\n\n"
+                yield "data: [DONE]\n\n"
+                return
+            except Exception as e:
+                yield f"data: {{\"error\": \"{str(e)}\"}}\n\n"
+                yield "data: [DONE]\n\n"
+                return
         
 
-
+        print(aiSpace)
         thinkingProcessor = ""
         for chunk in stream:
+            content = ""
             if aiSpace == "Ollama":
                 content = chunk["message"]["content"]
             else:
@@ -281,85 +304,96 @@ class CreateFlashCardsView(APIView):
         The response is then validated using the FlashCardsList.model_validate_json function and the validated response is then used to create the flashcards.
         The function also limits the number of flashcards created to the given number.
         """
-        query = request.data.get("query")
-        modelName = request.data.get("model")
-        thread = request.data.get("thread")
-        number = int(request.data.get("number"))
-        inputType = request.data.get("inputType")
-        aiSpace = AISpace.objects.get(id=1).ai_space
-        # print("Thead: ", thread)
-        thread = Thread.objects.get(title=thread)
-        messagesUser = Message.objects.filter(thread=thread).order_by("created_at")
-        messagesUser = [{"role": msg.role, "content": msg.instructions if msg.role == "user" else msg.content} for msg in messagesUser]
-        if inputType == "file" or inputType == "url": #If the input type is file or url, then we need to query the vector store first
-            results = query_vectorstore(query)
-            results = [chunk.page_content for chunk in results] #We dont have to include the metadata
-        elif inputType == "web search":
-            docResults = get_web_documents(query)
-            if docResults == "404":
-                return Response({"error": "SearXNG container is not running"}, status=404)
-            results = [chunk.page_content for chunk in docResults]
-        elif inputType == "Kiwix":
-            docResults = get_kiwix_documents(query)
-            results = [chunk.page_content for chunk in docResults]
+        try:
+            query = request.data.get("query")
+            modelName = request.data.get("model")
+            thread = request.data.get("thread")
+            number = int(request.data.get("number"))
+            inputType = request.data.get("inputType")
+            aiSpace = AISpace.objects.get(id=1).ai_space
+            # print("Thead: ", thread)
+            thread = Thread.objects.get(title=thread)
+            messagesUser = Message.objects.filter(thread=thread).order_by("created_at")
+            messagesUser = [{"role": msg.role, "content": msg.instructions if msg.role == "user" else msg.content} for msg in messagesUser]
+            if inputType == "file" or inputType == "url": #If the input type is file or url, then we need to query the vector store first
+                results = query_vectorstore(query)
+                results = [chunk.page_content for chunk in results] #We dont have to include the metadata
+            elif inputType == "web search":
+                docResults = get_web_documents(query)
+                if docResults == "404":
+                    return Response({"error": "SearXNG container is not running"}, status=404)
+                results = [chunk.page_content for chunk in docResults]
+            elif inputType == "Kiwix":
+                docResults = get_kiwix_documents(query)
+                results = [chunk.page_content for chunk in docResults]
 
-        if inputType != "model":
-            message = f"Create {number} flash card(s) with attributes title and content for the following prompt and content(Ensure you follow the number of cards that should be created).\n"
-            message += f"Make it as concise as possible.\n\nprompt: {query}\nContent: {results}"
-        else:
-            message = f"Create {number} flash card(s) with attributes title and content for the following prompt(Ensure you follow the number of cards that should be created).\n"
-            message += f"Make it as concise as possible.\n\nprompt: {query}"
-
-        jsonNotCorrect =True
-        tries = 1
-        while jsonNotCorrect:
-            if tries > 5:
-                return Response({"error": "Could not generate flashcard(s)"}, status=500)
-            if aiSpace == "Ollama":
-                response = chat(model=modelName, 
-                    messages=messagesUser + [{"role": "user", "content": message}],
-                    format=FlashCardsList.model_json_schema()) #gives the schema of the response in JSON format.
+            if inputType != "model":
+                message = f"Create {number} flash card(s) with attributes title and content for the following prompt and content(Ensure you follow the number of cards that should be created).\n"
+                message += f"Make it as concise as possible.\n\nprompt: {query}\nContent: {results}"
             else:
-                print("AI Space: ", aiSpace)
-                print("API Key: ", AISpace.objects.get(id=1).api_key)
-                client = OpenAI(
-                  base_url = AISpace.objects.get(id=1).base_url,
-                  api_key = AISpace.objects.get(id=1).api_key
-                )
-                response = client.chat.completions.create(
-                  model=AISpace.objects.get(id=1).model_name,
-                  messages=[{"role":"system","content":f"You are an AI assistant that creates flashcard(s) and respond only in VALID JSON. \
-                            Here is the format of the JSON: {FlashCardsList.model_json_schema()}"}] +  messagesUser[1:][-5 if len(messagesUser) > 5 else 0:] +
-                            [{"role": "user", "content": message}],
-                #   temperature=0.6,
-                #   top_p=0.7,
-                #   max_tokens=4096,
-                #   stream=True
-                )
+                message = f"Create {number} flash card(s) with attributes title and content for the following prompt(Ensure you follow the number of cards that should be created).\n"
+                message += f"Make it as concise as possible.\n\nprompt: {query}"
 
-                response = response.choices[0].message.content.replace("```json", "").replace("```", "").strip()
-                response = {"message": {"content": response}}
+            jsonNotCorrect =True
+            tries = 1
+            while jsonNotCorrect:
+                if tries > 5:
+                    return Response({"error": "Could not generate flashcard(s)"}, status=500)
+                if aiSpace == "Ollama":
+                    response = chat(model=modelName, 
+                        messages=messagesUser + [{"role": "user", "content": message}],
+                        format=FlashCardsList.model_json_schema()) #gives the schema of the response in JSON format.
+                else:
+                    print("AI Space: ", aiSpace)
+                    print("API Key: ", AISpace.objects.get(id=1).api_key)
+                    client = OpenAI(
+                      base_url = AISpace.objects.get(id=1).base_url,
+                      api_key = AISpace.objects.get(id=1).api_key
+                    )
+                    response = client.chat.completions.create(
+                      model=AISpace.objects.get(id=1).model_name,
+                      messages=[{"role":"system","content":f"You are an AI assistant that creates flashcard(s) and respond only in VALID JSON. \
+                                Here is the format of the JSON: {FlashCardsList.model_json_schema()}"}] +  messagesUser[1:][-5 if len(messagesUser) > 5 else 0:] +
+                                [{"role": "user", "content": message}],
+                    #   temperature=0.6,
+                    #   top_p=0.7,
+                    #   max_tokens=4096,
+                    #   stream=True
+                    )
 
-            tries += 1
-            jsonNotCorrect = not is_json_valid(FlashCardsList, response["message"]["content"])
-            print("JSON not correct: ", jsonNotCorrect)
-        
-        
+                    response = response.choices[0].message.content.replace("```json", "").replace("```", "").strip()
+                    response = {"message": {"content": response}}
 
-            
-        type(response["message"]["content"]) == str
-        # print(response["message"]["content"])
-        Cards = FlashCardsList.model_validate_json(response["message"]["content"])# Validates if the string follows the model schema then returns a FlashCardsList model, if not raises an exception
-        result = []
-        i = 0
-        for card in Cards.cards:
-            if FlashCards.objects.filter(thread=thread, title=card.title).exists() or i >= number:
-                continue
-            flash = FlashCards.objects.create(thread=thread, title=card.title, content=card.content)
-            # print(card.title, card.content)
-            result.append({"title": card.title, "content": card.content})
-            i += 1
-        return Response({"cards": result}, status=200)
+                tries += 1
+                jsonNotCorrect = not is_json_valid(FlashCardsList, response["message"]["content"])
+                print("JSON not correct: ", jsonNotCorrect)
+
+
+
+
+            type(response["message"]["content"]) == str
+            # print(response["message"]["content"])
+            Cards = FlashCardsList.model_validate_json(response["message"]["content"])# Validates if the string follows the model schema then returns a FlashCardsList model, if not raises an exception
+            result = []
+            i = 0
+            for card in Cards.cards:
+                if FlashCards.objects.filter(thread=thread, title=card.title).exists() or i >= number:
+                    continue
+                flash = FlashCards.objects.create(thread=thread, title=card.title, content=card.content)
+                # print(card.title, card.content)
+                result.append({"title": card.title, "content": card.content})
+                i += 1
+            return Response({"cards": result}, status=200)
+        except openai.APIError as e:
+            return Response({"message": e.message}, status=400)
+        except openai.OpenAIError as e:
+            # Fallback safety net for any obscure SDK-internal errors
+            return Response({"message": e.message}, status=400)
+        except openai.APIConnectionError as e:
+            # Catches network dropouts, SSL errors, and connection timeouts
+            return Response({"message": e.message}, status=400)
+        except Exception as e:
+            return Response({"message": str(e)}, status=400)
     
 class CreateQuizView(APIView):
     def post(self, request):
@@ -443,9 +477,18 @@ class CreateQuizView(APIView):
                 result.append({"question": card.question.strip(), "answer": card.answer.strip(), "choices": choicesNew})
                 i += 1
             return Response({"quizzes": result}, status=200)
+        except openai.APIError as e:
+            return Response({"message": e.message}, status=400)
+        except openai.OpenAIError as e:
+            # Fallback safety net for any obscure SDK-internal errors
+            return Response({"message": e.message}, status=400)
+        except openai.APIConnectionError as e:
+            # Catches network dropouts, SSL errors, and connection timeouts
+            return Response({"message": e.message}, status=400)
         except Exception as e:
             print(e)
             return Response({"message": "Error creating quiz"}, status=400)
+        
         
     
 
@@ -692,20 +735,37 @@ def ModifyMessageView(request):
               base_url = baseUrl,
               api_key = apiKey
             )
-            if not isNewModel(client, modelNameOnline):
-                stream = client.chat.completions.create(model=modelNameOnline, 
-                    messages=messagesUser + [{"role": "user", "content": message}],
-                    temperature=float(temperature) if temperature else 0.7,
-                    top_p=float(topP) if topP  else 1.0,
-                    max_tokens=int(maxTokens) if maxTokens else 4096,
-                    stream=True)
-            else:
-                stream = client.chat.completions.create(model=modelNameOnline, 
-                    messages=messagesUser + [{"role": "user", "content": message}],
-                    temperature=float(temperature) if temperature else 0.7,
-                    top_p=float(topP) if topP  else 1.0,
-                    max_completion_tokens=int(maxTokens) if maxTokens else 4096,
-                    stream=True)
+            try:
+                if not isNewModel(client, modelNameOnline):
+                    stream = client.chat.completions.create(model=modelNameOnline, 
+                        messages=messagesUser + [{"role": "user", "content": message}],
+                        temperature=float(temperature) if temperature else 0.7,
+                        top_p=float(topP) if topP  else 1.0,
+                        max_tokens=int(maxTokens) if maxTokens else 4096,
+                        stream=True)
+                else:
+                    stream = client.chat.completions.create(model=modelNameOnline, 
+                        messages=messagesUser + [{"role": "user", "content": message}],
+                        temperature=float(temperature) if temperature else 0.7,
+                        top_p=float(topP) if topP  else 1.0,
+                        max_completion_tokens=int(maxTokens) if maxTokens else 4096,
+                        stream=True)
+            except openai.APIError as e:
+                yield f"data: {{\"error\": \"{e.message}\"}}\n\n"
+                yield "data: [DONE]\n\n"
+                return
+            except openai.APIConnectionError as e:
+                yield f"data: {{\"error\": \"Connection failed: {e.message}\"}}\n\n"
+                yield "data: [DONE]\n\n"
+                return
+            except openai.OpenAIError as e:
+                yield f"data: {{\"error\": \"{e.message}\"}}\n\n"
+                yield "data: [DONE]\n\n"
+                return
+            except Exception as e:
+                yield f"data: {{\"error\": \"{str(e)}\"}}\n\n"
+                yield "data: [DONE]\n\n"
+                return
 
             
         
@@ -1035,6 +1095,39 @@ class StopKiwixContainerView(APIView):
         kiwixContainer.remove()
         kiwixContainer = None
         return Response({"message": "Kiwix container stopped"}, status=200)
+    
+class TodoListView(APIView):
+    def get(self, request):
+        todos = Todo.objects.all().order_by('-created_at')
+        serializer = TodoSerializer(todos, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        serializer = TodoSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=201)
+        return Response(serializer.errors, status=400)
+    
+class TodoDetailView(APIView):
+    def get(self, request, pk):
+        todo = get_object_or_404(Todo, pk=pk)
+        serializer = TodoSerializer(todo)
+        return Response(serializer.data)
+
+    def patch(self, request, pk):
+        todo = get_object_or_404(Todo, pk=pk)
+        serializer = TodoSerializer(todo, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=400)
+
+    def delete(self, request, pk):
+        todo = get_object_or_404(Todo, pk=pk)
+        todo.delete()
+        return Response(status=204)
+
 
 
 ########################function tools

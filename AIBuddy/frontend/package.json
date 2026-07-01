@@ -1,6 +1,6 @@
 {
   "name": "frontend",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "index.js",
   "scripts": {
     "dev": "webpack --mode development --watch",
@@ -25,10 +25,10 @@
     "@babel/plugin-transform-class-properties": "^7.25.9",
     "@base-ui/react": "^1.5.0",
     "@emotion/react": "^11.14.0",
-    "@emotion/styled": "^11.14.0",
-    "@mui/icons-material": "^7.0.1",
-    "@mui/material": "^7.0.1",
-    "@mui/x-charts": "^8.0.0-beta.3",
+    "@emotion/styled": "^11.14.1",
+    "@mui/icons-material": "^9.1.1",
+    "@mui/material": "^9.1.2",
+    "@mui/system": "^9.1.2",
     "@tinymce/tinymce-react": "^6.3.0",
     "@tiptap/extension-document": "3.24",
     "@tiptap/extension-highlight": "^3.24.0",

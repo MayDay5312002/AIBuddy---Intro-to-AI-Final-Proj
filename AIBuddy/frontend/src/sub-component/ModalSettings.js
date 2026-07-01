@@ -180,7 +180,7 @@ export default function ModalSettings({
 
 
   return (
-    <Box component={"span"} sx={{position: "absolute", right: 6, top: 0}}>
+    <Box component={"span"} sx={{position: "absolute", right: 7, top: 5}}>
       <Box sx={{display: 'flex', justifyContent: 'center', my: "0.5em"}}>
         <IconButton onClick={handleOpen} sx={{}}><SettingsIcon sx={{color: 'rgb(71, 69, 69)', fontSize: {xs: "0.9em", sm: "0.9em", md: "1em"}}}/></IconButton>
       </Box>

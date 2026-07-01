@@ -20,6 +20,8 @@ import PrintDisabledIcon from '@mui/icons-material/PrintDisabled';
 import FileUploadIcon from '@mui/icons-material/FileUpload';
 
 
+
+
 import ModalAddThread from "../sub-component/ModalAddThread.js";
 import ModalDeleteThread from "../sub-component/ModalDeleteThread.js";
 import ModalChangeFlashCard from "../sub-component/ModalChangeFlashCard.js";
@@ -31,6 +33,7 @@ import ModalPresentQuiz from "../sub-component/ModalPresentQuiz.js";
 import ModalPresentFlashcards from "../sub-component/ModalPresentFlashcards.js";
 import ModalSettings from "../sub-component/ModalSettings.js";
 import BundledEditor from "../sub-component/TextEditor.js";
+import Todo from "../sub-component/Todo.js";
 
 import axios from "axios";
 import TiptapEditor from "../sub-component/TextEditor.js";
@@ -124,6 +127,7 @@ const MainApp = () => {
     });
 
     const [exportContent, setExportContent] = useState(null);
+    // const [isTipTapOpen]
     
 //     useEffect(() => {
 //   console.log("outputRef.current:", outputRef.current);
@@ -221,7 +225,7 @@ const MainApp = () => {
         setErrorResponseMsg("");
       })
       .catch((error) => {
-          setErrorResponseMsg("Error: " + error.message);
+          setErrorResponseMsg("Error: " + error.response.data["error"]);
           // console.error("Error uploading file:", error);
       });
     }
@@ -261,7 +265,7 @@ const MainApp = () => {
               setErrorResponseMsg("");
               return;
           }
-          if(String(event.data).startsWith('{"error":')){
+          if(String(event.data).startsWith('{"error":') || String(event.data).startsWith('{{"error":')){
             setErrorResponseMsg("Error: " + JSON.parse(event.data).error);
             eventSource.close();
             setLoading(false);
@@ -486,7 +490,7 @@ const MainApp = () => {
           })
         }
         getSettings();
-        console.log(api);
+        // console.log(api);
 
 
     }, [selectedThread]);
@@ -531,7 +535,7 @@ const MainApp = () => {
             setThreads(response.data["threads"]);
         })
         .catch((error) => {
-            setErrorResponseMsg("Error: " + error.message);
+            setErrorResponseMsg("Error: " + error.response.data["message"]);
             // console.error("Error uploading file:", error);
         })
 
@@ -702,13 +706,13 @@ const MainApp = () => {
         <Box >
           <Typography variant="h4" sx={{fontWeight: "bold", textAlign: "center", color: "#383838ff"}}>
             <Box sx={{cursor: "pointer" }} component={"span"} onClick={() => window.location.reload()}>
-              <img src="http://127.0.0.1:4192/static/images/Logo.png"  style={{position: "relative", top: "0.2rem", height: "7vh"}}/>
+              <img src="http://127.0.0.1:4192/static/images/Logo.png"  style={{position: "relative", top: "0.5rem", height: "7vh"}}/>
               <Typography
                 variant="h4"
                 sx={{
                   display: "inline",
                   fontWeight: "600",
-                  fontSize: "4vh",
+                  fontSize: "4.7vh",
                   color: "#3a3838ff",
                   textShadow: `
                     -1px -1px 0 #ffffffff,  
@@ -717,7 +721,9 @@ const MainApp = () => {
                     1px 1px 0 #ffffffff,
                     2px 2px 4px white
                   `,
-                  fontFamily: ['Brush Script MT', 'Comic Sans MS']
+                  // fontFamily: ['Brush Script MT', 'Comic Sans MS']
+                  fontFamily: 'Brush Script MT',
+                  // top: "10rem",
                 }}
               >
                 PonderUp
@@ -742,8 +748,9 @@ const MainApp = () => {
           setBaseUrl={setBaseUrl}
           oldData={oldData}
           setOldData={setOldData}
-
           />
+
+          <Todo />
         </Box>
         {/* <Divider sx={{margin: "1em", mx: "5em", fontSize: "0.6rem"}}/> */}
         <hr 
@@ -763,7 +770,7 @@ const MainApp = () => {
          sx={{display: "flex",
           flexDirection: isPortrait ? "column" : "row",
           overflow: "auto",
-          // height: "86vh",
+          height: "100vh",
           // height: {xs: "60vh", sm: "70vh", md: "86vh"},
           pb: "0.75em",
           // flexGrow: "1"
@@ -997,7 +1004,7 @@ const MainApp = () => {
           top: 0, 
           mx: "1em", 
           flexGrow: 7, 
-          overflow: "auto", 
+          overflow: editorOn === false ? "auto" : "hidden", 
           position: "relative", 
           display: "flex", 
           flexDirection: "column",
@@ -1070,9 +1077,11 @@ const MainApp = () => {
                   onChange={(e) => setQuery(e.target.value)}
                   sx={{ 
                     my: "0.5em",
+                    // pr: "1em",
                     '& .MuiInputBase-input': {
                       resize: "vertical",
-                      maxHeight: 110 // enforce max height for 4 rows
+                      maxHeight: 110, // enforce max height for 4 rows
+                      pr: "1em"
                     }
                   }}
                   fullWidth
@@ -1308,13 +1317,8 @@ const MainApp = () => {
                               borderRadius: "0.5em"
                             }}
                             onClick={() => {
-                              // setClickedOptionPrint(true);
                               setShowAnswerPrint(true);
                               setClickTriggerPrint(prev => prev + 1);
-                              // handlePrintOutput();
-                              // setShowAnswerPrint(false);
-                              // setShowAnswerPrintOption(!showAnswerPrintOption);
-                              // setClickedOptionPrint(false);
                               }
                             }
                           >
@@ -1384,7 +1388,7 @@ const MainApp = () => {
                                   },
                                   cursor: 'pointer',
                                 }}
-                                className={choice === quiz.answer && showAnswerPrint ? "right-choice" : "wrong-choice"}
+                                className={choice === quiz.answer && showAnswerPrint ? "right-choice" : "wrong-choice"} //asds
                               >
                                 <ListItemText primary={choice} />
                               </ListItem>
@@ -1395,9 +1399,16 @@ const MainApp = () => {
                       </div>
                     </Paper>
                   }
-                  {editorOn && exportContent !== null &&
-                    <TiptapEditor newContent={exportContent}/>
-                  }
+                  {/* {editorOn && exportContent !== null && */}
+                  <div style={{
+                    display: editorOn && exportContent !== null ? "flex" : "none",
+                    flex: 1,
+                    
+                    minHeight: 0
+                  }}>
+                    <TiptapEditor newContent={exportContent} isTipTapOpen={editorOn}/>
+                  </div>
+                  {/* } */}
 
           </Paper>
           </Box>
