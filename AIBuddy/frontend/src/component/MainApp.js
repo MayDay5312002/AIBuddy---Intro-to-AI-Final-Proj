@@ -32,7 +32,7 @@ import ModalModifyMessegeHistory from "../sub-component/ModalModifyMessegeHistor
 import ModalPresentQuiz from "../sub-component/ModalPresentQuiz.js";
 import ModalPresentFlashcards from "../sub-component/ModalPresentFlashcards.js";
 import ModalSettings from "../sub-component/ModalSettings.js";
-import BundledEditor from "../sub-component/TextEditor.js";
+// import BundledEditor from "../sub-component/TextEditor.js";
 import Todo from "../sub-component/Todo.js";
 
 import axios from "axios";
@@ -251,6 +251,7 @@ const MainApp = () => {
       setErrorResponseMsg('');//clear old error
       setResponse(''); // clear old response
       setLoading(true);
+      let thinking = false;
       const eventSource = new EventSource('http://localhost:4192/api/chatStream/' + '?query=' + query + '&model=' + selectedModel + '&thread=' + selectedThread + 
         "&executionType=" + executionType);
       paperRefResponse.current.scrollTop = paperRefResponse.current.scrollHeight;
@@ -265,7 +266,7 @@ const MainApp = () => {
               setErrorResponseMsg("");
               return;
           }
-          if(String(event.data).startsWith('{"error":') || String(event.data).startsWith('{{"error":')){
+          else if(String(event.data).startsWith('{"error":') || String(event.data).startsWith('{{"error":')){
             setErrorResponseMsg("Error: " + JSON.parse(event.data).error);
             eventSource.close();
             setLoading(false);
@@ -273,6 +274,7 @@ const MainApp = () => {
             // setErrorResponseMsg("");
             return;
           }
+
           setResponse(prev => prev + event.data);
       };
     
@@ -704,7 +706,7 @@ const MainApp = () => {
       <div style={{display: "flex", flexDirection: "column", height: "100%"}}>
         {/* <Box sx={{display: "flex", justifyContent: "center", alignItems: "center"}}> */}
         <Box >
-          <Typography variant="h4" sx={{fontWeight: "bold", textAlign: "center", color: "#383838ff"}}>
+          <Typography variant="h4" sx={{fontWeight: "bold", textAlign: "center", color: "#383838ff", }}>
             <Box sx={{cursor: "pointer" }} component={"span"} onClick={() => window.location.reload()}>
               <img src="http://127.0.0.1:4192/static/images/Logo.png"  style={{position: "relative", top: "0.5rem", height: "7vh"}}/>
               <Typography
@@ -721,8 +723,9 @@ const MainApp = () => {
                     1px 1px 0 #ffffffff,
                     2px 2px 4px white
                   `,
-                  // fontFamily: ['Brush Script MT', 'Comic Sans MS']
+                  // fontFamily: ['Brush Script MT', 'Comic Sans MS'],
                   fontFamily: 'Brush Script MT',
+                  lineHeight: 1,        // ← kills the excess vertical space
                   // top: "10rem",
                 }}
               >

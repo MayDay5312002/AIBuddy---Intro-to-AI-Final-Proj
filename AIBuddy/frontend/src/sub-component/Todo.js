@@ -60,11 +60,11 @@ export default function Todo() {
     if (!todo) return;
 
     // Optimistic update
-    setTodos(prev => prev.map(t =>
+    setTodos(prev => prev.map(t => //prev.map is a function that returns a new array with the same length as prev array
       t.id === id ? { ...t, completed: !t.completed } : t //if t is the t target, change completed
     ));
 
-    axios.patch(`/api/todos/${id}/`, { completed: !todo.completed })
+    axios.patch(`/api/todos/${id}/`, { completed: !todo.completed }) //the $ is mandatory, kind of like f"{id}"
       .catch(() => {
         // Revert on failure
         // t = 1 task

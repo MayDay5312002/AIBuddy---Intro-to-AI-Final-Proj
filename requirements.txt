@@ -219,7 +219,7 @@ pyproject-hooks==1.2.0
     #   pip-tools
 python-dotenv==1.1.1
     # via pydantic-settings
-pywin32==311
+pywin32==311; sys_platform == 'win32'
     # via docker
 pyyaml==6.0.3
     # via

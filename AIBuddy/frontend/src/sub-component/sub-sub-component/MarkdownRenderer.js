@@ -11,7 +11,7 @@ function MarkdownRenderer({ children }) {
   const handleCopy = (code, index) => {
     navigator.clipboard.writeText(code);
     setCopiedIndex(index);
-    setTimeout(() => setCopiedIndex(null), 200);
+    setTimeout(() => setCopiedIndex(null), 100);
   };
 
   let codeBlockIndex = 0;

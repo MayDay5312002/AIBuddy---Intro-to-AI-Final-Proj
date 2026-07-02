@@ -161,9 +161,9 @@ def chatWithFile(request):
         # results = query_vectorstore(query)
         finalResponse = ""
         if(executionType != "Explain Simply"):
-            message = f"Read the following prompt and content carefully. Provide a comprehensive, detailed, and well-structured response to the prompt, directly utilizing the supplied content for support and context. Clearly explain your reasoning and organize your answer with appropriate headings, bullet points, or lists as needed for readability. If any aspect is unclear, state your assumptions. Try not to reference prior conversations—focus only on the information provided. The provided content might be not directly related to the prompt.\n\nPrompt:{query}\nContent:{results}"
+            message = f"Read the following prompt and content carefully. Provide a comprehensive, detailed, and well-structured response to the prompt, directly utilizing the supplied content for support and context. Clearly explain your reasoning and organize your answer with appropriate headings, bullet points, or lists as needed for readability. If any aspect is unclear, state your assumptions. Try not to reference prior conversations—focus only on the information provided. The provided content might be not directly related to the prompt. Respond in markdown format.\n\nPrompt:{query}\nContent:{results}"
         else:
-            message = f"Read the following prompt carefully. Provide a comprehensive, detailed and well-structured response to the prompt using your knowledge.\n\n Prompt:{query}"
+            message = f"Read the following prompt carefully. Provide a comprehensive, detailed and well-structured response to the prompt using your knowledge. Repond in markdown format.\n\n Prompt:{query}"
         print(message)
 
         if aiSpace == "Ollama":
@@ -230,13 +230,6 @@ def chatWithFile(request):
                     content = chunk.choices[0].delta.content
             if finalResponse == "" and thinking:
                 thinkingProcessor += content
-                # print(thinkingProcessor)
-                # # print(f"Content:|{chunk}|")
-                # # if thinkingText[:len(content.strip())] == content.: ###############FIX HERE for thinking
-                # if len(thinkingProcessor.strip()) >= 7 and thinkingProcessor.strip()[:7].lower() == "<think>":
-                #     thinking = True
-                #     print(f"THINKING: {thinking}")  # print(thinking)
-                #     continue
                 if len(thinkingProcessor.strip()) >= 7 and thinkingProcessor.strip()[:7].lower() != "<think>":
                     print(f"THINKING: {thinking}")
                     thinking = False
@@ -361,7 +354,7 @@ class CreateFlashCardsView(APIView):
                     #   stream=True
                     )
 
-                    response = response.choices[0].message.content.replace("```json", "").replace("```", "").strip()
+                    response = response.choices[0].message.content.strip()
                     response = {"message": {"content": response}}
 
                 tries += 1
@@ -772,6 +765,7 @@ def ModifyMessageView(request):
             
         thinkingProcessor = ""
         for chunk in stream:
+            content = ""
             if aiSpace == "Ollama":
                 content = chunk["message"]["content"]
             else:

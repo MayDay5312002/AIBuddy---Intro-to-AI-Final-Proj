@@ -123,7 +123,7 @@ div.program {
 
 /* Preformatted text styles */
 .tiptap pre {
-  background: black;
+  background: #2E2B29;
   border-radius: 0.5rem;
   color: white;
   font-family: 'JetBrainsMono', monospace;
@@ -255,6 +255,257 @@ div.program {
     /* overflow-y: auto; */
 
 }
+
+
+y
+/****************************Start of Code Block*******************************/
+
+.tiptap pre code {
+  background: none;
+  color: inherit;
+  font-size: 0.8rem;
+  padding: 0;
+}
+
+/* Code styling */
+.tiptap pre .hljs-comment,
+.tiptap pre .hljs-quote {
+  color: #616161;
+}
+
+.tiptap pre .hljs-variable,
+.tiptap pre .hljs-template-variable,
+.tiptap pre .hljs-attribute,
+.tiptap pre .hljs-tag,
+.tiptap pre .hljs-regexp,
+.tiptap pre .hljs-link,
+.tiptap pre .hljs-name,
+.tiptap pre .hljs-selector-id,
+.tiptap pre .hljs-selector-class {
+  color: #f98181;
+}
+
+.tiptap pre .hljs-number,
+.tiptap pre .hljs-meta,
+.tiptap pre .hljs-built_in,
+.tiptap pre .hljs-builtin-name,
+.tiptap pre .hljs-literal,
+.tiptap pre .hljs-type,
+.tiptap pre .hljs-params {
+  color: #fbbc88;
+}
+
+.tiptap pre .hljs-string,
+.tiptap pre .hljs-symbol,
+.tiptap pre .hljs-bullet {
+  color: #b9f18d;
+}
+
+.tiptap pre .hljs-title,
+.tiptap pre .hljs-section {
+  color: #faf594;
+}
+
+.tiptap pre .hljs-keyword,
+.tiptap pre .hljs-selector-tag {
+  color: #70cff8;
+}
+
+.tiptap pre .hljs-emphasis {
+  font-style: italic;
+}
+
+.tiptap pre .hljs-strong {
+  font-weight: 700;
+}
+
+
+
+.tiptap pre {
+  background: #2E2B29;
+  border-radius: 0.5rem;
+  color: white;
+  font-family: 'JetBrainsMono', monospace;
+  margin: 1.5rem 0;
+  padding: 0.75rem 1rem;
+}
+/***************End of Code Block****************/
+
+/***** For code block lang selection *****/
+.code-block {
+  position: relative;
+}
+
+.code-block pre {
+  background: #2d2a2e;
+  border-radius: 8px;
+  padding: 2.25rem 1rem 1rem 1rem;
+  overflow-x: auto;
+  font-family: 'Fira Code', monospace;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+/* wrapper handles top-left placement over the pre */
+.select-wrapper {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.75rem;
+  z-index: 10;
+  display: inline-block;
+}
+
+/* select just fills the wrapper, no positioning of its own */
+.code-block__language-select {
+  appearance: none;
+  background: transparent;
+  color: #8a8a8a;
+  border: none;
+  outline: none;
+  font-family: 'Fira Code', monospace;
+  font-size: 0.75rem;
+  cursor: pointer;
+  padding: 2px 18px 2px 4px;
+}
+
+.code-block__language-select:hover,
+.code-block__language-select:focus {
+  color: #fff;
+}
+
+.code-block__language-select option {
+  background: #2d2a2e;
+  color: #fff;
+}
+
+.select-wrapper::after {
+  content: "▼";
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.5em;
+  color: #8a8a8a;
+  pointer-events: none;
+}
+/***** End of code block lang selection *****/
+
+
+
+/**************For tables**************/
+/* Table-specific styling */
+.tiptap table {
+  border-collapse: collapse;
+  margin: 0;
+  overflow: hidden;
+  table-layout: fixed;
+  width: 100%;
+}
+
+.tiptap table td,
+.tiptap table th {
+  border: 0.05em solid #464646 !important;
+  border-radius: 1em !important;
+  box-sizing: border-box;
+  min-width: 1em;
+  padding: 6px 8px;
+  position: relative;
+  vertical-align: top;
+}
+
+.tiptap table td > *,
+.tiptap table th > * {
+  margin-bottom: 0;
+}
+
+.tiptap table th {
+  background-color: #f5f4f3;
+  font-weight: bold;
+  text-align: left;
+}
+
+.tiptap table .selectedCell::after {
+  background: #6362621f;
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.tiptap table .column-resize-handle {
+  background-color: purple;
+  position: absolute;
+  top: 0;
+  right: -2px;
+  bottom: -2px;
+  width: 4px;
+  pointer-events: none;
+}
+
+.tiptap .tableWrapper {
+  margin: 1.5rem 0;
+  overflow-x: auto;
+}
+
+.tiptap.resize-cursor {
+  cursor: col-resize;
+}
+/*****************End Table-specific styling****************/
+
+/**************For details**************/
+.tiptap .details {
+  border: 1px solid #e0e0e0;
+  border-radius: 0.5em;
+  padding: 0.5em;
+  margin: 0.5em 0;
+  background: #fafafa;
+}
+
+.tiptap .details summary {
+  cursor: pointer;
+  font-weight: 600;
+  padding: 0.25em 0.5em;
+  border-radius: 0.3em;
+  user-select: none;
+}
+
+.tiptap .details summary::marker {
+  color: #666;
+}
+
+.tiptap .details[open] {
+  background: #fff;
+  border-color: #c0c0c0;
+}
+
+.tiptap .details[open] summary {
+  margin-bottom: 0.5em;
+  border-bottom: 1px solid #eee;
+}
+.tiptap .details div[data-type="detailsContent"] {
+  padding: 0.25em 0.5em;
+}
+
+.details > button {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 0.75rem;
+  padding: 0.25em 0.5em;
+  border-radius: 0.3em;
+  user-select: none;
+}
+
+.details > button::before {
+  content: "▶";
+}
+
+.details.is-open > button::before {
+  content: "▼";
+}
+/**************End of details**************/
+
 
 #modalToDo .MuiBackdrop-root {
   background-color: transparent !important;
