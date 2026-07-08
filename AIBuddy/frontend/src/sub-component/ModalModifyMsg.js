@@ -295,7 +295,7 @@ export default function ModalModifyMsg({setResponse,thread_title, refreshMessage
           ...style, 
           borderRadius: 2, 
           border: "none", 
-          width: {xs:"80vw", sm: "60vw", md: "30vw"},
+          width: {xs:"80vw", sm: "60vw", lg: "50vw"},
 
         }}>
           <IconButton onClick={handleClose} sx={{position: "absolute", right: 18}}><CloseIcon /></IconButton>
@@ -511,7 +511,10 @@ export default function ModalModifyMsg({setResponse,thread_title, refreshMessage
               fullWidth
               multiline 
               rows={10}
-              inputProps={{readOnly: (modifyOption === "Manual") ? false : true}}
+
+              // InputProps={{ readOnly: modifyOption !== "Manual" }}                    // MUI v5/v6
+              slotProps={{ input: { readOnly: modifyOption !== "Manual" } }}         // MUI v7
+
               // onKeyDown={e => {
               //     if (e.key === "Enter") {
               //       e.preventDefault();

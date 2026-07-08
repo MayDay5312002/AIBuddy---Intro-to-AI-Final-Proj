@@ -32,7 +32,7 @@ const style = {
 
 export default function ModalSettings({
   aiSpace, setAiSpace, temperature, setTemperature, topP, setTopP, maxTokens, setMaxTokens, api, setApi, oldData, setOldData
-  , modelName, setModelName, baseUrl, setBaseUrl}) {
+  , modelName, setModelName, baseUrl, setBaseUrl, leftSection}) {
 
 
   const [open, setOpen] = useState(false);
@@ -180,9 +180,20 @@ export default function ModalSettings({
 
 
   return (
-    <Box component={"span"} sx={{position: "absolute", right: 7, top: 5}}>
-      <Box sx={{display: 'flex', justifyContent: 'center', my: "0.5em"}}>
-        <IconButton onClick={handleOpen} sx={{}}><SettingsIcon sx={{color: 'rgb(71, 69, 69)', fontSize: {xs: "0.9em", sm: "0.9em", md: "1em"}}}/></IconButton>
+    // <Box  sx={{position: "absolute", right: 7, top: 5, zIndex: 2}}>
+    <Box
+    sx={{
+      // mt: "auto",
+      pb: "0.3em"
+    }}
+    >
+      <Box sx={{display: 'flex', justifyContent: 'center'}}>
+        {!leftSection ? 
+        <IconButton onClick={handleOpen}>
+          <SettingsIcon sx={{color: 'rgb(71, 69, 69)', fontSize: {xs: "0.9em", sm: "0.9em", md: "1em"}}}/>
+        </IconButton>
+        :
+        <Button variant="contained"onClick={handleOpen} sx={{width: "100%"}}>Settings</Button>}
       </Box>
       <Modal
         open={open}
@@ -225,7 +236,7 @@ export default function ModalSettings({
               >
                 <FormControlLabel value="Ollama" control={<Radio />} label="Offline Ollama" />
                 {/* <FormControlLabel value="OpenAI" control={<Radio />} label="OpenAI" /> */}
-                <FormControlLabel value="Online AI Space" control={<Radio />} label="Online AI Space" />
+                <FormControlLabel value="Other AI Space" control={<Radio />} label="Other AI Space" />
               </RadioGroup>
             </FormControl>
 

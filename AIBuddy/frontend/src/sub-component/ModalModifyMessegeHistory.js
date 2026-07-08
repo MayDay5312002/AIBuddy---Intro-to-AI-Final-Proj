@@ -1,11 +1,12 @@
 import * as React from 'react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Box, Button, Typography, TextField, Modal, Divider, IconButton, Paper} from '@mui/material';
 import HistoryIcon from '@mui/icons-material/History';
 import axios from 'axios';
 import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ModalModifyMsg from './ModalModifyMsg.js';
+import MarkdownRenderer from './sub-sub-component/MarkdownRenderer.js';
 
 
 
@@ -43,6 +44,7 @@ export default function ModalModifyMessegeHistory({setResponse,thread_title, ref
   const [messages, setMessages] = useState([]);
   const [deleteAll, setDeleteAll] = useState(false);
   const [editMode, setEditMode] = useState(false);
+  const hasMounted = useRef(false);
 
   const handleClose = () => {
     setDeleteAll(false);
@@ -51,6 +53,10 @@ export default function ModalModifyMessegeHistory({setResponse,thread_title, ref
   }
 
   useEffect(() => {
+    if(!hasMounted.current){
+      hasMounted.current = true;
+      return;
+    }
       axios.get("http://127.0.0.1:4192/api/getMessages/"+ "?thread=" + thread_title )
       .then((response) => {
         // console.log(response.data["messages"]);
@@ -80,7 +86,12 @@ export default function ModalModifyMessegeHistory({setResponse,thread_title, ref
   return (
     <Box component={"span"}>
       {/* <Box sx={{display: 'flex', justifyContent: 'center', my: "0.5em"}}> */}
-        <IconButton onClick={handleOpen} sx={{}}><HistoryIcon /></IconButton>
+        <IconButton 
+        onClick={handleOpen} 
+        disabled= {thread_title === "" ? true : false}
+        >
+          <HistoryIcon />
+        </IconButton>
       {/* </Box> */}
       <Modal
         open={open}
@@ -93,10 +104,15 @@ export default function ModalModifyMessegeHistory({setResponse,thread_title, ref
           ...style, 
           borderRadius: 2, 
           border: "none", 
-          width: {xs:"80vw", sm: "60vw", md: "30vw"},
+          width: {xs:"80vw", sm: "60vw", lg: "50vw"},
 
         }}>
-            <IconButton onClick={handleClose} sx={{position: "absolute", right: 18}}><CloseIcon /></IconButton>
+            <IconButton 
+            onClick={handleClose} 
+            sx={{position: "absolute", right: 18}}
+            >
+              <CloseIcon />
+            </IconButton>
           <Typography id="modal-modal-title" variant="h5" component="h2" sx={{fontWeight: 500}}>
             Message History
           </Typography>
@@ -135,7 +151,13 @@ export default function ModalModifyMessegeHistory({setResponse,thread_title, ref
             <Box sx={{display: 'flex', flexDirection: 'column', gap: 1}}>
               {messages.map((message, index) => (
                 <Box key={message.id} sx={{display: 'flex', justifyContent: 'space-between'}}>
-                  <Paper sx={{ p:1}}>
+                  <Paper 
+                  sx={{ 
+                    p:1, 
+                    maxWidth: "100%",
+                    overflowWrap: "break-word",
+                    minWidth: 0
+                  }}>
                     {
                       message.role === "user" ?
                       <Box>
@@ -160,7 +182,7 @@ export default function ModalModifyMessegeHistory({setResponse,thread_title, ref
                         oldResponse={messages[index+1].content} document={message.document} setResponse={setResponse} id={message.id} aiSpace={aiSpace}/>
                       </Box>
                       :
-                      <Typography variant="body1" component="p" sx={{whiteSpace: "pre-line"}}>{message.content}</Typography>
+                      <Typography variant="body1" component="div"><MarkdownRenderer>{message.content}</MarkdownRenderer></Typography>
 
                     }
                   </Paper>

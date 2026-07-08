@@ -11,8 +11,8 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import axios from 'axios';
 
-export default function Todo() {
-  const [open, setOpen] = useState(false);
+export default function Todo({open, setOpen, top, right}) {
+  // const [open, setOpen] = useState(false);
   const [todos, setTodos] = useState([]);
   const [newTask, setNewTask] = useState("");
   const [loading, setLoading] = useState(false);
@@ -91,26 +91,31 @@ export default function Todo() {
   };
 
   return (
-    <Box component="span" sx={{ position: "absolute", left: 7, top: 5 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'center', my: "0.5em" }}>
-        <IconButton onClick={() => setOpen(v => !v)}>
-          <AssignmentIcon sx={{
-            color: 'rgb(71, 69, 69)',
-            fontSize: { xs: "0.9em", sm: "0.9em", md: "1em" }
-          }} />
-        </IconButton>
-      </Box>
-
+    // <Box component="span" position="relative" sx={{pl: "0.3em"}}>
+    //   <Box sx={{ display: 'inline-block', position: 'relative'}}>
+    //     <IconButton onClick={() => setOpen(v => !v)}>
+    //       <AssignmentIcon sx={{
+    //         // color: 'rgb(71, 69, 69)',
+    //         fontSize: { xs: "0.9em", sm: "0.9em", md: "1.2em" }
+    //       }} />
+    //     </IconButton>
+    //   </Box>
+      <Box
+      sx={{
+        position: "absolute",
+        top: top,
+        right: right,
+        zIndex: 1300
+      }}
+      >
       {open && (
         <Paper
           elevation={24}
           sx={{
-            position: "absolute",
-            top: "2.4em",
-            left: "0.5em",
-            zIndex: 1300,
+            
+            // zIndex: 1300,
             borderRadius: 2,
-            width: { xs: "70vw", sm: "50vw", md: "25vw" },
+            width: { xs: "70vw", sm: "50vw", md: "20em" },
             maxHeight: { sm: "50vh", md: "45vh" },
             overflow: "hidden",
             display: "flex",

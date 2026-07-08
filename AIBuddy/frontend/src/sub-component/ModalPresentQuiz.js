@@ -109,7 +109,19 @@ export default function ModalPresentQuiz({quizzes}) {
 
   return (
     <Box component={"span"}>
-      <Button onClick={handleOpen} sx={{ color: "white", backgroundColor: "rgb(25, 118, 210)", fontSzie: "0.85rem"}}>Present Quiz</Button>
+      <Button 
+      onClick={handleOpen} 
+      sx={{ 
+        color: "white", 
+        // backgroundColor: "rgb(25, 118, 210)", 
+        transform: "translateY(5%)",
+        fontSzie: "0.85rem"
+      }}
+      variant="contained"
+      disabled={quizzes?.length === 0}
+      >
+        Present Quiz
+      </Button>
       <Modal
         open={open}
         onClose={handleClose}

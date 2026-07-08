@@ -5,7 +5,7 @@ import { Button, TextField, Typography, Select, MenuItem, FormControl,
   InputLabel, Box, Radio, RadioGroup, FormControlLabel, FormLabel, Paper, Divider, IconButton, 
   CircularProgress, List,
   ListItem, ListItemText,
-  Modal,
+  Modal, Tooltip,
   Icon} from "@mui/material";
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
@@ -18,6 +18,13 @@ import FullscreenExitIcon from '@mui/icons-material/FullscreenExit';
 import PrintIcon from '@mui/icons-material/Print';
 import PrintDisabledIcon from '@mui/icons-material/PrintDisabled';
 import FileUploadIcon from '@mui/icons-material/FileUpload';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import RocketSharpIcon from '@mui/icons-material/RocketSharp'; // For execution type
+import AutoStoriesSharpIcon from '@mui/icons-material/AutoStoriesSharp'; // for editor 
+import SendIcon from '@mui/icons-material/Send'; //for send button
+import AssignmentIcon from '@mui/icons-material/Assignment'; //for to do
+import EditDocumentIcon from '@mui/icons-material/EditDocument'; // for editor
+
 
 
 
@@ -34,10 +41,12 @@ import ModalPresentFlashcards from "../sub-component/ModalPresentFlashcards.js";
 import ModalSettings from "../sub-component/ModalSettings.js";
 // import BundledEditor from "../sub-component/TextEditor.js";
 import Todo from "../sub-component/Todo.js";
+import LabeledNumberTab from "../sub-component/sub-sub-component/LabeledNumberTab.js";
 
 import axios from "axios";
 import TiptapEditor from "../sub-component/TextEditor.js";
 import { useReactToPrint } from "react-to-print";
+import { backgroundColor } from "@mui/system";
 
 const MainApp = () => {
     const [file, setFile] = useState(null);
@@ -92,6 +101,8 @@ const MainApp = () => {
 
 
     const [open, setOpen] = useState(false);
+    const [openTodo, setOpenTodo] = useState(false);
+    
 
     const [aiSpace, setAiSpace] = useState(null);
     const [temperature, setTemperature] = useState(null);
@@ -127,6 +138,12 @@ const MainApp = () => {
     });
 
     const [exportContent, setExportContent] = useState(null);
+
+
+
+    const [modelTooltipOpen, setModelTooltipOpen] = useState(false);
+    const [selectOpen, setSelectOpen] = useState(false);
+    const suppressReopen = useRef(false);
     // const [isTipTapOpen]
     
 //     useEffect(() => {
@@ -164,7 +181,7 @@ const MainApp = () => {
       setSelectedThread(event.target.value);
     };
 
-    const handleChangeExcutionType = (e) => {
+    const handleChangeExecutionType = (e) => {
       const val = e.target.value;
   
       if (/^\d*$/.test(val)) {
@@ -705,520 +722,579 @@ const MainApp = () => {
     return (
       <div style={{display: "flex", flexDirection: "column", height: "100%"}}>
         {/* <Box sx={{display: "flex", justifyContent: "center", alignItems: "center"}}> */}
-        <Box >
-          <Typography variant="h4" sx={{fontWeight: "bold", textAlign: "center", color: "#383838ff", }}>
-            <Box sx={{cursor: "pointer" }} component={"span"} onClick={() => window.location.reload()}>
-              <img src="http://127.0.0.1:4192/static/images/Logo.png"  style={{position: "relative", top: "0.5rem", height: "7vh"}}/>
-              <Typography
-                variant="h4"
-                sx={{
-                  display: "inline",
-                  fontWeight: "600",
-                  fontSize: "4.7vh",
-                  color: "#3a3838ff",
-                  textShadow: `
-                    -1px -1px 0 #ffffffff,  
-                    1px -1px 0 #ffffffff,
-                    -1px 1px 0 #ffffffff,
-                    1px 1px 0 #ffffffff,
-                    2px 2px 4px white
-                  `,
-                  // fontFamily: ['Brush Script MT', 'Comic Sans MS'],
-                  fontFamily: 'Brush Script MT',
-                  lineHeight: 1,        // ← kills the excess vertical space
-                  // top: "10rem",
-                }}
-              >
-                PonderUp
-              </Typography>
-
-            </Box>
-          </Typography>
-          <ModalSettings 
-          aiSpace={aiSpace} 
-          setAiSpace={setAiSpace}
-          setApi={setApi}
-          api={api}
-          setTemperature={setTemperature}
-          temperature={temperature}
-          setTopP={setTopP}
-          topP={topP}
-          setMaxTokens={setMaxTokens}
-          maxTokens={maxTokens}
-          modelName={modelName}
-          setModelName={setModelName}
-          baseUrl={baseUrl}
-          setBaseUrl={setBaseUrl}
-          oldData={oldData}
-          setOldData={setOldData}
-          />
-
-          <Todo />
-        </Box>
-        {/* <Divider sx={{margin: "1em", mx: "5em", fontSize: "0.6rem"}}/> */}
-        <hr 
-        style=
-        {{
-          margin: "1em 5em",
-          fontSize: "0.6rem", 
-          borderRadius: "10em", 
-          borderWidth: "0.1em", 
-          color: "#cfcfcfff",
-          borderTopColor: "#8a8a8aff",
-          borderBottomColor: 'rgb(194, 213, 219)',
-          color: '#a5a5a5ff'
-        }}
-        />
+        
         <Box
          sx={{display: "flex",
           flexDirection: isPortrait ? "column" : "row",
-          overflow: "auto",
+          // overflow: "auto",
           height: "100vh",
           // height: {xs: "60vh", sm: "70vh", md: "86vh"},
-          pb: "0.75em",
+          // py: "0.75em",
           // flexGrow: "1"
           flex: "1"
           }}
         >
 
-        {/* <TiptapEditor /> */}
+        
 
           {/******************This is the beginning of the left section******************* */}
-        { isFullscreen == false && editorOn == false  &&  
-          <Paper 
-          // elevation={3}
+        { isFullscreen == false && editorOn == false  && !isPortrait && 
+        <Box sx={{
+          position: "relative",              // ← anchor for IconButton's absolute positioning
+          flexGrow: leftSection ? 3 : 0,
+          minWidth: isPortrait ? undefined : leftSection ? "20em" : "auto",
+          minHeight: isPortrait ? (leftSection ? "15em" : "2.2em") : undefined,
+          flexBasis: 0,
+          display: "flex",
+          flexDirection: "column",
+        }}>
+          <Box 
           sx={{
-            padding: "1em",
-            borderRadius: 4,
-            ml: "1em",
-            mr: isPortrait ? "1em" : 0,
-            mb: isPortrait ? "1em" : 0,  
-            // order:1
-            // flexGrow: 3,
-            flexGrow: leftSection ? 3 : 0,
-            overflow: "auto",
-            // minWidth: isPortrait ? undefined : "25.5em",
-            minWidth: isPortrait ? undefined : leftSection ? "20em" : "2.5em",
-            minHeight: isPortrait ? (leftSection ? "15em" : "2.2em") : undefined,
-            // height: isPortrait ? (leftSection ? "15em" : "2.2em") : undefined,
-            // maxHeight: isPortrait ? "15em" : undefined,
-            flexBasis: 0
-          }}>
-          {/* <div className="div-eye" style={{ height: "1.7em" }}> */}
-            <IconButton 
-            sx={{
-              "&:hover": {
-                backgroundColor: "transparent" /* Removes the hover background effect */
-              },
-              height: "1.7em",
-              marginLeft: "auto", 
-              display: "block"
-            }}
-            onClick={() => setLeftSection(!leftSection) }
-            >
-              {leftSection ? <VisibilityIcon /> : <VisibilityOffIcon />}
-            </IconButton>
-          {/* </div> */}
+            height: "100%",
+            overflow: "visible",
+            position: "relative",
+          }}
+          >
+            <Paper sx={{
+              px: leftSection ? "1.2em" : "0.3em",
+              // pb: "0.3em",
+              mr: isPortrait ? "1em" : 0,
+              mb: isPortrait ? "1em" : 0,
+              overflowY: "auto",               // ← Paper scrolls freely
+              height: "100%",                  // ← fill the wrapper's flex-allocated height
+              direction: "rtl",                // ← right-to-left scrolling
+            }}>
+            {/* Beggining of Title */}
+              <Box 
+              sx={{
+                height: "100%",
+                direction: "ltr", 
+                position: "relative",
+                display: "flex",
+                flexDirection: "column",
+                overflow: "visible"
+                }}
+              >     
 
+                {/* left-to-right */}
+                <Box sx={{position: "relative", zIndex: 2}}>
+                  <Typography variant="h4" sx={{fontWeight: "bold", textAlign: "center", color: "#383838ff", lineHeight: "0"}}>
+                    <Box sx={{cursor: "pointer" }} component={"span"} onClick={() => window.location.reload()}>
+                      <img src="http://127.0.0.1:4192/static/images/Logo.png"  style={{position: "relative", top: "0.5rem", height: "7vh" }}/>
+                      {leftSection &&
+                      <Typography
+                        variant="h4"
+                        sx={{
+                          display: "inline",
+                          fontWeight: "600",
+                          fontSize: "4.7vh",
+                          color: "#3a3838ff",
+                          // textShadow: "2px 2px 0px rgba(0, 0, 0, 0.1), 4px 4px 8px rgba(0, 0, 0, 0.15)",
+                          // fontFamily: ['Brush Script MT', 'Comic Sans MS'],
+                          fontFamily: 'Brush Script MT',
+                          lineHeight: 1,        // ← kills the excess vertical space
+                          // top: "10rem",
+                        }}
+                      >
+                        PonderUp
+                      </Typography>
+                      }
 
-              {/* <Typography variant="h4" sx={{fontWeight: "bold", marginBottom: "1em", textAlign: "center"}}>
-                <Box sx={{cursor: "pointer"}} component={"span"} onClick={() => window.location.reload()}>
-                  <img src="http://127.0.0.1:4192/static/images/Logo.png" height={"80em"} style={{position: "relative", top: "0.2em"}}/>
-                  AI Study Companion
+                    </Box>
+                  </Typography>
                 </Box>
-              </Typography> */}
+                    
+                <hr 
+                style=
+                {{
+                  margin: leftSection ? "1em 2em": "1em 0.5em",
+                  fontSize: "0.6rem", 
+                  borderRadius: "10em", 
+                  borderWidth: "0.1em", 
+                  color: "#cfcfcfff",
+                  borderTopColor: "#8a8a8aff",
+                  borderBottomColor: 'rgb(194, 213, 219)',
+                  color: '#a5a5a5ff',
+                }}
+                />
+                {/* End of Title */}
               
-              {leftSection && 
-              <div className="leftSectionDiv">
-                <Box display="flex" flexDirection="column" gap={1} width={300}>
-                  <Box>
-                    <ModalAddThread  threads={threads} setThreads={setThreads} />
-                    <ModalDeleteThread  threads={threads} setThreads={setThreads} />
-                  </Box>
-                  {/* Dropdown to select thread */}
-                  <TextField
-                    select
-                    label="Select a Thread"
-                    value={selectedThread}
-                    onChange={handleSelectChange}
-                    fullWidth
-                    sx={{mt: "0.5em"}}
-                  >
-                    {threads.map((thread, index) => (
-                      <MenuItem key={index} value={thread}>
-                        {thread}
-                      </MenuItem>
-                    ))}
-                  </TextField>
-                
-                
-                </Box>
-                <FormControl sx={{mt: "0.2em"}}>
-                  <FormLabel>Choose Execution Type</FormLabel>
-                  <RadioGroup
-                    row
-                    value={executionType}
-                    onChange={handleExecuteQuery}
-                  >
-                    <FormControlLabel value="Explain Simply" control={<Radio />} label="Explain Simply" />
-                    <FormControlLabel value="Explain with web search" control={<Radio />} label="Explain with web search" />
-                    <FormControlLabel value="Explain with document" control={<Radio />} label="Explain with document" />
-                    <FormControlLabel value="Explain with Kiwix" control={<Radio />} label="Explain with Kiwix" />
-                    <FormControlLabel value="Create flash cards" control={<Radio />} label="Create flash cards" />
-                    <FormControlLabel value="Create quiz" control={<Radio />} label="Create quiz" />
-                  </RadioGroup>
-                 </FormControl>
-                <Divider sx={{mb:"1em"}}/>
-                {executionType !== "Explain with web search"  && executionType !== "Explain Simply" && executionType !== "Explain with Kiwix" &&
-                <>
-                <FormControl sx={{width: "100%"}}>
-
-                  <FormLabel>Choose Input Type</FormLabel>
-                  <RadioGroup
-                    // row
-                    value={inputType}
-                    onChange={handleRadioChange}
-                    id="inputType-radio-buttons-group"
+                <Box
+                sx={{
+                  // width: "95%",
+                  // padding: "0.3em 0.5em",
+                  // padding: "0 0 0.3em 0.12em",
+                  // p: "0.3em 0.5em",
+                  // mb: "0.1em",
+                  // p: "0 0 0.3em 0.12em",
+                  // borderRadius: 4,
+                  textAlign: "center",
+                  display: isFullscreen === false ? "block" : "none",
+                }}
+                >
+                {leftSection ? 
+                  <Button 
+                    variant="contained" 
+                    startIcon={<EditDocumentIcon />}
                     sx={{
-                      display: "flex",
-                      flexDirection: "row",
-                      flexWrap: "wrap",
-                      // width: "21em",
-                      // gap: 1, // optional spacing between items
+                      // position: "absolute", 
+                      // top: "1em", 
+                      // left: "2.3em", 
+                      fontSize: "0.85rem", 
+                      // visibility: isFullscreen === false ? "visible" : "hidden", 
+                      zIndex: 1,
+                    }}
+                    onClick={()=> {
+                      if (editorOn === false){
+                        setEditorOn(!editorOn);
+                        setExportContent("");
+                      }
+                      else{
+                        setEditorOn(!editorOn);
+                        setIsFullscreen(false);
+                        setExportContent(null);
+                      }
                     }}
                   >
-                    <FormControlLabel value="file" control={<Radio />} label="Upload a File" />
-                    <FormControlLabel value="url" control={<Radio />} label="Enter a youtube URL" />
-                    { (executionType === "Create flash cards" || executionType === "Create quiz") &&
-                      <>
-                      <FormControlLabel value="model" control={<Radio />} label="Model independent" />
-                      <FormControlLabel value="Kiwix" control={<Radio />} label="Kiwix Files" />
-                      <FormControlLabel value="web search" control={<Radio />} label="Web Search" />
-                      </>
+                    Editor
+                  </Button>
+                  :
+                  <IconButton 
+                    onClick={()=> { 
+                      if (editorOn === false){
+                        setEditorOn(!editorOn);
+                        setExportContent("");
+                      }
+                      else{
+                        setEditorOn(!editorOn);
+                        setIsFullscreen(false);
+                        setExportContent(null);
+                      }
                     }
-                  </RadioGroup>
-                </FormControl>
-                <Divider />
-                </>
-                }
-                {aiSpace === "Ollama" &&
-                <FormControl fullWidth style={{marginTop: "1em", marginBottom: "1em"}}>
-                  <InputLabel id="dropdown-label">Select model</InputLabel>
-                  <Select
-                    labelId="dropdown-label"
-                    value={selectedModel}
-                    label="Select Model"
-                    onChange={handleSelectedChange}
-                  >
-                    {models.map((model, index) => (
-                      <MenuItem key={index} value={model}>
-                        {model}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-                }
-                {(executionType !== "Explain with web search" && executionType !== "Explain Simply")  &&
-                  <>
-                  <Divider sx={{mb:"1em"}}/>
-                  {inputType === "file" && (executionType !== "Explain with Kiwix" && inputType !== "Kiwix") &&
-                  <Box>
-                    <Typography variant="h7" sx={{mb: "0.5em", display: "block", }}>Upload file</Typography>
-                    <input
-                      accept="*"
-                      type="file"
-                      id="file-upload"
-                      style={{ display: "none" }}
-                      onChange={handleFileChange}
-                      component="span"
-                      required
+                      
+                  }>
+                    <EditDocumentIcon 
+                    sx={{fontSize: { xs: "0.9em", sm: "0.9em", md: "1.2em" }}}
                     />
-                    <label htmlFor="file-upload">
-                      <Button variant="contained" component="span" sx={{fontSize: "0.85rem"}}>
-                        Select File
-                      </Button>
-                    </label>
-                    <Typography variant="body2" sx={{mt: "0.5em", overflow: "auto"}}><span style={{textDecoration: "underline"}}>Selected file</span>: {file ? file.name : "No file selected" }</Typography>
-                  </Box>
-                  }
-                  {(inputType === "url" && (executionType !== "Explain with Kiwix" && inputType !== "Kiwix")) &&
-                  <>
-                    <Typography variant="h7" sx={{mb: "0.5em", display: "block"}}>Enter Youtube URL</Typography>
-                    <TextField
-                      label="Enter Youtube URL"
-                      variant="outlined"
-                      value={url}
-                      onChange={(e) => setUrl(e.target.value)}
-                      fullWidth
-                      required
-                    />
-                  </>
-                  }
-                  {(executionType === "Explain with Kiwix" || (inputType === "Kiwix")) &&
-                    <>
-                      <Typography variant="h7" sx={{mb: "0.5em", display: "block"}}>Upload Folder Path</Typography>
-                      <Button variant="contained" component="span" sx={{fontSize: "0.85rem"}} onClick={handleSubmitFolder}>
-                        Select Folder
-                      </Button>
-                    {/* <Typography variant="body2" sx={{mt: "0.5em", overflow: "auto"}}><span style={{textDecoration: "underline"}}>Selected Folder</span>: {folder !== "" ? folder : "No folder selected" }</Typography> */}
-                    </> 
-                  }
-                  { (executionType !== "Explain with Kiwix" && inputType !== "Kiwix" && inputType !== "web search" && inputType !== "model") &&
-                    <Button variant="contained" component="span" onClick={handleSubmitFile} sx={{mt: "1em", fontSize: "0.85rem"}}>
-                        Submit {(inputType === "file") ? "File" : "URL"}
-                    </Button>
-                  }
-    
-                  <Typography id="error-response-text" variant="caption" sx={{display: "block", color: colorOfResponse, minHeight: "2.3em", mt:"0.5em"}}>{errorResponse}</Typography> 
-                
-                
-                  { ((inputType !== "model" && inputType !== "web search") || executionType === "Explain with Kiwix") &&
-                  <Box>
-                    <Divider/>
-                    
+                  </IconButton>
+                }
+
+                {/* this is button for editor */}
+                <IconButton onClick={() => setOpenTodo(v => !v)}>
                   
-                    <Typography variant="body2" sx={{ my: "1em"}}> {/*///////////////////////////////////////////////////////*/}
-                      {executionType !== "Explain with Kiwix" && inputType !== "Kiwix"? "Vector Store Content" : "Kiwix Folder"}: {(!(executionType === "Explain with Kiwix" || inputType === "Kiwix") && (vectorStoreContent.includes("youtu.be") || vectorStoreContent.includes("youtube.com"))
-                      ) ? 
-                      <a href={vectorStoreContent} target="_blank">{vectorStoreContent}</a> : (executionType === "Explain with Kiwix" || inputType === "Kiwix" ? folderPath : vectorStoreContent)}
-                    </Typography>
+                  <AssignmentIcon sx={{
+                    // color: 'rgb(71, 69, 69)',
+                    fontSize: { xs: "0.9em", sm: "0.9em", md: "1.2em" }
+                  }} />
+                </IconButton>
+
+              </Box>
+
+                {leftSection && 
+                <div className="leftSectionDiv">
+                  <Box display="flex" flexDirection="column" gap={1} width={300}>
+                    <Box>
+                      <ModalAddThread  threads={threads} setThreads={setThreads} />
+                      <ModalDeleteThread  threads={threads} setThreads={setThreads} />
+                    </Box>
+                    {/* Dropdown to select thread */}
+                    <TextField
+                      select
+                      label="Select a Thread"
+                      value={selectedThread}
+                      onChange={handleSelectChange}
+                      fullWidth
+                      sx={{mt: "0.5em"}}
+                    >
+                      {threads.map((thread, index) => (
+                        <MenuItem key={index} value={thread}>
+                          {thread}
+                        </MenuItem>
+                      ))}
+                    </TextField>
                     
-                  <Divider sx={{mt: "1em"}}/> 
+                    
                   </Box>
-                  }
-    
+                  <FormControl sx={{mt: "0.2em"}}>
+                    <FormLabel>
+                      <RocketSharpIcon sx={{mr: "0.2em", transform: "translateY(0.1em)"}}/>
+                      Choose Execution Type
+                    </FormLabel>
+                    <RadioGroup
+                      row
+                      value={executionType}
+                      onChange={handleExecuteQuery}
+                    >
+                      <FormControlLabel value="Explain Simply" control={<Radio />} label="Explain Simply" />
+                      <FormControlLabel value="Explain with web search" control={<Radio />} label="Explain with web search" />
+                      <FormControlLabel value="Explain with document" control={<Radio />} label="Explain with document" />
+                      <FormControlLabel value="Explain with Kiwix" control={<Radio />} label="Explain with Kiwix" />
+                      <FormControlLabel value="Create flash cards" control={<Radio />} label="Create flash cards" />
+                      <FormControlLabel value="Create quiz" control={<Radio />} label="Create quiz" />
+                    </RadioGroup>
+                   </FormControl>
+                  <Divider sx={{mb:"1em"}}/>
+                  {executionType !== "Explain with web search"  && executionType !== "Explain Simply" && executionType !== "Explain with Kiwix" &&
+                  <>
+                  <FormControl sx={{width: "100%"}}>
+                  
+                    <FormLabel>Choose Input Type</FormLabel>
+                    <RadioGroup
+                      // row
+                      value={inputType}
+                      onChange={handleRadioChange}
+                      id="inputType-radio-buttons-group"
+                      sx={{
+                        display: "flex",
+                        flexDirection: "row",
+                        flexWrap: "wrap",
+                      }}
+                    >
+                      <FormControlLabel value="file" control={<Radio />} label="Upload a File" />
+                      <FormControlLabel value="url" control={<Radio />} label="Enter a youtube URL" />
+                      { (executionType === "Create flash cards" || executionType === "Create quiz") &&
+                        <>
+                        <FormControlLabel value="model" control={<Radio />} label="Model independent" />
+                        <FormControlLabel value="Kiwix" control={<Radio />} label="Kiwix Files" />
+                        <FormControlLabel value="web search" control={<Radio />} label="Web Search" />
+                        </>
+                      }
+                    </RadioGroup>
+                  </FormControl>
+                  <Divider />
                   </>
+                  }
+
+                  {(executionType !== "Explain with web search" && executionType !== "Explain Simply")  &&
+                    <>
+                    <Divider sx={{mb:"1em"}}/>
+                    {inputType === "file" && (executionType !== "Explain with Kiwix" && inputType !== "Kiwix") &&
+                    <Box>
+                      <Typography variant="h7" sx={{mb: "0.5em", display: "block", }}>Upload file</Typography>
+                      <input
+                        accept="*"
+                        type="file"
+                        id="file-upload"
+                        style={{ display: "none" }}
+                        onChange={handleFileChange}
+                        component="span"
+                        required
+                      />
+                      <label htmlFor="file-upload">
+                        <Button variant="contained" component="span" sx={{fontSize: "0.85rem"}}>
+                          Select File
+                        </Button>
+                      </label>
+                      <Typography variant="body2" sx={{mt: "0.5em", overflow: "auto"}}><span style={{textDecoration: "underline"}}>Selected file</span>: {file ? file.name : "No file selected" }</Typography>
+                    </Box>
+                    }
+                    {(inputType === "url" && (executionType !== "Explain with Kiwix" && inputType !== "Kiwix")) &&
+                    <>
+                      <Typography variant="h7" sx={{mb: "0.5em", display: "block"}}>Enter Youtube URL</Typography>
+                      <TextField
+                        label="Enter Youtube URL"
+                        variant="outlined"
+                        value={url}
+                        onChange={(e) => setUrl(e.target.value)}
+                        fullWidth
+                        required
+                      />
+                    </>
+                    }
+                    {(executionType === "Explain with Kiwix" || (inputType === "Kiwix")) &&
+                      <>
+                        <Typography variant="h7" sx={{mb: "0.5em", display: "block"}}>Upload Folder Path</Typography>
+                        <Button variant="contained" component="span" sx={{fontSize: "0.85rem"}} onClick={handleSubmitFolder}>
+                          Select Folder
+                        </Button>
+                      </> 
+                    }
+                    { (executionType !== "Explain with Kiwix" && inputType !== "Kiwix" && inputType !== "web search" && inputType !== "model") &&
+                      <Button variant="contained" component="span" onClick={handleSubmitFile} sx={{mt: "1em", fontSize: "0.85rem"}}>
+                          Submit {(inputType === "file") ? "File" : "URL"}
+                      </Button>
+                    }
+
+                    <Typography id="error-response-text" variant="caption" sx={{display: "block", color: colorOfResponse, minHeight: "2.3em", mt:"0.5em"}}>{errorResponse}</Typography> 
+                  
+                  
+                    { ((inputType !== "model" && inputType !== "web search") || executionType === "Explain with Kiwix") &&
+                    <Box>
+                      <Divider/>
+
+                    
+                      <Typography variant="body2" sx={{ my: "1em"}}> {/*///////////////////////////////////////////////////////*/}
+                        {executionType !== "Explain with Kiwix" && inputType !== "Kiwix"? "Vector Store Content" : "Kiwix Folder"}: {(!(executionType === "Explain with Kiwix" || inputType === "Kiwix") && (vectorStoreContent.includes("youtu.be") || vectorStoreContent.includes("youtube.com"))
+                        ) ? 
+                        <a href={vectorStoreContent} target="_blank">{vectorStoreContent}</a> : (executionType === "Explain with Kiwix" || inputType === "Kiwix" ? folderPath : vectorStoreContent)}
+                      </Typography>
+                      
+                    <Divider sx={{mt: "1em"}}/> 
+                    </Box>
+                    }
+
+                    </>
+                  }
+
+                </div>
                 }
-              
-              </div>
-              }
-              {/* <hr style={{width: "100%", border: "1px solid #e0e0e0", height: "0.1em"}}/> */}
-              
-          </Paper>
+                <Box sx={{mt:"auto"}}>
+                  <Divider 
+                  sx={{
+                    mb:"0.5em", 
+                    borderWidth: "0.1em",
+                    // fontSize: "0.6rem",
+                    // borderRadius: "10em",
+                    // borderWidth: "0.1em",
+                    // color: "rgb(165, 165, 165)",
+                    // borderTopColor: "rgb(138, 138, 138)",
+                    // borderBottomColor: "rgb(194, 213, 219)"
+                  }}
+                  />
+                  <ModalSettings 
+                  aiSpace={aiSpace} 
+                  setAiSpace={setAiSpace}
+                  setApi={setApi}
+                  api={api}
+                  setTemperature={setTemperature}
+                  temperature={temperature}
+                  setTopP={setTopP}
+                  topP={topP}
+                  setMaxTokens={setMaxTokens}
+                  maxTokens={maxTokens}
+                  modelName={modelName}
+                  setModelName={setModelName}
+                  baseUrl={baseUrl}
+                  setBaseUrl={setBaseUrl}
+                  oldData={oldData}
+                  setOldData={setOldData}
+                  leftSection={leftSection}
+                  />
+                </Box>
+              </Box>
+            </Paper>
+            {/*********************Todo component here here *****************/}
+            <Todo open={openTodo} setOpen={setOpenTodo} top={leftSection ? "9em" : "10.5em"} right={leftSection ? "-1em" : "-17em"}/>
+
+          </Box>
+          <IconButton
+            size="small"
+            sx={{
+              "&:hover": { backgroundColor: "#FFFFFF" },
+              position: "absolute",
+              right: "-0.6em",
+              top: "6.3em",                  // ← adjust to align with where you want it
+              height: "1.7em",
+              backgroundColor: "#FFFFFF",
+              p: "0.2em",
+              borderRadius: "20%",
+            }}
+            onClick={() => setLeftSection(!leftSection)}
+          >
+            <ExpandLessIcon sx={{transform: leftSection ? "rotate(-90deg)" : "rotate(90deg)"}}/>
+          </IconButton>
+
+        </Box>
         }
         {/*/////////////////////////This is the the end of left section/////////////////////////////////////////*/}
 
-          {/*/////////////////////////This is the  right section/////////////////////////////////////////*/}
+        {/*/////////////////////////This is the  right section/////////////////////////////////////////*/}
 
           <Paper 
           sx=
-          {{p:"1em", 
+          {{
+          py: !editorOn ? "0.8em" : "0.3em",
+          pb: "0.8em",
+          // px: isPortrait ? "2em" : {xs: "2em", md: "10em", lg: "20em"}, 
+          px: "2em",
+          // pb: "3em",
           borderRadius: 4, 
-          top: 0, 
+          // top: 0, 
           mx: "1em", 
-          flexGrow: 7, 
-          overflow: editorOn === false ? "auto" : "hidden", 
+          flexGrow: 15, 
+          overflow: editorOn === false ? "visible" : "hidden", 
           position: "relative", 
           display: "flex", 
           flexDirection: "column",
-          flexBasis: 0
+          flexBasis: 0,
+          alignItems: "center",
+          my: "0.75em",
+          // maskImage: isPortrait ?'linear-gradient(to right, rgba(0,0,0,0.6) 0%, black 2%, black 98%, rgba(0,0,0,0.6) 100%)' 
+          //                       : 'linear-gradient(to right, rgba(0,0,0,0.6) 0%, black 5%, black 95%, rgba(0,0,0,0.6) 100%)',
+          // WebkitMaskImage: 'linear-gradient(to right, rgba(0,0,0,0.6) 0%, black 5%, black 95.5%, rgba(0,0,0,0.6) 100%)',
+          maskImage: 'linear-gradient(to right, transparent, black 3%, black 97%, transparent)',
+          WebkitMaskImage: 'linear-gradient(to right, transparent, black 3%, black 97%, transparent)'
+          // color: "transparent"
           }}>
-            <Button 
-            variant="contained" 
+          {editorOn &&
+            <Paper
             sx={{
-              position: "absolute", 
-              top: "1em", 
-              left: "1.4em", 
-              fontSize: "0.85rem", 
-              visibility: isFullscreen === false ? "visible" : "hidden", 
-              zIndex: 1
-            }}
-            onClick={()=> {
-              if (editorOn === false){
-                setEditorOn(!editorOn);
-                setExportContent("");
-              }
-              else{
-                setEditorOn(!editorOn);
-                setIsFullscreen(false);
-                setExportContent(null);
-              }
+              width: "95%",
+              // padding: "0.3em 0.5em",
+              // padding: "0 0 0.3em 0.12em",
+              p: "0.3em 0.5em",
+              mb: "0.1em",
+              // p: "0 0 0.3em 0.12em",
+              // borderRadius: 4,
+              display: isFullscreen === false ? "block" : "none",
+              // position: "relative",
             }}
             >
-              Editor
-            </Button>
-            {editorOn == false && isFullscreen === false &&
-              
-              <IconButton onClick={()=> setRightSection(!rightSection)} 
+              <Button 
+                variant="contained" 
                 sx={{
-                  "&:hover": {
-                    backgroundColor: "transparent" /* Removes the hover background effect */
-                  },
-                  height: "1.7em",
-                  marginLeft: "auto", 
-                  // display: selectedThread !== "" ?  "span" : "hidden"
-                  visibility: selectedThread !== "" ?  "visible" : "hidden"
-                  // display: "block"
+                  // position: "absolute", 
+                  // top: "1em", 
+                  // left: "2.3em", 
+                  fontSize: "0.85rem", 
+                  // visibility: isFullscreen === false ? "visible" : "hidden", 
+                  zIndex: 1,
                 }}
-                >
-                  {rightSection ? <VisibilityIcon /> : <VisibilityOffIcon />}
-              </IconButton>
-            }
-            {isFullscreen === false && rightSection === true && editorOn === false &&
-            <div>
-              <Box>
-                {/* <FormControl sx={{mt: "0.2em"}}>
-                  <FormLabel>Choose Execution Type</FormLabel>
-                  <RadioGroup
-                    row
-                    value={executionType}
-                    onChange={handleExecuteQuery}
-                  >
-                    <FormControlLabel value="Explain Simply" control={<Radio />} label="Explain Simply" />
-                    <FormControlLabel value="Explain with web search" control={<Radio />} label="Explain with web search" />
-                    <FormControlLabel value="Explain with document" control={<Radio />} label="Explain with document" />
-                    <FormControlLabel value="Explain with Kiwix" control={<Radio />} label="Explain with Kiwix" />
-                    <FormControlLabel value="Create flash cards" control={<Radio />} label="Create flash cards" />
-                    <FormControlLabel value="Create quiz" control={<Radio />} label="Create quiz" />
+                onClick={()=> {
+                  if (editorOn === false){
+                    setEditorOn(!editorOn);
+                    setExportContent("");
+                  }
+                  else{
+                    setEditorOn(!editorOn);
+                    setIsFullscreen(false);
+                    setExportContent(null);
+                  }
+                }}
+              >
+                Exit
+              </Button>
 
-                  </RadioGroup>
-                </FormControl> */}
-                <TextField //################input for query#################
-                  label="Enter Prompt"
-                  variant="outlined"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  sx={{ 
-                    my: "0.5em",
-                    // pr: "1em",
-                    '& .MuiInputBase-input': {
-                      resize: "vertical",
-                      maxHeight: 110, // enforce max height for 4 rows
-                      pr: "1em"
-                    }
-                  }}
-                  fullWidth
-                  required
-                  multiline
-                  // rows={1}
-                  minRows={1}
-                  maxRows={4}
-                  inputProps={{
-                    style: { resize: "vertical", overflow: "auto" }
-                  }}
-                  onKeyDown={e => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      // console.log("submit button disabled", submitButtonRef.current.disabled);     
-                      if(submitButtonRef.current.disabled === false){
-                        // (executionType === "Explain with document") ? handleQuery() : (executionType === "Create flash cards") ? handleCreateFlashCards() : handleCreateQuiz()
-                        if (executionType === "Explain with document" || executionType === "Explain with Kiwix" || executionType === "Explain with web search" || executionType === "Explain Simply") {
-                          handleQuery()
-                        } else if (executionType === "Create flash cards") {
-                          handleCreateFlashCards()
-                        } else if (executionType === "Create quiz") {
-                          handleCreateQuiz()
-                        }
-                      }
-                    }
-                  }}
-                  />
-                    {(executionType !== "Explain with document" && executionType !== "Explain with Kiwix" && executionType !== "Explain with web search" && executionType !== "Explain Simply") &&
-                    <Box>
-                      <Typography variant="h7" sx={{fontWeight: 200, display: "block"}} >Number of {executionType === "Create flash cards" ? "flash cards" : "questions"} to generate:</Typography>
-                      <TextField
-                        type="number"
-                        label="Enter a number"
-                        value={numberEx}
-                        onChange={handleChangeExcutionType}
-                        inputProps={{
-                          min: 1,
-                          step: 1, // ensures stepping by whole numbers
-                        }}
-                        sx={{ width: 200, my: "1em" }}
-                      /> 
-                    </Box>
-                    }
-                    <Button 
-                    ref={submitButtonRef}
-                    sx={{fontSize: "0.85rem"}}
-                    variant="contained" 
-                    type="submit"
-                    onClick={
-                      (executionType === "Explain with document" || executionType === "Explain with Kiwix" || executionType === "Explain with web search" || executionType === "Explain Simply") 
-                      ? 
-                      handleQuery 
-                      : 
-                      (executionType === "Create flash cards" ? handleCreateFlashCards : handleCreateQuiz)
-                    } 
-                    disabled={readyToQuery === false || selectedThread === "" || query === "" || loading || selectedModel === ""}>
-                        Submit Prompt
-                    </Button>
-                    <IconButton>
-                      {(loading) ? <CircularProgress size={24} /> : ""}
-                    </IconButton>
-                    <Typography variant="caption" sx={{display: "block", fontStyle: "italic"}}>Note: Please ensure Thread and File/URL are set to submit prompt.</Typography>
-                    <Typography variant="body2" sx={{display: "block", color: "red", minHeight: "1.5em", fontSize:"0.8rem", mb: "0.1em"}}>{errorResponseMsg}</Typography>
-                    <Divider sx={{mb: "0.5em"}}/>
-                </Box>
-            </div>
-                }
+              {/* <Todo /> */}
+              <Box sx={{position: "relative", display: "inline-block", ml: "0.3em"}}>
+                <IconButton onClick={() => setOpenTodo(v => !v)}>
+                  <AssignmentIcon sx={{
+                    fontSize: { xs: "0.9em", sm: "0.9em", md: "1.2em" }
+                  }} />
+                </IconButton>
+                <Todo open={openTodo} setOpen={setOpenTodo} top={"3em"} right={ "-13em"}/>
+              </Box>
+
+            </Paper>
+          } 
+           
             {/*///////////////////////////////Output Part below Right Section///////////////////////////////////////////////////////*/}
-                  {selectedThread !== "" && (executionType === "Explain with document" || executionType === "Explain with Kiwix" || 
+                  {/* {selectedThread !== "" && (executionType === "Explain with document" || executionType === "Explain with Kiwix" || 
+                    executionType === "Explain with web search" || executionType === "Explain Simply") && editorOn === false && */}
+                  {(executionType === "Explain with document" || executionType === "Explain with Kiwix" || 
                     executionType === "Explain with web search" || executionType === "Explain Simply") && editorOn === false &&
                     <Paper 
                     ref={paperRefResponse}
                     onScroll={handleScroll}
                     sx={{
-                      px: "3vh",
-                      pt: "2vh",
+                      // px: "3vh",
+                      // pt: "2vh",
                       backgroundColor: '#f9fafb',
                       borderRadius: "1em",
                       border: '1px solid #e0e0e0',
+                      borderRadius: "0 1em 1em 1em",
                       overflow: "auto",
                       position: "relative",
                       flex: "1",
                       minHeight: {xs: "20em", sm: "18em", md: "16em"},
-                      pb: isFullscreen ? 0 : "0.75em"
+                      pb: isFullscreen ? 0 : "0.75em",
+                      width: "95%",
+                      
                     }}
                     >
-                      <IconButton
-                        onClick={toggleFullscreen}
-                        sx={{ position: 'absolute', top: 8, right: 8 }}
-                        aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
-                      >
-                        {isFullscreen ? <FullscreenExitIcon/> : <FullscreenIcon />}
-                      </IconButton>
-                      <Typography variant="h5" sx={{fontWeight: "bold", color: "green", mt: "1em", textAlign: "center", color: "#0077b6"}}>Response</Typography>
-                      <Box sx={{display: 'flex', justifyContent: 'center', my: "0.5em"}}>
-                        <IconButton onClick={() => {
-                          if (response !== "")handlePrintOutput();
-                          }
-                        }
+                      {/* <Typography variant="h5" sx={{fontWeight: "bold", color: "green", mt: "1em", textAlign: "center", color: "#0077b6"}}>Response</Typography> */}
+                        <Box sx=
+                        {{
+                          display: 'flex', 
+                          justifyContent: 'left', 
+                          columnGap: "0.1em",
+                          pb: "0.3em", 
+                          position: "sticky", 
+                          top: "0", 
+                          zIndex: 2, 
+                          backgroundColor: "#F9FAFB"
+                        }}
                         >
-                          {response === "" ? <PrintDisabledIcon /> : <PrintIcon />}
-                          </IconButton>
-                        <ModalModifyMessegeHistory thread_title={selectedThread} refreshMessageHistory={refreshMessageHistory} 
-                          setRefreshMessageHistory={setRefreshMessageHistory} setResponse={setResponse} aiSpace={aiSpace}/>
-                        <IconButton onClick={() => 
-                          {
-                            setExportContent(response);
-                            setIsFullscreen(false);
-                            setEditorOn(true);
+                          <Typography 
+                          variant="h6" 
+                          sx={{
+                            fontWeight: "bold", 
+                            textAlign: "center", 
+                            backgroundColor: "#1565C0",
+                            color: "#F9FAFB",
+                            transform: "translateY(5%)",
+                            p: "0.1em 0.3em",
+                            borderRadius: "0 0 0.5em 0"
+
+                          }}
+                          >
+                            Response
+                          </Typography>
+                          {/* <Divider sx={{mx: "0.1em"}}></Divider> */}
+                          <hr style={{margin: "0.2em 0.2em", border: "0.1em solid #1565C0"}}></hr>
+                          <IconButton onClick={() => {
+                            if (response !== "")handlePrintOutput();
+                            }
                           }
-                        }>
-                          <FileUploadIcon />
-                        </IconButton>
+                          disabled={response !== "" ? false : true}
+                          >
+                            {response === "" ? <PrintDisabledIcon /> : <PrintIcon />}
+                            </IconButton>
+                          <ModalModifyMessegeHistory thread_title={selectedThread} refreshMessageHistory={refreshMessageHistory} 
+                            setRefreshMessageHistory={setRefreshMessageHistory} setResponse={setResponse} aiSpace={aiSpace}/>
+                          <IconButton 
+                          onClick={() => 
+                            {
+                              setExportContent(response);
+                              setIsFullscreen(false);
+                              setEditorOn(true);
+                            }
+                          }
+                          >
+                            <FileUploadIcon />
+                          </IconButton>
+                          {/* <IconButton
+                          onClick={toggleFullscreen}
+                          aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+                          >
+                          </IconButton> */}
+                          <IconButton
+                          onClick={toggleFullscreen}
+                          sx={{marginLeft: "auto"}}
+                          aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+                          // sx={}
+                          disabled={response !== "" ? false : true}
+                          >
+                            {isFullscreen ? <FullscreenExitIcon/> : <FullscreenIcon />}
+                          </IconButton>
+                        </Box>
+                      <Box 
+                      ref={outputRef}
+                      sx={{
+                        fontSize: "1.2em",
+                        p: "0.3em 1em 1em 1em",
+                        // typography: "body1",
+                      }}
+                      >
+                        {/* <Typography variant="h6" sx={{ fontWeight: 500 }}> */}
+                          <MarkdownRenderer>{errorResponseMsg === "" ? response : errorResponseMsg}</MarkdownRenderer>
+                        {/* </Typography> */}
                       </Box>
-                      <div ref={outputRef}>
-                        <Typography variant="h6" sx={{ fontWeight: 500 }}>
-                          <MarkdownRenderer>{response}</MarkdownRenderer>
-                        </Typography>
-                      </div>
 
 
                     </Paper>
                 
                   }
-                  {selectedThread !== "" && executionType === "Create flash cards" && flashCards != [] && editorOn === false &&
+                  { executionType === "Create flash cards" && flashCards != [] && editorOn === false &&
                     <Paper 
                     ref={paperRefFlashCards}
                     sx={{
-                      px: "3vh",
-                      pt: "2vh",
+                      // px: "3vh",
+                      // pt: "2vh",
                       backgroundColor: '#f9fafb',
                       borderRadius: "1em",
                       border: '1px solid #e0e0e0',
+                      borderRadius: "0 1em 1em 1em",
                       // mt: isFullscreen ? 0 : "1em",
                       // height: isFullscreen ? "98vh" : {xs: "12em", sm: "13em", md: "16em"},
                       // height: `calc(100vh - ${outerPaperHeight}px)`,
@@ -1226,26 +1302,67 @@ const MainApp = () => {
                       position: "relative",
                       flex: "1",
                       minHeight: {xs: "20em", sm: "18em", md: "16em"},
-                      pb: isFullscreen ? 0 : "0.75em"
+                      pb: isFullscreen ? 0 : "0.75em",
+                      width: "95%"
                     }}
                     >
-                      <IconButton
-                        onClick={toggleFullscreen}
-                        sx={{ position: 'absolute', top: 8, right: 8 }}
-                        aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+                      <Box sx=
+                      {{
+                        display: 'flex', 
+                        justifyContent: 'left', 
+                        columnGap: "0.1em",
+                        pb: "0.3em", 
+                        mb: "0.5em",
+                        position: "sticky", 
+                        top: "0", 
+                        zIndex: 2, 
+                        backgroundColor: "#F9FAFB",
+                      }}
                       >
-                        {isFullscreen ? <FullscreenExitIcon /> : <FullscreenIcon />}
-                      </IconButton>
-                      <Typography variant="h5" sx={{fontWeight: "bold", color: "green", mt: "1em", textAlign: "center", color: "#0077b6"}}>Flash Cards</Typography>
-                      <Box sx={{display: 'flex', justifyContent: 'center', alignItems: "center", columnGap: "0.5em", my: "0.5em"}}>
+                        <Typography 
+                        variant="h6" 
+                        sx={{
+                          fontWeight: "bold", 
+                          textAlign: "center", 
+                          backgroundColor: "#1565C0",
+                          color: "#F9FAFB",
+                          transform: "translateY(5%)",
+                          p: "0.1em 0.3em",
+                          borderRadius: "0 0 0.5em 0"
+                          
+                        }}
+                        >
+                          Flash Cards
+                        </Typography>
+                        <hr style={{margin: "0.2em 0.2em", border: "0.1em solid #1565C0"}}></hr>
                         <ModalAddFlashCard setFlashCards={setFlashCards} thread_title={selectedThread} setNewFlashCards={setNewFlashCards}/>
                         <ModalPresentFlashcards flashcards={flashCards} />
-                        <IconButton onClick={() => {if(flashCards.length !== 0)handlePrintOutput()}}
+                        <IconButton 
+                        onClick={() => {if(flashCards.length !== 0)handlePrintOutput()}}
+                        disabled={flashCards?.length === 0 ? true : false}
                         >
-                          {flashCards.length === 0 ? <PrintDisabledIcon /> : <PrintIcon />}
+                        {flashCards.length === 0 ? <PrintDisabledIcon /> : <PrintIcon />}
+                        </IconButton>
+                        <IconButton
+                        onClick={toggleFullscreen}
+                        // sx={{ position: 'absolute', top: 8, right: 8 }}
+                        sx={{marginLeft: "auto"}}
+                        aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+                        disabled={flashCards?.length === 0 ? true : false} 
+                        >
+                        {isFullscreen ? <FullscreenExitIcon /> : <FullscreenIcon />}
                         </IconButton>
                       </Box>
+                      <Typography variant="h6" 
+                      sx={{ 
+                        fontWeight: 500,
+                        display: errorResponseMsg !== "" ? "block" : "none"
+
+                      }}>
+                          <MarkdownRenderer>{errorResponseMsg === "" ? response : errorResponseMsg}</MarkdownRenderer>
+                      </Typography>
                       <div ref={outputRef}>
+                      
                       {flashCards.map((card, index) => (
                         <Paper key={card.id} sx={{ p: 2, mb: 2, display: "inline-block", mx: 1, maxWidth: "30em"}}>
                           <Typography variant="h6" sx={{ fontWeight: "500" }} component={"span"}>
@@ -1266,15 +1383,16 @@ const MainApp = () => {
                       </div>
                     </Paper>
                   }
-                  {selectedThread !== "" && executionType === "Create quiz" && quizzes != [] && editorOn === false &&
+                  { executionType === "Create quiz" && quizzes != [] && editorOn === false &&
                     <Paper 
                     ref={paperRefQuizzes}
                     sx={{
-                      px: "3vh",
-                      pt: "2vh",
+                      // px: "3vh",
+                      // pt: "2vh",
                       backgroundColor: '#f9fafb',
                       borderRadius: "1em",
                       border: '1px solid #e0e0e0',
+                      borderRadius: "0 1em 1em 1em",
                       // mt: isFullscreen ? 0 : "1em",
                       // height: isFullscreen ? "98vh" : {xs: "12em", sm: "13em", md: "16em"},
                       // height: `calc(100vh - ${outerPaperHeight}px)`,
@@ -1282,19 +1400,43 @@ const MainApp = () => {
                       position: "relative",
                       flex: "1",
                       minHeight: {xs: "20em", sm: "18em", md: "16em"},
-                      pb: isFullscreen ? 0 : "0.75em"
+                      pb: isFullscreen ? 0 : "0.75em",
+                      width: "95%"
                     }}
                     >
-                      <IconButton
-                        onClick={toggleFullscreen}
-                        sx={{ position: 'absolute', top: 8, right: 8 }}
-                        aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
-                      >
-                        {isFullscreen ? <FullscreenExitIcon /> : <FullscreenIcon />}
-                      </IconButton>
-                      <Typography variant="h5" sx={{fontWeight: "bold", color: "green", mt: "1em", textAlign: "center", color:"#0077b6"}}>Quizzes</Typography>
+                      
                       {/* <Typography variant="h6" sx={{fontWeight: "500"}}>{response}</Typography> */}
-                      <Box sx={{display: 'flex', justifyContent: 'center', my: "0.5em", alignItems: "center", columnGap: "0.5em"}}>
+                      <Box sx=
+                      {{
+                        display: 'flex', 
+                        justifyContent: 'left', 
+                        columnGap: "0.1em",
+                        pb: "0.3em", 
+                        mb: "0.5em",
+                        position: "sticky", 
+                        top: "0", 
+                        zIndex: 2, 
+                        backgroundColor: "#F9FAFB",
+                        overflow: "auto"
+                      }}
+                      >
+                        {/* <Typography variant="h5" sx={{fontWeight: "bold", color: "green", textAlign: "center", color:"#0077b6"}}>Quizzes</Typography> */}
+                        <Typography 
+                        variant="h6" 
+                        sx={{
+                          fontWeight: "bold", 
+                          textAlign: "center", 
+                          backgroundColor: "#1565C0",
+                          color: "#F9FAFB",
+                          transform: "translateY(5%)",
+                          p: "0.1em 0.3em",
+                          borderRadius: "0 0 0.5em 0"
+                          
+                        }}
+                        >
+                          Quizzes
+                        </Typography>
+                        <hr style={{margin: "0.2em 0.2em", border: "0.1em solid #1565C0"}}></hr>
                         <ModalAddQuiz setQuizzes={setQuizzes} thread_title={selectedThread} setNewQuizzes={setNewQuizzes}/>
                         <ModalPresentQuiz quizzes={quizzes} />
                         <span>
@@ -1303,57 +1445,77 @@ const MainApp = () => {
                             if(quizzes.length !== 0)setShowAnswerPrintOption(!showAnswerPrintOption);
                           }
                         }
+                        disabled={quizzes?.length === 0 ? true : false}
                         >
                           {quizzes.length === 0 ? <PrintDisabledIcon /> : <PrintIcon />}
                         </IconButton>
                         </span>
+                        {showAnswerPrintOption ? 
+                          <Box sx={{display: 'flex', justifyContent: 'center', my: "0.5em", alignContent: "center", transform: "translateY(3%)"}}>
+                          {/* <Box> */}
+                            Show Answers?&nbsp;
+                            <Box 
+                              component="span" 
+                              sx={{ 
+                                cursor: "pointer",
+                                ':hover': { backgroundColor: 'lightblue' },
+                                // padding: "0.1em",
+                                borderRadius: "0.5em"
+                              }}
+                              onClick={() => {
+                                setShowAnswerPrint(true);
+                                setClickTriggerPrint(prev => prev + 1);
+                                }
+                              }
+                            >
+                            Yes
+                            </Box>
+                            &nbsp;
+                            /
+                            &nbsp;
+                            <Box 
+                              component="span" 
+                              sx={{ 
+                                cursor: "pointer",
+                                ':hover': { backgroundColor: 'lightblue' } ,
+                                // padding: "0.1em",
+                                borderRadius: "0.5em"
+                              }}
+                              onClick={() => {
+                                // setClickedOptionPrint(true);
+                                setShowAnswerPrint(false);
+                                setClickTriggerPrint(prev => prev + 1);
+                                // handlePrintOutput();
+                                // setShowAnswerPrintOption(!showAnswerPrintOption);
+                                // setClickedOptionPrint(false);
+                                }
+                              }
+                            >
+                            No
+                            </Box>
+                          </Box>
+                          : 
+                          ""
+                        }
+                        <IconButton
+                          onClick={toggleFullscreen}
+                          sx={{marginLeft: "auto"}}
+                          aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+                          disabled={quizzes?.length === 0 ? true : false}
+                        >
+                          {isFullscreen ? <FullscreenExitIcon /> : <FullscreenIcon />}
+                        </IconButton>
                       </Box>
-                      {showAnswerPrintOption ? 
-                        <Box sx={{display: 'flex', justifyContent: 'center', my: "0.5em"}}>
-                          Show Answers?&nbsp;
-                          <Box 
-                            component="span" 
-                            sx={{ 
-                              cursor: "pointer",
-                              ':hover': { backgroundColor: 'lightblue' },
-                              // padding: "0.1em",
-                              borderRadius: "0.5em"
-                            }}
-                            onClick={() => {
-                              setShowAnswerPrint(true);
-                              setClickTriggerPrint(prev => prev + 1);
-                              }
-                            }
-                          >
-                          Yes
-                          </Box>
-                          &nbsp;
-                          /
-                          &nbsp;
-                          <Box 
-                            component="span" 
-                            sx={{ 
-                              cursor: "pointer",
-                              ':hover': { backgroundColor: 'lightblue' } ,
-                              // padding: "0.1em",
-                              borderRadius: "0.5em"
-                            }}
-                            onClick={() => {
-                              // setClickedOptionPrint(true);
-                              setShowAnswerPrint(false);
-                              setClickTriggerPrint(prev => prev + 1);
-                              // handlePrintOutput();
-                              // setShowAnswerPrintOption(!showAnswerPrintOption);
-                              // setClickedOptionPrint(false);
-                              }
-                            }
-                          >
-                          No
-                          </Box>
-                        </Box>
-                        : 
-                        ""
-                      }
+                      
+                      <Typography variant="h6" 
+                      sx={{ 
+                        fontWeight: 500,
+                        display: errorResponseMsg !== "" ? "block" : "none"
+
+                      }}>
+                          <MarkdownRenderer>{errorResponseMsg === "" ? response : errorResponseMsg}</MarkdownRenderer>
+                      </Typography>
+                      {/* <div ref={outputRef}></div> */}
                       <div ref={outputRef}>
                       {quizzes.map((quiz, indexQuiz) => (
                         <Paper key={quiz.id} sx={{ p: 2, mb: 2, display: "inline-block", mx: 1}}>
@@ -1406,12 +1568,225 @@ const MainApp = () => {
                   <div style={{
                     display: editorOn && exportContent !== null ? "flex" : "none",
                     flex: 1,
-                    
+                    width: "95%",
                     minHeight: 0
                   }}>
                     <TiptapEditor newContent={exportContent} isTipTapOpen={editorOn}/>
                   </div>
-                  {/* } */}
+                  {isFullscreen === false && rightSection === true && editorOn === false &&
+                  //this is where to submit prompt
+                          <Box sx={{width: "95%", position: "relative"}}>
+                            {executionType === "Create flash cards" || executionType === "Create quiz" ?
+                            <LabeledNumberTab //################input for query#################
+                              labelTab= {executionType === "Create flash cards" ? "Number of flash cards:" : "Number of questions:"}
+                              valueTab={numberEx}
+                              onChangeTab={setNumberEx}
+                              variant="outlined"
+                              value={query}
+                              onChange={(e) => setQuery(e.target.value)}
+                            
+                              sx={{ 
+                                my: "0.5em",
+                                // pr: "1em",
+                                // width: "100%",
+                                '& .MuiInputBase-input': {
+                                  // resize: "vertical",
+                                  // maxHeight: 110, // enforce max height for 4 rows
+                                  pr: "3em"
+                                },
+                                backgroundColor: "#FFFFFF"
+                              }}
+                              fullWidth
+                              required
+                              multiline
+                              minRows={1}
+                              maxRows={4}
+                              inputProps={{
+                                style: { resize: "vertical", overflow: "auto", paddingRight: "3em" }
+                              }}
+                              onKeyDown={e => {
+                                if (e.key === 'Enter' && !e.shiftKey) {
+                                  e.preventDefault();
+                                  // console.log("submit button disabled", submitButtonRef.current.disabled);     
+                                  if(submitButtonRef.current.disabled === false){
+                                    // (executionType === "Explain with document") ? handleQuery() : (executionType === "Create flash cards") ? handleCreateFlashCards() : handleCreateQuiz()
+                                    if (executionType === "Explain with document" || executionType === "Explain with Kiwix" || executionType === "Explain with web search" || executionType === "Explain Simply") {
+                                      handleQuery()
+                                    } else if (executionType === "Create flash cards") {
+                                      handleCreateFlashCards()
+                                    } else if (executionType === "Create quiz") {
+                                      handleCreateQuiz()
+                                    }
+                                  }
+                                }
+                              }}
+                            />
+                            ///////////////
+                            :
+                            <Box sx={{position: "relative"}}>
+                              <TextField //################input for query#################
+                              variant="outlined"
+                              value={query}
+                              onChange={(e) => setQuery(e.target.value)}
+                              sx={{ 
+                                my: "0.5em",
+                                // pr: "1em",
+                                // width: "100%",
+                                backgroundColor: "#FFFFFF",
+                                '& .MuiInputBase-input': {
+                                  // resize: "vertical",
+                                  // maxHeight: 110, // enforce max height for 4 rows
+                                  pr: "3em"
+                                },
+                                backgroundColor: "#FFFFFF"
+                              }}
+                              fullWidth
+                              required
+                              multiline
+                              minRows={1}
+                              maxRows={4}
+                              inputProps={{
+                                style: { resize: "vertical", overflow: "auto", paddingRight: "3em" }
+                              }}
+                              onKeyDown={e => {
+                                if (e.key === 'Enter' && !e.shiftKey) {
+                                  e.preventDefault();
+                                  // console.log("submit button disabled", submitButtonRef.current.disabled);     
+                                  if(submitButtonRef.current.disabled === false){
+                                    // (executionType === "Explain with document") ? handleQuery() : (executionType === "Create flash cards") ? handleCreateFlashCards() : handleCreateQuiz()
+                                    if (executionType === "Explain with document" || executionType === "Explain with Kiwix" || executionType === "Explain with web search" || executionType === "Explain Simply") {
+                                      handleQuery()
+                                    } else if (executionType === "Create flash cards") {
+                                      handleCreateFlashCards()
+                                    } else if (executionType === "Create quiz") {
+                                      handleCreateQuiz()
+                                    }
+                                  }
+                                }
+                              }}
+                              />
+                               {/* <Select
+                                labelId="dropdown-label"
+                                value={selectedModel}
+                                // label="Select Model"
+                                onChange={handleSelectedChange}
+                                sx={{
+                                  position: "absolute", 
+                                  right: "0.8em", 
+                                  bottom: "-0.8em", 
+                                  width: "9em", 
+                                  fontSize: "0.8rem",
+                                  zIndex: -1,
+                                  // p: "0"
+                                  "& .MuiSelect-select": {
+                                    p: "0.1em 01em"
+                                  }
+                                }}
+                              >
+                                {models.map((model, index) => (
+                                  <MenuItem key={index} value={model}>
+                                    {model}
+                                  </MenuItem>
+                                ))}
+                              </Select> */}
+                            </Box>
+                          } 
+                          <IconButton
+                            ref={submitButtonRef}
+                            sx={{
+                              position: "absolute",
+                              right: "0.8em",
+                              bottom: executionType === "Create flash cards" || executionType === "Create quiz" ? "0.65em" : "0.65em",
+                              backgroundColor: "primary.main",
+                              color: "white",
+                              "&:hover": { backgroundColor: "primary.dark" },
+                              "&:disabled": { backgroundColor: "grey.300" },
+                              zIndex: 1,
+                            }}
+                            disabled={readyToQuery === false || selectedThread === "" || query === "" || loading || selectedModel === ""}
+                            onClick={
+                              (executionType === "Explain with document" || executionType === "Explain with Kiwix" || executionType === "Explain with web search" || executionType === "Explain Simply")
+                              ? handleQuery
+                              : (executionType === "Create flash cards" ? handleCreateFlashCards : handleCreateQuiz)
+                            }
+                          >
+                            {loading ? <CircularProgress size={24} sx={{ color: "white" }} /> : <SendIcon />}
+                          </IconButton>
+
+
+                          
+                          {aiSpace === "Ollama" &&
+                            <Tooltip
+                             title="Choose which AI model to use"
+                              open={modelTooltipOpen && !selectOpen}
+                              onOpen={() => {
+                                if (suppressReopen.current) return; // ignore phantom mouseover right after close
+                                setModelTooltipOpen(true);
+                              }}
+                              onClose={() => setModelTooltipOpen(false)}
+                              disableFocusListener
+                            >
+                              <Select
+                                labelId="dropdown-label"
+                                value={selectedModel}
+                                onOpen={() => {
+                                  setSelectOpen(true);
+                                  setModelTooltipOpen(false); // hide tooltip the instant the menu opens
+                                }}
+                                onClose={() => {
+                                  setSelectOpen(false),   
+                                  setModelTooltipOpen(false);
+                                  suppressReopen.current = true;
+                                  setTimeout(() => { suppressReopen.current = false; }, 300);
+                                }}
+                                onChange={(e) => {
+                                  setSelectOpen(false);
+                                  handleSelectedChange(e);
+                                  setModelTooltipOpen(false);
+                                  suppressReopen.current = true;
+                                  setTimeout(() => { suppressReopen.current = false; }, 300);
+                                }}
+                                MenuProps={{
+                                  slotProps: {
+                                    paper: {
+                                      style: {
+                                        maxHeight: (36 * 6)+8, //only show 6 rows. Each item is 36px and the padding of the MuiList is 8
+                                        overflowY: 'auto',
+                                      },
+                                    },
+                                  },
+                                }}
+                                sx={{
+                                  position: "absolute", 
+                                  right: "1.5em", 
+                                  bottom: "-0.8em", 
+                                  width: "9em", 
+                                  fontSize: "0.8rem",
+                                  zIndex: -1,
+                                  // p: "0"
+                                  "& .MuiSelect-select": {
+                                    p: "0.1em 1em"
+                                  },
+
+                                }}
+                              >
+                                {models.map((model, index) => (
+                                  <MenuItem key={index} value={model}>
+                                    {model}
+                                  </MenuItem>
+                                ))}
+                              </Select>
+                            </Tooltip>
+                          }
+                          {/* <IconButton>
+                            {(loading) ? <CircularProgress size={24} /> : ""}
+                          </IconButton> */}
+                          {/* <Typography variant="caption" sx={{display: "block", fontStyle: "italic"}}>Note: Please ensure Thread and File/URL are set to submit prompt.</Typography> */}
+                          {/* <Typography variant="body2" sx={{display: "block", color: "red", minHeight: "1.5em", fontSize:"0.8rem", mb: "0.1em"}}>{errorResponseMsg}</Typography> */}
+                          {/* <Divider sx={{mb: "0.5em"}}/> */}
+                      </Box>
+                  // </div>
+                  }
 
           </Paper>
           </Box>

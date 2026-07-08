@@ -260,7 +260,7 @@ const MenuBar = ({ editor, handlePrint}) => {
   )
 }
 
-export default function TiptapEditor({newContent, isTipTapOpen}) {
+export default function SmallTextEditor({newContent}) {
   // const [content, setContent] = useState('');
   const [htmlContent, setHtmlContent] = useState('');
 
@@ -332,14 +332,14 @@ export default function TiptapEditor({newContent, isTipTapOpen}) {
 
 
   useEffect(() => {
-    if (editor && isTipTapOpen && htmlContent) {
+    if (editor && htmlContent) {
       editor
         .chain()
         .focus('end')
         .insertContent(htmlContent)
         .run();
     }
-  }, [editor, htmlContent, isTipTapOpen]);//add anoter state to control this when inline highlight import happens in the future
+  }, [editor, htmlContent]);//add anoter state to control this when inline highlight import happens in the future
 
 
 
@@ -350,9 +350,9 @@ export default function TiptapEditor({newContent, isTipTapOpen}) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", minHeight: 0 , width: "100%"}} id="outerDivTipTap">
-      <div >
+      {/* <div >
         <MenuBar editor={editor} handlePrint={handlePrint} />
-      </div>
+      </div> */}
       <Box
         sx={{
           backgroundColor: '#f9fafb',

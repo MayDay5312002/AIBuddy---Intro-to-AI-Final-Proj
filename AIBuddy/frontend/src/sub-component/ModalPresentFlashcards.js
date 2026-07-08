@@ -67,7 +67,17 @@ export default function ModalPresentFlashcards({flashcards}) {
 
   return (
     <Box component={"span"}>
-      <Button onClick={handleOpen} sx={{ color: "white", backgroundColor: "rgb(25, 118, 210)", fontSzie: "0.85rem"}}>Present Flashcards</Button>
+      <Button 
+      onClick={handleOpen} 
+      sx={{ 
+        // color: "white", backgroundColor: "rgb(25, 118, 210)", fontSzie: "0.85rem"
+        transform: "translateY(5%)",
+      }}
+      variant="contained"
+      disabled={flashcards?.length === 0}
+      >
+        Present Flashcards
+      </Button>
       <Modal
         open={open}
         onClose={handleClose}

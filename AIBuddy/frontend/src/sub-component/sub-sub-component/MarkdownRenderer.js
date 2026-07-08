@@ -19,11 +19,12 @@ function MarkdownRenderer({ children }) {
   return (
     <Box
       sx={{
+        minWidth: 0,
         "& p": { m: 0, mb: 1 },
         "& ul, & ol": { pl: 3, mb: 1 },
         "& pre": {
           borderRadius: 1,
-          overflowX: "auto",
+          // overflowX: "auto",
           mb: 1,
           "& code": {
             fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
@@ -61,8 +62,8 @@ function MarkdownRenderer({ children }) {
             const codeText = String(children).replace(/\n$/, "");
 
             return (
-              <Card sx={{ my: 1, bgcolor: "#1e1e1e", position: "relative" }}>
-                <CardContent sx={{ p: 1.5, pr: 6 }}>
+              <Card sx={{ my: 1, bgcolor: "#1e1e1e", position: "relative", overflow: "hidden" }}>
+                <CardContent sx={{ p: 1.5, pr: 6, minWidth: 0, maxWidth: "100%" }}>
                   <IconButton
                     size="small"
                     onClick={() => handleCopy(codeText, currentIndex)}
@@ -75,19 +76,20 @@ function MarkdownRenderer({ children }) {
                   >
                     <FiCopy />
                   </IconButton>
-                  <pre style={{ margin: 0, overflowX: "auto" }}>
+                  <pre style={{ margin: 0, overflowX: "auto", maxWidth: "100%" }}>
                     <code
-                      {...props}
-                      className={className}
-                      style={{
-                        fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
-                        fontSize: "0.85rem",
-                        lineHeight: 1.5,
-                        color: "#d4d4d4",
-                        background: "transparent",
-                        padding: 0
-                      }}
-                    >
+                        {...props}
+                        className={className}
+                        style={{
+                          fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+                          fontSize: "0.85rem",
+                          lineHeight: 1.5,
+                          color: "#d4d4d4",
+                          background: "transparent",
+                          padding: 0,
+                          whiteSpace: "pre",
+                        }}
+                      >
                       {children}
                     </code>
                   </pre>
@@ -95,6 +97,11 @@ function MarkdownRenderer({ children }) {
               </Card>
             );
           },
+          
+          // pre: ({ children }) => (
+          //   <div style={{ marginBottom: 8 }}>{children}</div>
+          // ),
+
           blockquote: (props) => (
             <Typography
               variant="body1"
@@ -109,6 +116,17 @@ function MarkdownRenderer({ children }) {
               {...props}
             />
           ),
+          h1: ({ children }) => (
+            <h3>
+              {children}
+            </h3>
+          ),
+          h2: ({ children }) => (
+            <h3 >
+              {children}
+            </h3>
+          ),
+          // p: ({ children }) => <div>{children}</div>
         }}
       >
         {children}

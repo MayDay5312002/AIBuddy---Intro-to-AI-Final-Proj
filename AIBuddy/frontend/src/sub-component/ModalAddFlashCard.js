@@ -64,9 +64,9 @@ export default function ModalAddFlashCard({setFlashCards, thread_title, setNewFl
 
   return (
     <Box component={"span"}>
-      <Box sx={{display: 'flex', justifyContent: 'center', my: "0.5em"}}>
+      {/* <Box sx={{display: 'flex', justifyContent: 'center', my: "0.5em"}}> */}
         <IconButton onClick={handleOpen} sx={{}}><AddBoxSharpIcon /></IconButton>
-      </Box>
+      {/* </Box> */}
       <Modal
         open={open}
         onClose={handleClose}
