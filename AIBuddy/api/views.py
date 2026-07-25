@@ -34,6 +34,7 @@ from openai import OpenAI
 import openai
 
 from AIBuddy.serializers import *
+from AIBuddy.services import get_ai_space
 
 # EMBED_MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
 # embedding_model = HuggingFaceEmbeddings(model_name="./models/all-MiniLM-L6-v2")
@@ -887,7 +888,8 @@ class ModifyAISpaceView(APIView):
 class GetAISpaceView(APIView):
     def get(self, request):
         try:
-            aiSetting = AISpace.objects.first()
+            # aiSetting = AISpace.objects.first()
+            aiSetting = get_ai_space()
             # print(aiSetting.api_key, aiSetting.top_p, aiSetting.temperature, aiSetting.max_tokens, aiSetting.aiSpace)
             # print("apiKey: ", aiSetting.api_key)
             # print("topP: ", aiSetting.top_p)

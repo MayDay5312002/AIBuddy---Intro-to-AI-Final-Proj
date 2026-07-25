@@ -17,6 +17,8 @@ class AIBuddyConfig(AppConfig):
             self._start_docker_services()
 
     def _start_docker_services(self):
+
+        
         compose_file = r'docker-controller\docker-compose.yaml'
 
         try:
