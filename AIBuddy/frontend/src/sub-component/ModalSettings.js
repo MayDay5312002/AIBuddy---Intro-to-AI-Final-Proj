@@ -87,7 +87,7 @@ export default function ModalSettings({
       // console.log(oldData);
     })
   }
-  const handleThread = async () => {
+  const handleSettingSave = async () => {
     axios.post("http://127.0.0.1:4192/api/updateSettings/", {"temperature": temperature, "topP": topP, "maxTokens": maxTokens, "apiKey": api, "aiSpace": aiSpace,
       "baseUrl": baseUrl, "modelName": modelName
     })
@@ -115,7 +115,7 @@ export default function ModalSettings({
     
     // handleClose();
   }
-  const handleReset = async () => {
+  const handleSettingsReset = async () => {
     axios.post("http://127.0.0.1:4192/api/updateSettings/", {"temperature": null, "topP": null, "maxTokens": null, "apiKey": "" , "aiSpace": "Ollama"
       , "baseUrl": null, "modelName": null})
     .then((response) => {
@@ -190,10 +190,10 @@ export default function ModalSettings({
       <Box sx={{display: 'flex', justifyContent: 'center'}}>
         {!leftSection ? 
         <IconButton onClick={handleOpen}>
-          <SettingsIcon sx={{color: 'rgb(71, 69, 69)', fontSize: {xs: "0.9em", sm: "0.9em", md: "1em"}}}/>
+          <SettingsIcon sx={{color: 'rgb(71, 69, 69)', fontSize: {xs: "0.9em", md: "1em"}}}/>
         </IconButton>
         :
-        <Button variant="contained"onClick={handleOpen} sx={{width: "100%"}}>Settings</Button>}
+        <Button variant="contained"onClick={handleOpen} sx={{width: "100%", fontSize: {xs: "0.6rem",md:"0.875rem"}}}>Settings</Button>}
       </Box>
       <Modal
         open={open}
@@ -206,11 +206,11 @@ export default function ModalSettings({
           ...style, 
           borderRadius: 2, 
           border: "none", 
-          width: {xs:"80vw", sm: "60vw", md: "30vw"},
+          width: {xs:"80vw", sm: "60vw", lg: "40vw"},
 
         }}>
             <IconButton onClick={handleClose} sx={{position: "absolute", right: 18}}><CloseIcon /></IconButton>
-          <Typography id="modal-modal-title" variant="h5" component="h2" sx={{fontWeight: 500}}>
+          <Typography id="modal-modal-title" variant="h5" component="h2" sx={{fontWeight: 500, fontSize: {xs: "1.3rem", md: "1.5rem"}}}>
             Settings
           </Typography>
           <Divider sx={{my: 1}}/>
@@ -218,14 +218,14 @@ export default function ModalSettings({
           <Paper 
           sx=
           {{p: 1,
-           maxHeight: {xs:"85vh", sm: "80vh", md: "75vh"},
+           maxHeight: {xs:"60vh", md: "75vh"},
            overflow: "auto"
            }}>
-            {/* <div><IconButton onClick={handleReset} sx={{}}><RestartAltIcon /></IconButton></div> */}
-            <Button onClick={handleReset} variant="contained" sx={{display: "block", mb: "1em"}}>Reset</Button>
+            {/* <div><IconButton onClick={handleSettingsReset} sx={{}}><RestartAltIcon /></IconButton></div> */}
+            <Button onClick={handleSettingsReset} variant="contained" sx={{display: "block", mb: "1em", fontSize: {xs: "0.6rem", md:"0.78rem"}}}>Reset</Button>
             <FormControl>
               {/* <FormLabel id={`${id}-label`}>AI Space</FormLabel> */}
-              <Typography variant="h6" component="h2" >API Space</Typography>
+              <Typography variant="h6" component="h2" sx={{fontSize: {xs: "1rem", md: "1.25rem"}}}>API Space</Typography>
               <RadioGroup 
               row 
               aria-labelledby={`${id}-label`} 
@@ -243,30 +243,41 @@ export default function ModalSettings({
             {/* {aiSpace === "Ollama" || aiSpace === "OpenAI" || aiSpace === "Common AI Space" && */}
             {aiSpace !== "Ollama" &&
             <div>
-              <Typography variant="h6" component="h2" >API Key (Required)</Typography>
-              <ApiKeyInput api={api} setApi={setApi} />
+              <Typography variant="h6" component="h2" sx={{fontSize: {xs: "1rem", md: "1.25rem"}}}>API Key (Required)</Typography>
+              <ApiKeyInput api={api} setApi={setApi}/>
 
-              <Typography variant="h6" component="h2" >Model Name (Required)</Typography>
+              <Typography variant="h6" component="h2" sx={{fontSize: {xs: "1rem", md: "1.25rem"}, mt: "0.5em"}}>Model Name (Required)</Typography>
               <TextField 
               id="Card Model" 
-              label="Model name" 
+              // label="Model name" 
               value={modelName} 
               onChange={(e) => setModelName(e.target.value)} 
               variant="outlined" 
               sx={{pb: "0.5em"}} 
               required 
-              fullWidth/>
+              fullWidth
+              sx={{
+                '& .MuiInputBase-input': {
+                  fontSize: {xs: "0.9rem",md: "1rem"}
+                },
+              }}/>
 
-              <Typography variant="h6" component="h2" >Base URL (Required)</Typography>
+              <Typography variant="h6" component="h2" sx={{fontSize: {xs: "1rem", md: "1.25rem"}, mt: "0.5em"}}>Base URL (Required)</Typography>
               <TextField 
               id="Card Base URL" 
-              label="Base URL" 
+              // label="Base URL" 
               value={baseUrl} 
               onChange={(e) => setBaseUrl(e.target.value)} 
               variant="outlined" 
-              sx={{pb: "1em"}} 
+              sx={{
+                pb: "1em",
+                '& .MuiInputBase-input': {
+                  fontSize: {xs: "0.9rem",md: "1rem"}
+                }
+
+              }} 
           
-              // required 
+              required 
               fullWidth/>
             </div>
             }
@@ -279,7 +290,13 @@ export default function ModalSettings({
               value={temperature}
               sx={{width:"100%"}}
               step={0.1}
-              // fullWidth
+              fullWidth
+              sx={{
+                '& .MuiInputBase-input': {
+                  fontSize: {xs: "0.9rem",md: "1rem"}
+                },
+                // mt: "0.5em"
+              }}
               />
 
               <NumberField 
@@ -289,7 +306,13 @@ export default function ModalSettings({
               value={maxTokens}
               sx={{width:"100%"}}
               step={1}
-              // fullWidth
+              fullWidth
+              sx={{
+                '& .MuiInputBase-input': {
+                  fontSize: {xs: "0.9rem",md: "1rem"}
+                },
+                mt: "0.5rem"
+              }}
               />
 
               <NumberField 
@@ -300,16 +323,22 @@ export default function ModalSettings({
               value={topP}
               sx={{width:"100%"}}
               step={0.1}
-              // fullWidth
+              sx={{
+                '& .MuiInputBase-input': {
+                  fontSize: {xs: "0.9rem",md: "1rem"}
+                },
+                mt: "0.5rem"
+              }}
+              fullWidth
               />
             </div>
             {/* } */}
 
             <Button 
             disabled={apiCheck()} 
-            onClick={handleThread} 
+            onClick={handleSettingSave} 
             variant='contained' 
-            sx={{mt: "1em", fontSize: "0.85rem"}}
+            sx={{mt: "1em", fontSize: {xs: "0.6rem", md:"0.78rem"}}}
             >
             Save
             </Button>

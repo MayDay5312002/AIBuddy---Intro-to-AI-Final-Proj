@@ -41,12 +41,13 @@ import ModalPresentFlashcards from "../sub-component/ModalPresentFlashcards.js";
 import ModalSettings from "../sub-component/ModalSettings.js";
 // import BundledEditor from "../sub-component/TextEditor.js";
 import Todo from "../sub-component/Todo.js";
-import LabeledNumberTab from "../sub-component/sub-sub-component/LabeledNumberTab.js";
+import TextFieldLblNbmr from "../sub-component/sub-sub-component/TextFieldLblNbmr.js";
+import ThreadComponent from "../sub-component/ThreadComponent.js";
 
 import axios from "axios";
 import TiptapEditor from "../sub-component/TextEditor.js";
 import { useReactToPrint } from "react-to-print";
-import { backgroundColor } from "@mui/system";
+import { backgroundColor, fontSize } from "@mui/system";
 
 const MainApp = () => {
     const [file, setFile] = useState(null);
@@ -158,7 +159,7 @@ const MainApp = () => {
         setSelectedAnswer(choice);
         setIsAnswerCorrect(choice === answer); // Check if selected answer is correct
         setIndexQuizSelected(index);
-        console.log("selectedAnswer:", selectedAnswer, "answer:", answer, "index:", indexQuizSelected);
+        // console.log("selectedAnswer:", selectedAnswer, "answer:", answer, "index:", indexQuizSelected);
       }
     };
 
@@ -169,7 +170,7 @@ const MainApp = () => {
 
     
 
-    const handleSelectedChange = (event) => {
+    const handleSelectedModel = (event) => {
       setSelectedModel(event.target.value);
     };
 
@@ -177,9 +178,9 @@ const MainApp = () => {
       setExecutionType(event.target.value);
     }
 
-    const handleSelectChange = (event) => {
-      setSelectedThread(event.target.value);
-    };
+    // const handleSelThreadChange = (event) => {
+    //   setSelectedThread(event.target.value);
+    // };
 
     const handleChangeExecutionType = (e) => {
       const val = e.target.value;
@@ -203,7 +204,7 @@ const MainApp = () => {
     };
 
     useEffect(() => {
-      if(!threads.includes(selectedThread)){
+      if(threads.find(t => t.title === selectedThread) === undefined){
         setSelectedThread("")
       }
     }, [threads])
@@ -219,7 +220,7 @@ const MainApp = () => {
     // }, [window.innerHeight, window.innerWidth])
 
   function updateLayout() {
-    setIsPortrait(window.matchMedia("(orientation: portrait)").matches);
+    setIsPortrait(window.matchMedia("(orientation: portrait)").matches); // its portrait when the px of width is equal or less than the px of height
   }
 
   let debounceTimer;
@@ -538,6 +539,22 @@ const MainApp = () => {
     // }, []);
     
     useEffect(() => {
+        getSettings();
+        axios.get('http://127.0.0.1:4192/api/getThreads/')
+        .then((response) => {
+            setThreads(response.data["threads"]);
+            // console.log(response.data["threads"]);
+        })
+        .catch((error) => {
+            setErrorResponseMsg("Error: " + error.response.data["message"]);
+            // console.error("Error uploading file:", error);
+        })
+
+        // axios.get('http://127.0.0.1:4192/api/getQuizzes/' + '?thread=' + selectedThread)
+    }, [])
+
+    useEffect(() => {
+      if(aiSpace === "Ollama"){
         axios.get('http://127.0.0.1:4192/api/models/')
         .then((response) => {
             // console.log(response)
@@ -548,18 +565,11 @@ const MainApp = () => {
             setErrorResponseMsg("Error: " + error.response.data["message"]);
             // console.error("Error uploading file:", error);
         })
-
-        axios.get('http://127.0.0.1:4192/api/getThreads/')
-        .then((response) => {
-            setThreads(response.data["threads"]);
-        })
-        .catch((error) => {
-            setErrorResponseMsg("Error: " + error.response.data["message"]);
-            // console.error("Error uploading file:", error);
-        })
-
-        // axios.get('http://127.0.0.1:4192/api/getQuizzes/' + '?thread=' + selectedThread)
-    }, [])
+      }
+      else{
+        setErrorResponseMsg("");
+      }
+    }, [aiSpace])
 
     useEffect(() => {
       if (autoScroll && paperRefResponse.current) {
@@ -672,17 +682,18 @@ const MainApp = () => {
       else if (executionType == "Explain with document" && vectorStoreContent !== "") {
         setErrorResponse("Success");
       }
-
-      axios.get('http://127.0.0.1:4192/api/models/')
-      .then((response) => {
-          // console.log(response)
-          setModels(response.data["models"])
-          // setSelectedModel(response.data["models"][0])
-      })
-      .catch((error) => {
-          setErrorResponseMsg("Error: " + error.response.data["message"]);
-          // console.error("Error uploading file:", error);
-      })
+      if(aiSpace === "Ollama"){
+        axios.get('http://127.0.0.1:4192/api/models/')
+        .then((response) => {
+            // console.log(response)
+            setModels(response.data["models"])
+            // setSelectedModel(response.data["models"][0])
+        })
+        .catch((error) => {
+            setErrorResponseMsg("Error: " + error.response.data["message"]);
+            // console.error("Error uploading file:", error);
+        })
+      }
 
       // executionType === "Explain with Document" ? setInputType("file") : null;
       if (executionType === "Explain with document" && (inputType !== "file" && inputType !== "url")) {//////////////////////////////////////FIX THISS
@@ -742,8 +753,8 @@ const MainApp = () => {
         <Box sx={{
           position: "relative",              // ← anchor for IconButton's absolute positioning
           flexGrow: leftSection ? 3 : 0,
-          minWidth: isPortrait ? undefined : leftSection ? "20em" : "auto",
-          minHeight: isPortrait ? (leftSection ? "15em" : "2.2em") : undefined,
+          // minWidth: leftSection ? "20em" : "auto",
+          // minHeight: isPortrait ? (leftSection ? "15em" : "2.2em") : undefined,
           flexBasis: 0,
           display: "flex",
           flexDirection: "column",
@@ -753,13 +764,14 @@ const MainApp = () => {
             height: "100%",
             overflow: "visible",
             position: "relative",
+            // zIndex: 3
           }}
           >
             <Paper sx={{
-              px: leftSection ? "1.2em" : "0.3em",
+              px: leftSection ? "1.2rem" : "0.5rem",
               // pb: "0.3em",
-              mr: isPortrait ? "1em" : 0,
-              mb: isPortrait ? "1em" : 0,
+              mr: "1rem",
+              mb: "1rem",
               overflowY: "auto",               // ← Paper scrolls freely
               height: "100%",                  // ← fill the wrapper's flex-allocated height
               direction: "rtl",                // ← right-to-left scrolling
@@ -778,16 +790,25 @@ const MainApp = () => {
 
                 {/* left-to-right */}
                 <Box sx={{position: "relative", zIndex: 2}}>
-                  <Typography variant="h4" sx={{fontWeight: "bold", textAlign: "center", color: "#383838ff", lineHeight: "0"}}>
+                  <Box sx={{ textAlign: "center"}}>
                     <Box sx={{cursor: "pointer" }} component={"span"} onClick={() => window.location.reload()}>
-                      <img src="http://127.0.0.1:4192/static/images/Logo.png"  style={{position: "relative", top: "0.5rem", height: "7vh" }}/>
+                      <Box
+                        component="img"
+                        src="http://127.0.0.1:4192/static/images/Logo.png"  
+                        sx={{
+                          position: "relative", 
+                          top: "0.5rem", 
+                          // height: {xs: "0.5em", sm: "1em", md: "1.1em", lg: "1.5em", xl: "1.8em"}, 
+                          height: {xs: "3rem",sm: "3.7rem"}
+                      }}/>
                       {leftSection &&
                       <Typography
                         variant="h4"
                         sx={{
                           display: "inline",
                           fontWeight: "600",
-                          fontSize: "4.7vh",
+                          // fontSize: {xs: "0.5em", sm: "0.7em", lg: "1em", xl: "1.3em"},
+                          fontSize: {xs:"2rem", sm: "2.5rem"},
                           color: "#3a3838ff",
                           // textShadow: "2px 2px 0px rgba(0, 0, 0, 0.1), 4px 4px 8px rgba(0, 0, 0, 0.15)",
                           // fontFamily: ['Brush Script MT', 'Comic Sans MS'],
@@ -801,7 +822,7 @@ const MainApp = () => {
                       }
 
                     </Box>
-                  </Typography>
+                  </Box>
                 </Box>
                     
                 <hr 
@@ -809,9 +830,8 @@ const MainApp = () => {
                 {{
                   margin: leftSection ? "1em 2em": "1em 0.5em",
                   fontSize: "0.6rem", 
-                  borderRadius: "10em", 
-                  borderWidth: "0.1em", 
-                  color: "#cfcfcfff",
+                  borderRadius: "10rem", 
+                  borderWidth: "0.1vh", 
                   borderTopColor: "#8a8a8aff",
                   borderBottomColor: 'rgb(194, 213, 219)',
                   color: '#a5a5a5ff',
@@ -829,20 +849,24 @@ const MainApp = () => {
                   // p: "0 0 0.3em 0.12em",
                   // borderRadius: 4,
                   textAlign: "center",
-                  display: isFullscreen === false ? "block" : "none",
+                  // display: isFullscreen === false ? "block" : "none",
                 }}
                 >
                 {leftSection ? 
                   <Button 
                     variant="contained" 
-                    startIcon={<EditDocumentIcon />}
+                    startIcon={<EditDocumentIcon  />}
                     sx={{
                       // position: "absolute", 
                       // top: "1em", 
                       // left: "2.3em", 
-                      fontSize: "0.85rem", 
+                      // fontSize: {sm: "0.4rem", xl:"0.78rem"}, 
+                      fontSize: {xs: "0.6rem", md:"0.78rem"},
                       // visibility: isFullscreen === false ? "visible" : "hidden", 
                       zIndex: 1,
+                      '& .MuiButton-startIcon svg': {
+                        fontSize: {xs: "1.4rem",md:'1.6rem'},
+                      },
                     }}
                     onClick={()=> {
                       if (editorOn === false){
@@ -874,17 +898,21 @@ const MainApp = () => {
                       
                   }>
                     <EditDocumentIcon 
-                    sx={{fontSize: { xs: "0.9em", sm: "0.9em", md: "1.2em" }}}
+                    sx={{
+                      // fontSize: { xs: "0.9em", sm: "0.7em", md: "1.2em" },
+                      fontSize: {xs:"1em", md:"1.2em"}
+                    }}
                     />
                   </IconButton>
                 }
 
-                {/* this is button for editor */}
+                {/* this is button for To do */}
                 <IconButton onClick={() => setOpenTodo(v => !v)}>
                   
                   <AssignmentIcon sx={{
                     // color: 'rgb(71, 69, 69)',
-                    fontSize: { xs: "0.9em", sm: "0.9em", md: "1.2em" }
+                    // fontSize: { xs: "0.9em", sm: "0.7em", md: "1.2em" }
+                    fontSize: {xs:"1em", md:"1.2em"}
                   }} />
                 </IconButton>
 
@@ -892,53 +920,60 @@ const MainApp = () => {
 
                 {leftSection && 
                 <div className="leftSectionDiv">
-                  <Box display="flex" flexDirection="column" gap={1} width={300}>
+                  {/* <Box display="flex" flexDirection="column" gap={1} width={300}>
                     <Box>
                       <ModalAddThread  threads={threads} setThreads={setThreads} />
                       <ModalDeleteThread  threads={threads} setThreads={setThreads} />
                     </Box>
-                    {/* Dropdown to select thread */}
                     <TextField
                       select
                       label="Select a Thread"
                       value={selectedThread}
-                      onChange={handleSelectChange}
+                      onChange={handleSelThreadChange}
                       fullWidth
                       sx={{mt: "0.5em"}}
                     >
                       {threads.map((thread, index) => (
-                        <MenuItem key={index} value={thread}>
-                          {thread}
+                        <MenuItem key={index} value={thread.title}>
+                          {thread.title}
                         </MenuItem>
                       ))}
                     </TextField>
                     
                     
-                  </Box>
-                  <FormControl sx={{mt: "0.2em"}}>
-                    <FormLabel>
-                      <RocketSharpIcon sx={{mr: "0.2em", transform: "translateY(0.1em)"}}/>
+                  </Box> */}
+                  <Divider sx={{mt:"1em", mb:"0.8em"}}/>
+                  <ThreadComponent selectedThread={selectedThread} setSelectedThread={setSelectedThread} threads={threads} setThreads={setThreads} />
+                  <Divider sx={{mt:"1em", mb:"0.8em"}}/>
+                  <FormControl sx={{mt: "0.2em", width: "100%"}}>
+                    <FormLabel sx={{fontSize: {xs: "0.95rem", md: "1rem"}}}>
+                      <RocketSharpIcon sx={{mr: "0.2em", transform: "translateY(0.1em)", fontSize: {xs: "1.25rem", md: "1.5rem"}}}/>
                       Choose Execution Type
                     </FormLabel>
-                    <RadioGroup
-                      row
+                    <Select
                       value={executionType}
                       onChange={handleExecuteQuery}
+                      displayEmpty
+                      size="small"
+                      // sx={{ mt: 0.5 }}
+                      sx={{
+                        '& .MuiSelect-select': { fontSize: {xs:"0.9rem", md:'1rem'}},
+                      }}
                     >
-                      <FormControlLabel value="Explain Simply" control={<Radio />} label="Explain Simply" />
-                      <FormControlLabel value="Explain with web search" control={<Radio />} label="Explain with web search" />
-                      <FormControlLabel value="Explain with document" control={<Radio />} label="Explain with document" />
-                      <FormControlLabel value="Explain with Kiwix" control={<Radio />} label="Explain with Kiwix" />
-                      <FormControlLabel value="Create flash cards" control={<Radio />} label="Create flash cards" />
-                      <FormControlLabel value="Create quiz" control={<Radio />} label="Create quiz" />
-                    </RadioGroup>
+                      <MenuItem value="Explain Simply" sx={{ fontSize: {xs:"0.9rem", md:'1rem'}}}>Explain Simply</MenuItem>
+                      <MenuItem value="Explain with web search" sx={{ fontSize: {xs:"0.9rem", md:'1rem'}}}>Explain with web search</MenuItem>
+                      <MenuItem value="Explain with document" sx={{ fontSize: {xs:"0.9rem", md:'1rem'}}}>Explain with document</MenuItem>
+                      <MenuItem value="Explain with Kiwix" sx={{ fontSize: {xs:"0.9rem", md:'1rem'}}}>Explain with Kiwix</MenuItem>
+                      <MenuItem value="Create flash cards" sx={{ fontSize: {xs:"0.9rem", md:'1rem'}}}>Create flash cards</MenuItem>
+                      <MenuItem value="Create quiz" sx={{ fontSize: {xs:"0.9rem", md:'1rem'}}}>Create quiz</MenuItem>
+                    </Select>
                    </FormControl>
-                  <Divider sx={{mb:"1em"}}/>
+                  {/* <Divider sx={{mt:"1em"}}/> */}
                   {executionType !== "Explain with web search"  && executionType !== "Explain Simply" && executionType !== "Explain with Kiwix" &&
                   <>
                   <FormControl sx={{width: "100%"}}>
-                  
-                    <FormLabel>Choose Input Type</FormLabel>
+                    <Divider sx={{my:"1em"}} />
+                    <FormLabel sx={{fontSize: {xs: "0.95rem", md: "1rem"}}}>Choose Input Type</FormLabel>
                     <RadioGroup
                       // row
                       value={inputType}
@@ -950,27 +985,27 @@ const MainApp = () => {
                         flexWrap: "wrap",
                       }}
                     >
-                      <FormControlLabel value="file" control={<Radio />} label="Upload a File" />
-                      <FormControlLabel value="url" control={<Radio />} label="Enter a youtube URL" />
+                      <FormControlLabel value="file" control={<Radio />} label="Upload a File" sx={{ "& span": {fontSize: {xs:"0.9rem", md:'1rem'}}}}/>
+                      <FormControlLabel value="url" control={<Radio />} label="Enter a youtube URL" sx={{ "& span": {fontSize: {xs:"0.9rem", md:'1rem'}}}}/>
                       { (executionType === "Create flash cards" || executionType === "Create quiz") &&
                         <>
-                        <FormControlLabel value="model" control={<Radio />} label="Model independent" />
-                        <FormControlLabel value="Kiwix" control={<Radio />} label="Kiwix Files" />
-                        <FormControlLabel value="web search" control={<Radio />} label="Web Search" />
+                        <FormControlLabel value="model" control={<Radio />} label="Model independent" sx={{ "& span": {fontSize: {xs:"0.9rem", md:'1rem'}}}}/>
+                        <FormControlLabel value="Kiwix" control={<Radio />} label="Kiwix Files" sx={{ "& span": {fontSize: {xs:"0.9rem", md:'1rem'}}}}/>
+                        <FormControlLabel value="web search" control={<Radio />} label="Web Search" sx={{ "& span": {fontSize: {xs:"0.9rem", md:'1rem'}}}}/>
                         </>
                       }
                     </RadioGroup>
                   </FormControl>
-                  <Divider />
+                  {/* <Divider /> */}
                   </>
                   }
 
                   {(executionType !== "Explain with web search" && executionType !== "Explain Simply")  &&
                     <>
-                    <Divider sx={{mb:"1em"}}/>
+                    <Divider sx={{my:"1em"}}/>
                     {inputType === "file" && (executionType !== "Explain with Kiwix" && inputType !== "Kiwix") &&
                     <Box>
-                      <Typography variant="h7" sx={{mb: "0.5em", display: "block", }}>Upload file</Typography>
+                      <Typography variant="h7" sx={{mb: "0.5em", display: "block", fontSize: {xs: "0.95rem", md: "1rem"}}}>Upload file</Typography>
                       <input
                         accept="*"
                         type="file"
@@ -981,7 +1016,7 @@ const MainApp = () => {
                         required
                       />
                       <label htmlFor="file-upload">
-                        <Button variant="contained" component="span" sx={{fontSize: "0.85rem"}}>
+                        <Button variant="contained" component="span" sx={{fontSize: {xs: "0.6rem", md:"0.78rem"}}}>
                           Select File
                         </Button>
                       </label>
@@ -1002,15 +1037,15 @@ const MainApp = () => {
                     </>
                     }
                     {(executionType === "Explain with Kiwix" || (inputType === "Kiwix")) &&
-                      <>
-                        <Typography variant="h7" sx={{mb: "0.5em", display: "block"}}>Upload Folder Path</Typography>
-                        <Button variant="contained" component="span" sx={{fontSize: "0.85rem"}} onClick={handleSubmitFolder}>
+                      <Box>
+                        <Typography variant="h7" sx={{mb: "0.5em", display: "block", fontSize: {xs: "0.95rem", md: "1rem"}}}>Upload Folder Path</Typography>
+                        <Button variant="contained" component="span" sx={{fontSize: {xs: "0.6rem", md: "0.85rem"}}} onClick={handleSubmitFolder}>
                           Select Folder
                         </Button>
-                      </> 
+                      </Box> 
                     }
                     { (executionType !== "Explain with Kiwix" && inputType !== "Kiwix" && inputType !== "web search" && inputType !== "model") &&
-                      <Button variant="contained" component="span" onClick={handleSubmitFile} sx={{mt: "1em", fontSize: "0.85rem"}}>
+                      <Button variant="contained" component="span" onClick={handleSubmitFile} sx={{mt: "1em", fontSize: {xs: "0.6rem", md:"0.78rem"}}}>
                           Submit {(inputType === "file") ? "File" : "URL"}
                       </Button>
                     }
@@ -1023,13 +1058,13 @@ const MainApp = () => {
                       <Divider/>
 
                     
-                      <Typography variant="body2" sx={{ my: "1em"}}> {/*///////////////////////////////////////////////////////*/}
+                      <Typography variant="body2" sx={{ my: "1em", fontSize: {xs: "0.8rem", md: "0.875rem"}}}> {/*///////////////////////////////////////////////////////*/}
                         {executionType !== "Explain with Kiwix" && inputType !== "Kiwix"? "Vector Store Content" : "Kiwix Folder"}: {(!(executionType === "Explain with Kiwix" || inputType === "Kiwix") && (vectorStoreContent.includes("youtu.be") || vectorStoreContent.includes("youtube.com"))
                         ) ? 
                         <a href={vectorStoreContent} target="_blank">{vectorStoreContent}</a> : (executionType === "Explain with Kiwix" || inputType === "Kiwix" ? folderPath : vectorStoreContent)}
                       </Typography>
                       
-                    <Divider sx={{mt: "1em"}}/> 
+                      {/* <Divider sx={{mt: "1em"}}/>  */}
                     </Box>
                     }
 
@@ -1042,6 +1077,7 @@ const MainApp = () => {
                   <Divider 
                   sx={{
                     mb:"0.5em", 
+                    mt:"0.3em",
                     borderWidth: "0.1em",
                     // fontSize: "0.6rem",
                     // borderRadius: "10em",
@@ -1082,11 +1118,12 @@ const MainApp = () => {
             sx={{
               "&:hover": { backgroundColor: "#FFFFFF" },
               position: "absolute",
-              right: "-0.6em",
-              top: "6.3em",                  // ← adjust to align with where you want it
-              height: "1.7em",
+              right: "0",
+              top: "6.3rem",                  // ← adjust to align with where you want it
+              // height: "1.7em",
+              fontSize: "1rem",
               backgroundColor: "#FFFFFF",
-              p: "0.2em",
+              p: "0.15rem",
               borderRadius: "20%",
             }}
             onClick={() => setLeftSection(!leftSection)}
@@ -1101,29 +1138,33 @@ const MainApp = () => {
         {/*/////////////////////////This is the  right section/////////////////////////////////////////*/}
 
           <Paper 
+          //Only the right section shrinks whenthe window size shrinks in the width because its children are permitted to shrink
+          //By default, the minWidth: "auto", which means your size is dependent on the size of its content.
           sx=
           {{
-          py: !editorOn ? "0.8em" : "0.3em",
-          pb: "0.8em",
+          pb: !editorOn ? "0.8em" : "0.3em",
+          // pb: "0.8em",
+          pt: !editorOn ? {xs: "0.2em", lg: "0.8rem"} : "0.3em",
           // px: isPortrait ? "2em" : {xs: "2em", md: "10em", lg: "20em"}, 
-          px: "2em",
+          px: {xs: "0.5em", sm: 0},
           // pb: "3em",
           borderRadius: 4, 
           // top: 0, 
-          mx: "1em", 
+          // mx: {xs: "0.2rem",md: "0.2rem"}, 
           flexGrow: 15, 
-          overflow: editorOn === false ? "visible" : "hidden", 
+          // overflow: editorOn === false ? "visible" : "hidden", 
+          overflow: "auto",
           position: "relative", 
           display: "flex", 
           flexDirection: "column",
           flexBasis: 0,
           alignItems: "center",
-          my: "0.75em",
+          my: {xs: "0.2rem", lg:"0.75em"},
           // maskImage: isPortrait ?'linear-gradient(to right, rgba(0,0,0,0.6) 0%, black 2%, black 98%, rgba(0,0,0,0.6) 100%)' 
           //                       : 'linear-gradient(to right, rgba(0,0,0,0.6) 0%, black 5%, black 95%, rgba(0,0,0,0.6) 100%)',
           // WebkitMaskImage: 'linear-gradient(to right, rgba(0,0,0,0.6) 0%, black 5%, black 95.5%, rgba(0,0,0,0.6) 100%)',
-          maskImage: 'linear-gradient(to right, transparent, black 3%, black 97%, transparent)',
-          WebkitMaskImage: 'linear-gradient(to right, transparent, black 3%, black 97%, transparent)'
+          maskImage: 'linear-gradient(to right, transparent, black 2%, black 98%, transparent)',
+          WebkitMaskImage: 'linear-gradient(to right, transparent, black 2%, black 98%, transparent)'
           // color: "transparent"
           }}>
           {editorOn &&
@@ -1190,15 +1231,15 @@ const MainApp = () => {
                       // px: "3vh",
                       // pt: "2vh",
                       backgroundColor: '#f9fafb',
-                      borderRadius: "1em",
-                      border: '1px solid #e0e0e0',
-                      borderRadius: "0 1em 1em 1em",
+                      borderRadius: "1rem",
+                      border: '0.1rem solid #e0e0e0',
+                      borderRadius: "0 1rem 1rem 1rem",
                       overflow: "auto",
                       position: "relative",
                       flex: "1",
-                      minHeight: {xs: "20em", sm: "18em", md: "16em"},
+                      // minHeight: {xs: "20em", sm: "18em", md: "16em"},
                       pb: isFullscreen ? 0 : "0.75em",
-                      width: "95%",
+                      width: {xs:"99%",sm:"95%"},
                       
                     }}
                     >
@@ -1212,7 +1253,8 @@ const MainApp = () => {
                           position: "sticky", 
                           top: "0", 
                           zIndex: 2, 
-                          backgroundColor: "#F9FAFB"
+                          backgroundColor: "#F9FAFB",
+                          overflowX: "auto"
                         }}
                         >
                           <Typography 
@@ -1224,7 +1266,8 @@ const MainApp = () => {
                             color: "#F9FAFB",
                             transform: "translateY(5%)",
                             p: "0.1em 0.3em",
-                            borderRadius: "0 0 0.5em 0"
+                            borderRadius: "0 0 0.5em 0",
+                            fontSize: {xs: "1rem", md: "1.25rem"}
 
                           }}
                           >
@@ -1232,26 +1275,34 @@ const MainApp = () => {
                           </Typography>
                           {/* <Divider sx={{mx: "0.1em"}}></Divider> */}
                           <hr style={{margin: "0.2em 0.2em", border: "0.1em solid #1565C0"}}></hr>
-                          <IconButton onClick={() => {
-                            if (response !== "")handlePrintOutput();
+                          <IconButton 
+                            onClick={() => {
+                              if (response !== "")handlePrintOutput();
+                              }
                             }
-                          }
-                          disabled={response !== "" ? false : true}
+                            disabled={response === ""}
                           >
-                            {response === "" ? <PrintDisabledIcon /> : <PrintIcon />}
-                            </IconButton>
+                          {response === "" ? 
+                            <PrintDisabledIcon sx={{fontSize: {xs: "1.25rem", md: "1.5rem"}}}/> 
+                            : 
+                            <PrintIcon sx={{fontSize: {xs: "1.25rem", md: "1.5rem"}}}/>
+                          }
+                          </IconButton>
                           <ModalModifyMessegeHistory thread_title={selectedThread} refreshMessageHistory={refreshMessageHistory} 
                             setRefreshMessageHistory={setRefreshMessageHistory} setResponse={setResponse} aiSpace={aiSpace}/>
                           <IconButton 
-                          onClick={() => 
-                            {
-                              setExportContent(response);
-                              setIsFullscreen(false);
-                              setEditorOn(true);
+                            onClick={() => 
+                              {
+                                setExportContent(response);
+                                setIsFullscreen(false);
+                                setEditorOn(true);
+                              }
                             }
-                          }
+                            disabled={
+                              selectedThread === "" || response === "" 
+                            }
                           >
-                            <FileUploadIcon />
+                            <FileUploadIcon sx={{fontSize: {xs: "1.25rem", md: "1.5rem"}}}/>
                           </IconButton>
                           {/* <IconButton
                           onClick={toggleFullscreen}
@@ -1259,29 +1310,28 @@ const MainApp = () => {
                           >
                           </IconButton> */}
                           <IconButton
-                          onClick={toggleFullscreen}
-                          sx={{marginLeft: "auto"}}
-                          aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
-                          // sx={}
-                          disabled={response !== "" ? false : true}
+                            onClick={toggleFullscreen}
+                            sx={{marginLeft: "auto"}}
+                            aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+                            // sx={}
+                            disabled={response !== "" ? false : true}
                           >
-                            {isFullscreen ? <FullscreenExitIcon/> : <FullscreenIcon />}
+                            {isFullscreen ? 
+                              <FullscreenExitIcon sx={{fontSize: {xs: "1.25rem", md: "1.5rem"}}}/> 
+                              : 
+                              <FullscreenIcon sx={{fontSize: {xs: "1.25rem", md: "1.5rem"}}}/>
+                            }
                           </IconButton>
                         </Box>
                       <Box 
-                      ref={outputRef}
-                      sx={{
-                        fontSize: "1.2em",
-                        p: "0.3em 1em 1em 1em",
-                        // typography: "body1",
-                      }}
+                        ref={outputRef}
+                        sx={{
+                          fontSize: {xs: "1rem", md: "1.1rem", lg: "1.2rem"},
+                          p: "0.3em 1em 1em 1em",
+                        }}
                       >
-                        {/* <Typography variant="h6" sx={{ fontWeight: 500 }}> */}
-                          <MarkdownRenderer>{errorResponseMsg === "" ? response : errorResponseMsg}</MarkdownRenderer>
-                        {/* </Typography> */}
+                        <MarkdownRenderer>{errorResponseMsg === "" ? response : errorResponseMsg}</MarkdownRenderer>
                       </Box>
-
-
                     </Paper>
                 
                   }
@@ -1301,9 +1351,9 @@ const MainApp = () => {
                       overflow: "auto",
                       position: "relative",
                       flex: "1",
-                      minHeight: {xs: "20em", sm: "18em", md: "16em"},
+                      // minHeight: {xs: "20em", sm: "18em", md: "16em"},
                       pb: isFullscreen ? 0 : "0.75em",
-                      width: "95%"
+                      width: {xs:"99%",sm:"95%"},
                     }}
                     >
                       <Box sx=
@@ -1317,6 +1367,7 @@ const MainApp = () => {
                         top: "0", 
                         zIndex: 2, 
                         backgroundColor: "#F9FAFB",
+                        overflowX: "auto"
                       }}
                       >
                         <Typography 
@@ -1328,29 +1379,38 @@ const MainApp = () => {
                           color: "#F9FAFB",
                           transform: "translateY(5%)",
                           p: "0.1em 0.3em",
-                          borderRadius: "0 0 0.5em 0"
-                          
+                          borderRadius: "0 0 0.5em 0",
+                          fontSize: {xs: "0.8rem", md: "1.2rem"}
                         }}
                         >
                           Flash Cards
                         </Typography>
                         <hr style={{margin: "0.2em 0.2em", border: "0.1em solid #1565C0"}}></hr>
-                        <ModalAddFlashCard setFlashCards={setFlashCards} thread_title={selectedThread} setNewFlashCards={setNewFlashCards}/>
+                        <ModalAddFlashCard setFlashCards={setFlashCards} thread_title={selectedThread} setNewFlashCards={setNewFlashCards}
+                        selectedThread={selectedThread}/>
                         <ModalPresentFlashcards flashcards={flashCards} />
                         <IconButton 
-                        onClick={() => {if(flashCards.length !== 0)handlePrintOutput()}}
-                        disabled={flashCards?.length === 0 ? true : false}
+                          onClick={() => {if(flashCards.length !== 0)handlePrintOutput()}}
+                          disabled={flashCards?.length === 0 ? true : false}
                         >
-                        {flashCards.length === 0 ? <PrintDisabledIcon /> : <PrintIcon />}
+                        {flashCards.length === 0 ? 
+                          <PrintDisabledIcon sx={{fontSize: {xs: "1.25rem", lg: "1.5rem"}}}/> 
+                          : 
+                          <PrintIcon sx={{fontSize: {xs: "1.25rem", lg: "1.5rem"}}}/>
+                        }
                         </IconButton>
                         <IconButton
-                        onClick={toggleFullscreen}
-                        // sx={{ position: 'absolute', top: 8, right: 8 }}
-                        sx={{marginLeft: "auto"}}
-                        aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
-                        disabled={flashCards?.length === 0 ? true : false} 
+                          onClick={toggleFullscreen}
+                          // sx={{ position: 'absolute', top: 8, right: 8 }}
+                          sx={{marginLeft: "auto"}}
+                          aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+                          disabled={flashCards?.length === 0 ? true : false} 
                         >
-                        {isFullscreen ? <FullscreenExitIcon /> : <FullscreenIcon />}
+                        {isFullscreen ? 
+                          <FullscreenExitIcon sx={{fontSize: {xs: "1.25rem", lg: "1.5rem"}}}/> 
+                          : 
+                          <FullscreenIcon sx={{fontSize: {xs: "1.25rem", lg: "1.5rem"}}}/>
+                        }
                         </IconButton>
                       </Box>
                       <Typography variant="h6" 
@@ -1365,16 +1425,18 @@ const MainApp = () => {
                       
                       {flashCards.map((card, index) => (
                         <Paper key={card.id} sx={{ p: 2, mb: 2, display: "inline-block", mx: 1, maxWidth: "30em"}}>
-                          <Typography variant="h6" sx={{ fontWeight: "500" }} component={"span"}>
+                          <Typography variant="h6" sx={{ fontWeight: "500", fontSize: {xs: "1rem", md: "1.2rem"}}} component={"span"}>
                             {card["title"]}
                           </Typography>
-                          <IconButton onClick={() => deleteCard(card["title"], card["content"], card["id"])} sx={{mx: 1}}>
-                            <DeleteIcon />
-                          </IconButton>
-                          <ModalChangeFlashCard oldTitle={card["title"]}  oldContent={card["content"]} setFlashCards={setFlashCards} 
-                          flashCards={flashCards} thread_title={selectedThread} id_card={card["id"]}/>
+                          <Box sx={{display: "inline-block"}}>
+                            <IconButton onClick={() => deleteCard(card["title"], card["content"], card["id"])} sx={{mx: 1}}>
+                              <DeleteIcon sx={{fontSize: {xs: "1.25rem", lg: "1.5rem"}}}/>
+                            </IconButton>
+                            <ModalChangeFlashCard oldTitle={card["title"]}  oldContent={card["content"]} setFlashCards={setFlashCards} 
+                            flashCards={flashCards} thread_title={selectedThread} id_card={card["id"]}/>
+                          </Box>
                           <Divider sx={{ my: 1 }} />
-                          <Typography variant="body1" sx={{ fontWeight: "400", whiteSpace: "pre-line"}}>
+                          <Typography variant="body1" sx={{ fontWeight: "400", whiteSpace: "pre-line", fontSize: {xs: "0.8rem", md: "1rem"}}}>
                             {card["content"]}
                           </Typography>
                       
@@ -1399,9 +1461,9 @@ const MainApp = () => {
                       overflow: "auto",
                       position: "relative",
                       flex: "1",
-                      minHeight: {xs: "20em", sm: "18em", md: "16em"},
+                      // minHeight: {xs: "20em", sm: "18em", md: "16em"},
                       pb: isFullscreen ? 0 : "0.75em",
-                      width: "95%"
+                      width: {xs:"99%",sm:"95%"},
                     }}
                     >
                       
@@ -1430,28 +1492,43 @@ const MainApp = () => {
                           color: "#F9FAFB",
                           transform: "translateY(5%)",
                           p: "0.1em 0.3em",
-                          borderRadius: "0 0 0.5em 0"
+                          borderRadius: "0 0 0.5em 0",
+                          fontSize: {xs: "0.8rem", md: "1.2rem"}
                           
                         }}
                         >
                           Quizzes
                         </Typography>
                         <hr style={{margin: "0.2em 0.2em", border: "0.1em solid #1565C0"}}></hr>
-                        <ModalAddQuiz setQuizzes={setQuizzes} thread_title={selectedThread} setNewQuizzes={setNewQuizzes}/>
+                        <ModalAddQuiz setQuizzes={setQuizzes} thread_title={selectedThread} setNewQuizzes={setNewQuizzes}
+                        selectedThread={selectedThread}/>
                         <ModalPresentQuiz quizzes={quizzes} />
-                        <span>
-                        <IconButton onClick={() =>{
-                            // handlePrintOutput();
-                            if(quizzes.length !== 0)setShowAnswerPrintOption(!showAnswerPrintOption);
+                        {/* <span> */}
+                        <IconButton 
+                          onClick={() =>{
+                              if(quizzes.length !== 0)setShowAnswerPrintOption(!showAnswerPrintOption);
+                            }
                           }
-                        }
-                        disabled={quizzes?.length === 0 ? true : false}
+                          disabled={quizzes?.length === 0 ? true : false}
                         >
-                          {quizzes.length === 0 ? <PrintDisabledIcon /> : <PrintIcon />}
+                          {quizzes.length === 0 ? 
+                            <PrintDisabledIcon sx={{fontSize: {xs: "1.25rem", lg: "1.5rem"}}}/> 
+                            : 
+                            <PrintIcon sx={{fontSize: {xs: "1.25rem", lg: "1.5rem"}}}/>
+                          }
                         </IconButton>
-                        </span>
+                        {/* </span> */}
                         {showAnswerPrintOption ? 
-                          <Box sx={{display: 'flex', justifyContent: 'center', my: "0.5em", alignContent: "center", transform: "translateY(3%)"}}>
+                          <Box 
+                          sx={{
+                            display: 'flex', 
+                            justifyContent: 'center', 
+                            my: "0.5em", 
+                            alignContent: "center", 
+                            transform: "translateY(3%)",
+                            fontSize: {xs: "0.8rem", md: "1rem"}
+                          }}
+                          >
                           {/* <Box> */}
                             Show Answers?&nbsp;
                             <Box 
@@ -1460,7 +1537,8 @@ const MainApp = () => {
                                 cursor: "pointer",
                                 ':hover': { backgroundColor: 'lightblue' },
                                 // padding: "0.1em",
-                                borderRadius: "0.5em"
+                                borderRadius: "0.5em",
+                                fontSize: "inherit"
                               }}
                               onClick={() => {
                                 setShowAnswerPrint(true);
@@ -1479,7 +1557,8 @@ const MainApp = () => {
                                 cursor: "pointer",
                                 ':hover': { backgroundColor: 'lightblue' } ,
                                 // padding: "0.1em",
-                                borderRadius: "0.5em"
+                                borderRadius: "0.5em",
+                                fontSize: "inherit"
                               }}
                               onClick={() => {
                                 // setClickedOptionPrint(true);
@@ -1503,7 +1582,11 @@ const MainApp = () => {
                           aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
                           disabled={quizzes?.length === 0 ? true : false}
                         >
-                          {isFullscreen ? <FullscreenExitIcon /> : <FullscreenIcon />}
+                          {isFullscreen ? 
+                            <FullscreenExitIcon sx={{fontSize: {xs: "1.25rem", lg: "1.5rem"}}}/> 
+                            : 
+                            <FullscreenIcon sx={{fontSize: {xs: "1.25rem", lg: "1.5rem"}}}/>
+                          }
                         </IconButton>
                       </Box>
                       
@@ -1519,15 +1602,17 @@ const MainApp = () => {
                       <div ref={outputRef}>
                       {quizzes.map((quiz, indexQuiz) => (
                         <Paper key={quiz.id} sx={{ p: 2, mb: 2, display: "inline-block", mx: 1}}>
-                          <Typography variant="h6" sx={{ fontWeight: "500" }} component={"span"}>
+                          <Typography variant="h6" sx={{ fontWeight: "500", fontSize: {xs: "1rem", md: "1.2rem"}}} component={"span"}>
                             {quiz["question"]}
                           </Typography>
-                          <IconButton onClick={() => deleteQuiz(quiz["question"], quiz["id"])} sx={{mx: 1}}>
-                            <DeleteIcon />
-                          </IconButton>
-                          <ModalChangeQuiz oldAnswer={quiz.answer} oldQuestion={quiz.question} oldChoices={quiz.choices} 
-                          setQuizzes={setQuizzes} quizzes={quizzes} thread_title={selectedThread} id_quiz={quiz.id}
-                          indexQuizSelected={indexQuizSelected} handleChoiceClick={handleChoiceClick} selectedAnswer={selectedAnswer} />
+                          <Box sx={{display: "inline-block"}}>
+                            <IconButton onClick={() => deleteQuiz(quiz["question"], quiz["id"])} sx={{mx: 1}}>
+                              <DeleteIcon sx={{fontSize: {xs: "1.25rem", lg: "1.5rem"}}}/>
+                            </IconButton>
+                            <ModalChangeQuiz oldAnswer={quiz.answer} oldQuestion={quiz.question} oldChoices={quiz.choices} 
+                            setQuizzes={setQuizzes} quizzes={quizzes} thread_title={selectedThread} id_quiz={quiz.id}
+                            indexQuizSelected={indexQuizSelected} handleChoiceClick={handleChoiceClick} selectedAnswer={selectedAnswer} />
+                            </Box>
                           <Divider sx={{ my: 1 }} />
                           <List>
                             {quiz.choices.map((choice, index) => (
@@ -1552,6 +1637,9 @@ const MainApp = () => {
                                       : 'lightgray',
                                   },
                                   cursor: 'pointer',
+                                  '& .MuiTypography-root': {
+                                    fontSize: {xs: "0.8rem", md: "1rem"}
+                                  },
                                 }}
                                 className={choice === quiz.answer && showAnswerPrint ? "right-choice" : "wrong-choice"} //asds
                               >
@@ -1577,7 +1665,7 @@ const MainApp = () => {
                   //this is where to submit prompt
                           <Box sx={{width: "95%", position: "relative"}}>
                             {executionType === "Create flash cards" || executionType === "Create quiz" ?
-                            <LabeledNumberTab //################input for query#################
+                            <TextFieldLblNbmr //################input for query#################
                               labelTab= {executionType === "Create flash cards" ? "Number of flash cards:" : "Number of questions:"}
                               valueTab={numberEx}
                               onChangeTab={setNumberEx}
@@ -1592,18 +1680,24 @@ const MainApp = () => {
                                 '& .MuiInputBase-input': {
                                   // resize: "vertical",
                                   // maxHeight: 110, // enforce max height for 4 rows
-                                  pr: "3em"
+                                  pr: {xs: "2em",md:"2.5em"}
                                 },
-                                backgroundColor: "#FFFFFF"
+                                '& .MuiInputBase-root': {
+                                  p: {xs: "0.5rem 0.5rem", md: "1.03125rem 0.875rem"}
+                                },
+                                backgroundColor: "#FFFFFF",
+                                '& .MuiInputBase-input': {
+                                  fontSize: {xs: "0.9rem",md: "1rem"}
+                                },
                               }}
                               fullWidth
                               required
                               multiline
                               minRows={1}
                               maxRows={4}
-                              inputProps={{
-                                style: { resize: "vertical", overflow: "auto", paddingRight: "3em" }
-                              }}
+                              // inputProps={{
+                              //   style: { resize: "vertical", overflow: "auto", paddingRight: "3em" }
+                              // }}
                               onKeyDown={e => {
                                 if (e.key === 'Enter' && !e.shiftKey) {
                                   e.preventDefault();
@@ -1631,12 +1725,16 @@ const MainApp = () => {
                               sx={{ 
                                 my: "0.5em",
                                 // pr: "1em",
+                                
                                 // width: "100%",
                                 backgroundColor: "#FFFFFF",
+                                '& .MuiInputBase-root': {
+                                  p: {xs: "0.5rem 0.5rem", md: "1rem 0.7rem"}
+                                },
                                 '& .MuiInputBase-input': {
                                   // resize: "vertical",
                                   // maxHeight: 110, // enforce max height for 4 rows
-                                  pr: "3em"
+                                  pr: {xs: "2em",md:"2.5em"}
                                 },
                                 backgroundColor: "#FFFFFF"
                               }}
@@ -1645,9 +1743,9 @@ const MainApp = () => {
                               multiline
                               minRows={1}
                               maxRows={4}
-                              inputProps={{
-                                style: { resize: "vertical", overflow: "auto", paddingRight: "3em" }
-                              }}
+                              // inputProps={{
+                              //   style: { resize: "vertical", overflow: "auto", paddingRight: "3em" }
+                              // }}
                               onKeyDown={e => {
                                 if (e.key === 'Enter' && !e.shiftKey) {
                                   e.preventDefault();
@@ -1694,23 +1792,27 @@ const MainApp = () => {
                           <IconButton
                             ref={submitButtonRef}
                             sx={{
-                              position: "absolute",
-                              right: "0.8em",
-                              bottom: executionType === "Create flash cards" || executionType === "Create quiz" ? "0.65em" : "0.65em",
+                              position: "absolute", 
+                              right: {xs:"0.3em",md:"0.3em"},
+                              bottom: {xs: "0.5em", md: "0.65em"},
                               backgroundColor: "primary.main",
                               color: "white",
                               "&:hover": { backgroundColor: "primary.dark" },
                               "&:disabled": { backgroundColor: "grey.300" },
                               zIndex: 1,
                             }}
-                            disabled={readyToQuery === false || selectedThread === "" || query === "" || loading || selectedModel === ""}
+                            disabled={readyToQuery === false || selectedThread === "" || query === "" || loading || (aiSpace === "Ollama" && selectedModel === "")}
                             onClick={
                               (executionType === "Explain with document" || executionType === "Explain with Kiwix" || executionType === "Explain with web search" || executionType === "Explain Simply")
                               ? handleQuery
                               : (executionType === "Create flash cards" ? handleCreateFlashCards : handleCreateQuiz)
                             }
                           >
-                            {loading ? <CircularProgress size={24} sx={{ color: "white" }} /> : <SendIcon />}
+                            {loading ? 
+                              <CircularProgress size={24} sx={{ color: "white", fontSize: {xs: "1.1rem", md: "1.5rem"}}} /> 
+                              : 
+                              <SendIcon sx={{ fontSize: {xs: "0.95rem", md: "1.5rem"}}}/>
+                            }
                           </IconButton>
 
 
@@ -1741,7 +1843,7 @@ const MainApp = () => {
                                 }}
                                 onChange={(e) => {
                                   setSelectOpen(false);
-                                  handleSelectedChange(e);
+                                  handleSelectedModel(e);
                                   setModelTooltipOpen(false);
                                   suppressReopen.current = true;
                                   setTimeout(() => { suppressReopen.current = false; }, 300);
@@ -1759,9 +1861,9 @@ const MainApp = () => {
                                 sx={{
                                   position: "absolute", 
                                   right: "1.5em", 
-                                  bottom: "-0.8em", 
+                                  bottom: {xs: "-0.6em",md:"-0.8em"}, 
                                   width: "9em", 
-                                  fontSize: "0.8rem",
+                                  fontSize: {xs: "0.6rem",md: "0.8rem"},
                                   zIndex: -1,
                                   // p: "0"
                                   "& .MuiSelect-select": {
@@ -1771,7 +1873,7 @@ const MainApp = () => {
                                 }}
                               >
                                 {models.map((model, index) => (
-                                  <MenuItem key={index} value={model}>
+                                  <MenuItem key={index} value={model} sx={{fontSize: {xs: "0.85rem",md: "1rem"}}}>
                                     {model}
                                   </MenuItem>
                                 ))}

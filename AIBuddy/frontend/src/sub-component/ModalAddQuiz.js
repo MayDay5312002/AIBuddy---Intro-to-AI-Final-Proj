@@ -23,7 +23,7 @@ const style = {
 };
 
 
-export default function ModalAddQuiz({setQuizzes, thread_title, setNewQuizzes}) {
+export default function ModalAddQuiz({setQuizzes, thread_title, setNewQuizzes, selectedThread}) {
 
 
   const [open, setOpen] = useState(false);
@@ -67,7 +67,16 @@ export default function ModalAddQuiz({setQuizzes, thread_title, setNewQuizzes}) 
   return (
     <Box component={"span"}>
       {/* <Box sx={{display: 'flex', justifyContent: 'center', my: "0.5em"}}> */}
-        <IconButton onClick={handleOpen} sx={{}} ><AddBoxSharpIcon /></IconButton>
+        <IconButton 
+          onClick={handleOpen} 
+          sx={{
+            eight: "100%", 
+            width: "100%",
+          }}
+          disabled={selectedThread === ""}
+        >
+          <AddBoxSharpIcon sx={{fontSize: {xs: "1.25rem", lg: "1.5rem"}}}/>
+        </IconButton>
       {/* </Box> */}
       <Modal
         open={open}
@@ -80,27 +89,42 @@ export default function ModalAddQuiz({setQuizzes, thread_title, setNewQuizzes}) 
           ...style, 
           borderRadius: 2, 
           border: "none", 
-          width: {xs:"80vw", sm: "60vw", md: "40vw"},
+          width: {xs:"80vw", sm: "75vw", md: "70vw", sm: "60vw", xl: "40vw"},
           maxHeight: {xs:"80vh", sm: "60vh", md: "70vh"},
           overflow: "auto",
 
         }}>
           <IconButton onClick={handleClose} sx={{position: "absolute", right: 18}}><CloseIcon /></IconButton>
-          <Typography id="modal-modal-title" variant="h5" component="h2" sx={{fontWeight: 500}}>
+          <Typography id="modal-modal-title" variant="h5" component="h2" sx={{fontWeight: 500, fontSize: {xs: "1.25rem", md: "1.5rem"}}}>
             Add Quiz
           </Typography>
           <Divider sx={{my: 1}}/>
 
 
           <div>
-            <Typography variant="h6" component="h2" >Quiz Question</Typography>
-            <TextField id="Card Question" label="Card Question" value={question} onChange={(e) => setQuestion(e.target.value)} variant="filled" required fullWidth multiline rows={3}/>
+            <Typography variant="h6" component="h2" sx={{fontSize: {xs: "1.1rem", md: "1.25rem"}}}>Quiz Question</Typography>
+            <TextField 
+            id="Card Question" 
+            label="Card Question" 
+            value={question} 
+            onChange={(e) => setQuestion(e.target.value)} 
+            variant="filled" 
+            required 
+            fullWidth 
+            multiline 
+            rows={3}
+            sx={{
+              '& .MuiInputBase-input': {
+                fontSize: {xs: "0.9rem",md: "1rem"}
+              },
+            }}
+            />
           </div>
 
           <div>
-            <Typography variant="h6" component="h2" sx={{mt: "0.5em"}} >Quiz Choices</Typography>
+            <Typography variant="h6" component="h2" sx={{mt: "0.5em", fontSize: {xs: "1.1rem", md: "1.2rem"}}} >Quiz Choices</Typography>
             <IconButton>
-              <AddBoxSharpIcon onClick={() => setChoices([...choices, ""])}/>
+              <AddBoxSharpIcon onClick={() => setChoices([...choices, ""])} sx={{fontSize: {xs: "1.25rem", lg: "1.5rem"}}}/>
             </IconButton>
             <List> 
               {choices.map((choice, index) => (
@@ -126,6 +150,11 @@ export default function ModalAddQuiz({setQuizzes, thread_title, setNewQuizzes}) 
                     fullWidth
                     multiline
                     rows={1}
+                    sx={{
+                      '& .MuiInputBase-input': {
+                        fontSize: {xs: "0.9rem",md: "1rem"}
+                      },
+                    }}
                   />
                   <IconButton
                     onClick={() => {

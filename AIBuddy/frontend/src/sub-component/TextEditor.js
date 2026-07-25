@@ -23,6 +23,8 @@ import StarterKit from '@tiptap/starter-kit';
 
 import { marked } from 'marked';
 
+import axios from "axios";
+
 import React from 'react';
 import {useState, useEffect, useRef} from 'react';
 
@@ -42,6 +44,27 @@ const MenuBar = ({ editor, handlePrint}) => {
     if (url) {
       editor.chain().focus().setImage({ src: url }).run()
     }
+  }
+
+
+  const saveMDfile = async () => {
+    const fileName =window.prompt("Enter the file name");
+    const savedFile = editor.getHTML();
+    await axios.post("http://127.0.0.1:4192/api/saveDocument/", {
+      content: savedFile,
+      filename: fileName
+    });
+  }
+
+  const loadMDfile = async () => {
+    const fileName = window.prompt("Enter the file name");
+    const url = "http://127.0.0.1:4192/api/loadDocument/?filename=" +
+      (fileName.slice(-3) === ".md" ? fileName : fileName + ".md");
+    
+    await axios.get(url)
+      .then((response) => {
+        editor.commands.setContent(response.data.content);
+      });
   }
 
 
@@ -254,7 +277,8 @@ const MenuBar = ({ editor, handlePrint}) => {
         <button onClick={() => editor.chain().focus().redo().run()}>Redo</button>
         <button onClick={addImage}>Add image from URL</button>
         <button onClick={()=> handlePrint()}>Print</button>
-        <button>Save</button>
+        <button onClick={()=> loadMDfile()}>Load</button>
+        <button onClick={()=> saveMDfile()}>Save</button>
       </div>
     </div>
   )

@@ -5,7 +5,7 @@ import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 
 
-function LabeledNumberTab({ labelTab, valueTab, onChangeTab, min = 1, ...textFieldProps }) {
+function TextFieldLblNmbr({ labelTab, valueTab, onChangeTab, min = 1, ...textFieldProps }) {
   const [inputValue, setInputValue] = useState(String(valueTab));
 
   const clamp = (num) => {
@@ -42,11 +42,11 @@ function LabeledNumberTab({ labelTab, valueTab, onChangeTab, min = 1, ...textFie
   const decrement = () => commit((Number(inputValue) || min + 1) - 1);
 
   return (
-    <Box sx={{ position: 'relative', mt: '1.5em' }}>
+    <Box sx={{ position: 'relative', mt: {xs: "1rem",md: '1.5rem'} }}>
         <Box
           sx={{
             position: 'absolute',
-            top: '-18px',
+            top: {xs: "-12px",md:'-18px'},
             left: '12px',
             display: 'flex',
             alignItems: 'center',
@@ -59,7 +59,7 @@ function LabeledNumberTab({ labelTab, valueTab, onChangeTab, min = 1, ...textFie
             zIndex: 0,
           }}
         >
-            <Box component="span" sx={{ fontSize: '0.8rem', color: 'text.secondary' }}>
+            <Box component="span" sx={{ fontSize: {xs: "0.65rem", md:'0.8rem'}, color: 'text.secondary' }}>
               {labelTab}
             </Box>
             <InputBase
@@ -78,7 +78,7 @@ function LabeledNumberTab({ labelTab, valueTab, onChangeTab, min = 1, ...textFie
                   decrement();
                 }
               }}
-            //   sx={{pr: "10px"}}
+              sx={{fontSize: {xs: "0.75rem",md: "1rem"}}}
               inputProps={{
                 inputMode: 'numeric',
                 pattern: '[0-9]*',
@@ -116,4 +116,4 @@ function LabeledNumberTab({ labelTab, valueTab, onChangeTab, min = 1, ...textFie
   );
 }
 
-export default LabeledNumberTab;
+export default TextFieldLblNmbr;

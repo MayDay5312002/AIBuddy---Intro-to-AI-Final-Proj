@@ -101,7 +101,7 @@ export default function ModalChangeQuiz({oldAnswer,oldQuestion, oldChoices, setQ
 
   return (
     <Box component={"span"}>
-      <IconButton onClick={handleOpen}><EditIcon /></IconButton>
+      <IconButton onClick={handleOpen}><EditIcon sx={{fontSize: {xs: "1.25rem", lg: "1.5rem"}}}/></IconButton>
       <Modal
         open={open}
         onClose={handleClose}

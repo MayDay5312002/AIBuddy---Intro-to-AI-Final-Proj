@@ -4,9 +4,23 @@ import { useState, useEffect} from "react";
 import axios from "axios";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import CircularProgress from '@mui/material/CircularProgress';
+import { createTheme, ThemeProvider } from '@mui/material/styles';
 
 
 import MainApp from "./MainApp";
+
+
+const theme = createTheme({
+  breakpoints: {
+    values: {
+      xs: 0,
+      sm: 650,
+      md: 900,
+      lg: 1200,
+      xl: 1536,
+    },
+  },
+});
 
 function App() {
     // useEffect(() => {
@@ -15,6 +29,7 @@ function App() {
     //     });
     // }, []);
     return (
+        <ThemeProvider theme={theme}>
         <Router>
             <Routes>
                 <Route path="/" element={<MainApp />} />
@@ -30,6 +45,7 @@ function App() {
                 }/>
             </Routes>
         </Router>
+        </ThemeProvider>
         // <div>Hello World</div>
     )
 }

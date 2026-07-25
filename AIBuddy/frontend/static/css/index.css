@@ -544,3 +544,22 @@ y
   }
 
 }
+
+/* .threadComponent {
+  min-width: "15.6rem";
+
+} */
+
+/* @media (min-width: 650px) and (max-width: 900px) {
+  .threadComponent {
+    min-width: auto !important;
+    max-width: 13.5rem !important;
+  }
+}
+
+@media (max-width: 649px) {
+  .threadComponent {
+    min-width: auto !important;
+    max-width: 11rem !important;
+  }
+} */

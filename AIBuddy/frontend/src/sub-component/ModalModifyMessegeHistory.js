@@ -84,15 +84,13 @@ export default function ModalModifyMessegeHistory({setResponse,thread_title, ref
   }
 
   return (
-    <Box component={"span"}>
-      {/* <Box sx={{display: 'flex', justifyContent: 'center', my: "0.5em"}}> */}
+    <Box>
         <IconButton 
         onClick={handleOpen} 
         disabled= {thread_title === "" ? true : false}
         >
-          <HistoryIcon />
+          <HistoryIcon sx={{fontSize: {xs: "1.25rem", md: "1.5rem"}}}/>
         </IconButton>
-      {/* </Box> */}
       <Modal
         open={open}
         onClose={handleClose}
@@ -105,15 +103,23 @@ export default function ModalModifyMessegeHistory({setResponse,thread_title, ref
           borderRadius: 2, 
           border: "none", 
           width: {xs:"80vw", sm: "60vw", lg: "50vw"},
-
+          // height: {xs: "95vh", md: "auto"}
         }}>
             <IconButton 
             onClick={handleClose} 
             sx={{position: "absolute", right: 18}}
             >
-              <CloseIcon />
+              <CloseIcon sx={{fontSize: {xs: "1.25rem", lg: "1.5rem"}}}/>
             </IconButton>
-          <Typography id="modal-modal-title" variant="h5" component="h2" sx={{fontWeight: 500}}>
+          <Typography 
+            id="modal-modal-title" 
+            variant="h5" 
+            component="h2" 
+            sx={{
+              fontWeight: 500,
+              fontSize: {xs: "1.3rem",md: "1.5rem"},
+            }}
+          >
             Message History
           </Typography>
           <Divider sx={{my: 1}}/>
@@ -121,7 +127,8 @@ export default function ModalModifyMessegeHistory({setResponse,thread_title, ref
           <Paper 
           sx=
           {{p: 1,
-           maxHeight: {xs:"80vh", sm: "60vh", md: "60vh"},
+          //  maxHeight: {xs:"60vh", sm: "60vh", md: "60vh"},
+           maxHeight: "60vh",
            overflow: "auto"
            }}>
             {/* <Typography variant="h6" component="h2" >Message History</Typography> */}
@@ -129,21 +136,22 @@ export default function ModalModifyMessegeHistory({setResponse,thread_title, ref
             {
               deleteAll === true ?
                 (
-                  <>
+                  <Box sx={{translateY: "-50%", display: "inline-block", pl: "0.5rem"}}>
+                    Are you sure?
                     <IconButton 
                       sx={{ margin: "0.2em", cursor: "pointer", "&:hover": { backgroundColor: "#c9c9c9ff" } }}
                       onClick={() => deleteAllMessage()}
                     >
-                      <Typography variant="body1" component="p" sx={{ fontSize: "0.7em"}}>Yes</Typography>
+                      <Typography variant="body1" component="p" sx={{ fontSize: "0.6em", translateY: "-50%"}}>Yes</Typography>
                     </IconButton>
                     /
                     <IconButton 
                       sx={{ cursor: "pointer", marginLeft: "0.2em", "&:hover": { backgroundColor: "#c9c9c9ff" } }}
                       onClick={() => setDeleteAll(false)}
                     >
-                      <Typography variant="body1" component="p" sx={{ fontSize: "0.7em"}}>No</Typography>
+                      <Typography variant="body1" component="p" sx={{ fontSize: "0.6em", translateY: "-50%"}}>No</Typography>
                     </IconButton>
-                  </>
+                  </Box>
                 )
                 : ""
             }
@@ -161,28 +169,51 @@ export default function ModalModifyMessegeHistory({setResponse,thread_title, ref
                     {
                       message.role === "user" ?
                       <Box>
-                        <Typography variant="body1" component="p" sx={{ color: "#0077b6", cursor: "pointer", '&:hover': {backgroundColor: "#f3f3f3ff"}, borderRadius: 1, p:1}} onClick={() => setResponse(messages[index+1].content)}>
+                        <Typography 
+                        variant="body1" 
+                        component="p" 
+                        sx={{ 
+                          color: "#0077b6", 
+                          cursor: "pointer", 
+                          '&:hover': {backgroundColor: "#f3f3f3ff"}, 
+                          borderRadius: 1, 
+                          p:1,
+                          fontSize: {xs: "0.9rem", md: "1rem"},
+                          
+                        }} 
+                        onClick={() => setResponse(messages[index+1].content)}
+                        >
                           {message.content} <br/> <u>Content</u>: {message.document} <br/>
                           </Typography>
                         <IconButton 
-                        onClick={() => {
-                          axios.post("http://127.0.0.1:4192/api/deleteMessage/", {"thread": thread_title, "content": message.content, "document": message.document, "response": messages[index+1].content, id: message.id})
-                          .then((response) => {
-                            setRefreshMessageHistory(!refreshMessageHistory);
-                          })
-                          .catch((error) => {
-                            console.log(error);
-                          });
-                        }}
+                          onClick={() => {
+                            axios.post("http://127.0.0.1:4192/api/deleteMessage/", {"thread": thread_title, "content": message.content, "document": message.document, "response": messages[index+1].content, id: message.id})
+                            .then((response) => {
+                              setRefreshMessageHistory(!refreshMessageHistory);
+                            })
+                            .catch((error) => {
+                              console.log(error);
+                            });
+                          }}
                         >
-                          <DeleteIcon />
+                          <DeleteIcon sx={{fontSize: {xs: "1.25rem", lg: "1.5rem"}}}/>
                         </IconButton>
                         <ModalModifyMsg thread_title={thread_title} refreshMessageHistory={refreshMessageHistory} 
                         setRefreshMessageHistory={setRefreshMessageHistory} oldQuestion={message.content} 
                         oldResponse={messages[index+1].content} document={message.document} setResponse={setResponse} id={message.id} aiSpace={aiSpace}/>
                       </Box>
                       :
-                      <Typography variant="body1" component="div"><MarkdownRenderer>{message.content}</MarkdownRenderer></Typography>
+                      <Typography 
+                      variant="body1" 
+                      component="div"
+                      sx={{
+                        fontSize: {xs: "0.9rem", md: "1rem"},
+                      }}
+                      >
+                        <MarkdownRenderer>
+                        {message.content}
+                        </MarkdownRenderer>
+                      </Typography>
 
                     }
                   </Paper>

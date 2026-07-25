@@ -103,7 +103,7 @@ export default function Todo({open, setOpen, top, right}) {
       <Box
       sx={{
         position: "absolute",
-        top: top,
+        top: "14vh",
         right: right,
         zIndex: 1300
       }}
@@ -115,8 +115,8 @@ export default function Todo({open, setOpen, top, right}) {
             
             // zIndex: 1300,
             borderRadius: 2,
-            width: { xs: "70vw", sm: "50vw", md: "20em" },
-            maxHeight: { sm: "50vh", md: "45vh" },
+            width: "20em",
+            maxHeight: "45vh",
             overflow: "hidden",
             display: "flex",
             flexDirection: "column",

@@ -16,7 +16,7 @@ export default function ApiKeyInput({api, setApi}) {
   return (
     <TextField
       fullWidth
-      label="API Key"
+      // label="API Key"
       variant="outlined"
       type={showKey ? 'text' : 'password'}
       value={api}
@@ -30,6 +30,13 @@ export default function ApiKeyInput({api, setApi}) {
           </InputAdornment>
         ),
       }}
+      sx={{
+        '& .MuiInputBase-input': {
+          fontSize: {xs: "0.9rem",md: "1rem"}
+        },
+      }}
+      
+      required
     />
   );
 }

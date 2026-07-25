@@ -495,16 +495,17 @@ class CreateNewThreadView(APIView):
         thread = Thread.objects.create(title=title)
         message = Message.objects.create(thread=thread, role="system", content="You are a helpful assistant that will provide answers to any question the user asks. Your name is 'May'")
         # print(thread)
-        return Response({"message": thread.id}, status=200)
+        return Response({"id": thread.id}, status=200)
     
 class GetAllThreadView(APIView):
     def get(self, request):
         threads = Thread.objects.all()
-        return Response({"threads": [thread.title for thread in threads]}, status=200)
+        # print(threads)
+        return Response({"threads": [{"title": thread.title, "id": thread.id} for thread in threads]}, status=200)
 
 class DeleteThreadView(APIView):
     def post(self, request):
-        thread = Thread.objects.get(title=request.data.get("title"))
+        thread = Thread.objects.get(id=request.data.get("id"))
         thread.delete()
         return Response({"message": "Thread deleted"}, status=200)
     
@@ -1121,6 +1122,31 @@ class TodoDetailView(APIView):
         todo = get_object_or_404(Todo, pk=pk)
         todo.delete()
         return Response(status=204)
+
+class SaveMDFileView(APIView):
+    def post(self, request):
+        data = json.loads(request.body)
+        content = data['content']
+        filename = data.get('filename', 'document.html')
+
+        save_path = os.path.join('brain1', filename if filename[-3:] == ".md" else filename + ".md") 
+        os.makedirs(os.path.dirname(save_path), exist_ok=True)
+
+        with open(save_path, 'w', encoding='utf-8') as f:
+            f.write(content)
+
+        return Response({"message": "File saved successfully"}, status=200)
+
+class LoadMDFileView(APIView):
+    def get(self, request):
+        filename = request.GET.get('filename', 'document.html')
+        # print("This is the request:", request.data)
+        save_path = os.path.join('brain1', filename if filename[-3:] == ".md" else filename + ".md") 
+        # print(save_path)
+        with open(save_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+        # print("got here", save_path)
+        return Response({"content": content}, status=200)
 
 
 

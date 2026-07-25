@@ -2,7 +2,7 @@ from django.urls import path, include
 from .views import (GetTextView, GetAllModels, chatWithFile, CreateNewThreadView, GetAllThreadView, DeleteThreadView, CreateFlashCardsView, GetAllFlashCardsView
 , DeleteFlashCardView, ModifyFlashCardView, CreateQuizView, GetAllQuizzesView, DeleteQuizView, ModifyQuizView, DeleteQuizChoiceView, CreateManualFlashCardView, CreateManualQuizView,
 GetAllMessagesView, DeleteMessageView, DeleteAllMessagesView, ModifyMessageView, ModifyMessageManualView, UploadFolderView, StopKiwixContainerView, ModifyAISpaceView,  
-GetAISpaceView, TodoListView, TodoDetailView)
+GetAISpaceView, TodoListView, TodoDetailView, SaveMDFileView, LoadMDFileView)
     
 # from .views import index
 
@@ -36,5 +36,7 @@ urlpatterns = [
     path("getSettings/", GetAISpaceView.as_view()),
     path("todos/", TodoListView.as_view()),
     path("todos/<int:pk>/", TodoDetailView.as_view()),
+    path("saveDocument/", SaveMDFileView.as_view()),
+    path("loadDocument/", LoadMDFileView.as_view()),
 
 ]

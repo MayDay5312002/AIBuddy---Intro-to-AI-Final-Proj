@@ -115,7 +115,7 @@ export default function ModalPresentQuiz({quizzes}) {
         color: "white", 
         // backgroundColor: "rgb(25, 118, 210)", 
         transform: "translateY(5%)",
-        fontSzie: "0.85rem"
+        fontSize: {xs: "0.7rem", md: "0.9rem"}
       }}
       variant="contained"
       disabled={quizzes?.length === 0}
@@ -133,20 +133,20 @@ export default function ModalPresentQuiz({quizzes}) {
           ...style, 
           borderRadius: 2, 
           border: "none", 
-          width: {xs:"80vw", sm: "60vw", md: "40vw"},
-          maxHeight: {xs:"90vh", sm: "70vh", md: "85vh"},
+          width: {xs:"80vw", sm: "75vw", md: "70vw", sm: "60vw", xl: "40vw"},
+          maxHeight: {xs:"80vh", md: "85vh"},
           overflow: "auto",
 
         }}>
           <IconButton onClick={handleClose} sx={{position: "absolute", right: 18}}><CloseIcon /></IconButton>
-          <Typography id="modal-modal-title" variant="h5" component="h2" sx={{fontWeight: 500}}>
+          <Typography id="modal-modal-title" variant="h5" component="h2" sx={{fontWeight: 500, fontSize: {xs: "1.3rem",md: "1.5rem"},}}>
             Present Quiz
           </Typography>
           <Divider sx={{my: 1}}/>
 
           {tempQuizzes.length === 0 &&
            <Box>
-              <Typography id="modal-modal-title" variant="h6" component="h2" sx={{fontWeight: 500}}>
+              <Typography id="modal-modal-title" variant="h6" component="h2" sx={{fontWeight: 500, fontSize: {xs: "1.3rem",md: "1.5rem"},}}>
                 Grade: {numberCorrect}/{quizzes.length} ({((numberCorrect / quizzes.length) * 100).toFixed(2)}%)
               </Typography>    
               <Button 
@@ -178,7 +178,7 @@ export default function ModalPresentQuiz({quizzes}) {
               </Typography>
               {showUserAnswers && tempAnswers.map((quiz, indexQuiz) => (
                 <Paper key={quiz.id} sx={{ p: 2, mt: 2, display: "block", mx: 1}}>
-                  <Typography variant="h6" sx={{ fontWeight: "500" }} component={"span"}>
+                  <Typography variant="h6" sx={{ fontWeight: "500", fontSize: {xs: "1.1rem",md: "1.3rem"}}} component={"span"}>
                     { "Q"+String(indexQuiz)+": "+quiz["question"]}
                   </Typography>
                   
@@ -195,6 +195,9 @@ export default function ModalPresentQuiz({quizzes}) {
                             choice === quiz.answer ? "lightgreen" : choice === quiz.myAnswer ? "lightcoral" : "white",
                           borderRadius: 1,
                           cursor: 'pointer',
+                          '& .MuiTypography-root': {
+                            fontSize: {xs: "0.9rem", md: "1rem"}
+                          }
                         }}
                       >
                         <ListItemText primary={choice === quiz.answer ? choice+" ✅" : choice === quiz.myAnswer ? choice+" ❌" : choice}  />
@@ -209,7 +212,7 @@ export default function ModalPresentQuiz({quizzes}) {
           { tempQuizzes.length > 0 &&
           <div>
             <Paper sx={{ p: 2, display: "display"}}>
-              <Typography variant="h6" sx={{ fontWeight: "500" }} component={"span"}>
+              <Typography variant="h6" sx={{ fontWeight: "500", fontSize: {xs: "1.1rem",md: "1.3rem"},}} component={"span"}>
                 {"Q"+String(questionNumber)+": "+tempQuizzes[0]["question"]}
               </Typography>
               <Divider sx={{ my: 1 }} />
@@ -242,6 +245,9 @@ export default function ModalPresentQuiz({quizzes}) {
                           : 'lightgray',
                       },
                       cursor: 'pointer',
+                      '& .MuiTypography-root': {
+                        fontSize: {xs: "0.9rem", md: "1rem"}
+                      }
                     }}
                     // disabled={blocked}
                   >

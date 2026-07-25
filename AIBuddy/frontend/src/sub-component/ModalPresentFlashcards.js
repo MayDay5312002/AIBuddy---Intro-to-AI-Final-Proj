@@ -68,13 +68,13 @@ export default function ModalPresentFlashcards({flashcards}) {
   return (
     <Box component={"span"}>
       <Button 
-      onClick={handleOpen} 
-      sx={{ 
-        // color: "white", backgroundColor: "rgb(25, 118, 210)", fontSzie: "0.85rem"
-        transform: "translateY(5%)",
-      }}
-      variant="contained"
-      disabled={flashcards?.length === 0}
+        onClick={handleOpen} 
+        sx={{ 
+          transform: "translateY(5%)",
+          fontSize: {xs: "0.7rem", md: "0.9rem"}
+        }}
+        variant="contained"
+        disabled={flashcards?.length === 0}
       >
         Present Flashcards
       </Button>
@@ -89,13 +89,21 @@ export default function ModalPresentFlashcards({flashcards}) {
           ...style, 
           borderRadius: 2, 
           border: "none", 
-          width: {xs:"80vw", sm: "60vw", md: "40vw"},
-          maxHeight: {xs:"80vh", sm: "60vh", md: "70vh"},
+          width: {xs:"80vw", sm: "75vw", md: "70vw", sm: "60vw", xl: "40vw"},
+          maxHeight: {xs:"80vh", md: "70vh"},
           overflow: "auto",
 
         }}>
           <IconButton onClick={handleClose} sx={{position: "absolute", right: 18}}><CloseIcon /></IconButton>
-          <Typography id="modal-modal-title" variant="h5" component="h2" sx={{fontWeight: 500}}>
+          <Typography 
+            id="modal-modal-title" 
+            variant="h5" 
+            component="h2" 
+            sx={{
+              fontWeight: 500,
+              fontSize: {xs: "1.3rem",md: "1.5rem"},
+            }}
+          >
             Present Flashcards
           </Typography>
           <Divider sx={{my: 1}}/>
@@ -111,11 +119,27 @@ export default function ModalPresentFlashcards({flashcards}) {
                 <ChevronLeftIcon />
             </IconButton>
             <Paper sx={{ p: 2, display: "span", maxHeight: {xs:"71vh", sm: "51vh", md: "61vh"}, overflow: "auto", flex: 1}}>
-              <Typography variant="h6" sx={{ fontWeight: "500" }} component={"span"}>
+              <Typography 
+                variant="h6" 
+                sx={{ 
+                  fontWeight: "500",
+                  fontSize: {xs: "1.1rem",md: "1.2rem"},
+
+                }} 
+                component={"span"}
+              >
                 {tempFlashcards[flashcardNumber].title}
               </Typography>
               <Divider sx={{ my: 1 }} />
-              <Typography variant="body1" sx={{ fontWeight: "500" }} component={"span"}>
+              <Typography 
+              variant="body1" 
+              sx={{ 
+                fontWeight: "500",
+                fontSize: {xs: "0.93rem",md: "1rem"}, 
+
+              }} 
+              component={"span"}
+              >
                 {tempFlashcards[flashcardNumber].content}
               </Typography>
             </Paper>

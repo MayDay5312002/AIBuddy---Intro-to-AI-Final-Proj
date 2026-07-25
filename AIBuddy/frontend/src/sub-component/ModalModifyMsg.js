@@ -283,7 +283,9 @@ export default function ModalModifyMsg({setResponse,thread_title, refreshMessage
 
   return (
     <Box component={"span"}>
-    <IconButton onClick={handleOpen} sx={{}}><EditIcon /></IconButton>
+    <IconButton onClick={handleOpen} sx={{}}>
+      <EditIcon sx={{fontSize: {xs: "1.25rem", lg: "1.5rem"}}}/>
+    </IconButton>
       <Modal
         open={open}
         onClose={handleClose}

@@ -20,7 +20,7 @@ const style = {
 };
 
 
-export default function ModalAddFlashCard({setFlashCards, thread_title, setNewFlashCards}) {
+export default function ModalAddFlashCard({setFlashCards, thread_title, setNewFlashCards, selectedThread}) {
 
 
   const [open, setOpen] = useState(false);
@@ -64,8 +64,10 @@ export default function ModalAddFlashCard({setFlashCards, thread_title, setNewFl
 
   return (
     <Box component={"span"}>
-      {/* <Box sx={{display: 'flex', justifyContent: 'center', my: "0.5em"}}> */}
-        <IconButton onClick={handleOpen} sx={{}}><AddBoxSharpIcon /></IconButton>
+      {/* <Box sx={{display: 'flex', justifyContent: 'center'}}> */}
+        <IconButton onClick={handleOpen} sx={{height: "100%", width: "100%"}} disabled={selectedThread===""}>
+          <AddBoxSharpIcon sx={{fontSize: {xs: "1.25rem", lg: "1.5rem"}}}/>
+        </IconButton>
       {/* </Box> */}
       <Modal
         open={open}
@@ -78,30 +80,52 @@ export default function ModalAddFlashCard({setFlashCards, thread_title, setNewFl
           ...style, 
           borderRadius: 2, 
           border: "none", 
-          width: {xs:"80vw", sm: "60vw", md: "30vw"},
+          width: {xs:"80vw", sm: "75vw", md: "70vw", sm: "60vw", xl: "40vw"},
+          maxHeight: {xs:"80vh", sm: "60vh", md: "60vh"},
+          overflowX: "auto"
 
         }}>
             <IconButton onClick={handleClose} sx={{position: "absolute", right: 18}}><CloseIcon /></IconButton>
-          <Typography id="modal-modal-title" variant="h5" component="h2" sx={{fontWeight: 500}}>
+          <Typography id="modal-modal-title" variant="h5" component="h2" sx={{fontWeight: 500, fontSize: {xs: "1.25rem", md: "1.5rem"}}}>
             Add Flash Card
           </Typography>
           <Divider sx={{my: 1}}/>
 
 
           <div>
-            <Typography variant="h6" component="h2" >Card Title</Typography>
-            <TextField id="Card Title" label="Card Title" value={title} onChange={(e) => setTitle(e.target.value)} variant="filled" required fullWidth multiline rows={1}/>
+            <Typography variant="h6" component="h2" sx={{fontSize: {xs: "1.1rem", md: "1.25rem"}}}>Card Title</Typography>
+            <TextField 
+            id="Card Title" 
+            label="Card Title" 
+            value={title} 
+            onChange={(e) => setTitle(e.target.value)} 
+            variant="filled" 
+            required 
+            fullWidth 
+            multiline 
+            rows={1}
+            sx={{
+              '& .MuiInputBase-input': {
+                fontSize: {xs: "0.9rem",md: "1rem"}
+              },
+            }}
+              />
           </div>
 
           <div>
-            <Typography variant="h6" component="h2" >Card Content</Typography>
+            <Typography variant="h6" component="h2" sx={{fontSize: {xs: "1.1rem", md: "1.25rem"}}}>Card Content</Typography>
             <TextField 
             id="Card Content" 
             label="Card Content" 
             value={content} 
             onChange={(e) => setContent(e.target.value)} 
             variant="filled" 
-            sx={{height: "5em"}} 
+            sx={{
+              height: "5em",
+              '& .MuiInputBase-input': {
+                fontSize: {xs: "0.9rem",md: "1rem"}
+              },
+            }} 
             multiline
             rows={4}
             required 

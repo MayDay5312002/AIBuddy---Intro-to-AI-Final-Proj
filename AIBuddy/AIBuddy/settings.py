@@ -72,6 +72,7 @@ INSTALLED_APPS = [
     'api',
     'frontend',
     'corsheaders',
+    # 'AIBuddy.apps.AIBuddyConfig',
 ]
 
 MIDDLEWARE = [

@@ -126,7 +126,13 @@ function MarkdownRenderer({ children }) {
               {children}
             </h3>
           ),
-          // p: ({ children }) => <div>{children}</div>
+          table: ({children}) => (
+            <Box style={{ overflowX: "auto" }}>
+              <table>{children}</table>
+            </Box>
+          ),
+            
+          p: ({ children }) => <div>{children}</div>
         }}
       >
         {children}
